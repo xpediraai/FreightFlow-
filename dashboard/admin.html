@@ -1,0 +1,522 @@
+<!DOCTYPE html><html lang="en"><head>
+<meta charset="UTF-8"/><meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+<title>Admin Dashboard — FreightFlow ERP</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Bebas+Neue&display=swap" rel="stylesheet"/>
+<link rel="stylesheet" href="../shared/erp.css"/>
+</head>
+<body>
+<div class="erp-layout">
+
+<!-- TOPBAR -->
+<div class="topbar">
+  <div class="topbar-brand">
+    <img src="../Shanti Shipping Logo (1).png" alt="Logo"/>
+    <div><div class="topbar-brand-name">Shanti Shipping</div><div class="topbar-brand-role" id="topbar-role">Branch Manager</div></div>
+  </div>
+  <div class="topbar-title" id="pageTitle">Operational Dashboard</div>
+  <div class="topbar-right">
+    <div class="topbar-search"><svg class="search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width: 14px; height: 14px; color: var(--light);"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg><input placeholder="Search job, BL, container…"/></div>
+    <div class="notif-btn" title="Notifications"><svg class="notif-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width: 16px; height: 16px; color: var(--light);"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path><path d="M13.73 21a2 2 0 0 1-3.46 0"></path></svg><div class="notif-dot"></div></div>
+    <span class="role-chip"><svg class="user-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width: 13px; height: 13px; margin-right: 5px; vertical-align: middle; color: var(--light);"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg> <span id="topbar-username">Admin</span></span>
+    <button class="waffle-btn" id="waffleBtn" onclick="toggleWaffle()" title="All Modules" aria-label="Open module menu"><svg viewBox="0 0 18 18" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <rect x="1" y="1" width="4" height="4" rx="1" stroke-width="1.5"/>
+  <rect x="7" y="1" width="4" height="4" rx="1" stroke-width="1.5"/>
+  <rect x="13" y="1" width="4" height="4" rx="1" stroke-width="1.5"/>
+  <rect x="1" y="7" width="4" height="4" rx="1" stroke-width="1.5"/>
+  <rect x="7" y="7" width="4" height="4" rx="1" stroke-width="1.5"/>
+  <rect x="13" y="7" width="4" height="4" rx="1" stroke-width="1.5"/>
+  <rect x="1" y="13" width="4" height="4" rx="1" stroke-width="1.5"/>
+  <rect x="7" y="13" width="4" height="4" rx="1" stroke-width="1.5"/>
+  <rect x="13" y="13" width="4" height="4" rx="1" stroke-width="1.5"/>
+</svg></button>
+    <button class="btn btn-outline btn-sm" onclick="logout()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="width: 13px; height: 13px; margin-right: 4px; vertical-align: middle; color: inherit;"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path><polyline points="16 17 21 12 16 7"></polyline><line x1="21" y1="12" x2="9" y2="12"></line></svg><span>Logout</span></button>
+  </div>
+</div>
+
+<!-- WAFFLE OVERLAY -->
+<div class="waffle-overlay" id="waffleOverlay">
+  <div class="waffle-panel">
+    <div class="waffle-header">
+      <div class="waffle-header-title">FreightFlow ERP — All Modules</div>
+      <button class="waffle-close" onclick="closeWaffle()">✕</button>
+    </div>
+    <div class="waffle-grid">
+      <div class="waffle-item active" data-page="dashboard" onclick="showPage('dashboard','Dashboard')"><div class="waffle-icon-wrap" style="background:linear-gradient(135deg,#1a1a2a,#374151);"><svg viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg></div><div class="waffle-item-label">Dashboard</div></div>
+      <div class="waffle-item" data-page="jobs" onclick="showPage('jobs','Shipment Jobs')"><div class="waffle-icon-wrap" style="background:linear-gradient(135deg,#0369a1,#0ea5e9);"><svg viewBox="0 0 24 24"><path d="M2 21c.6.5 1.2 1 2.5 1C7 22 7 20 9.5 20c2.6 0 2.4 2 5 2 2.5 0 2.5-2 5-2 1.3 0 1.9.5 2.5 1"/><path d="M19.38 20A11.6 11.6 0 0 0 21 14l-9-4-9 4c0 2.8.7 5.3 1.62 6"/><path d="M19 13V7a2 2 0 0 0-2-2H7a2 2 0 0 0-2 2v6"/><line x1="12" y1="10" x2="12" y2="10.01"/></svg></div><div class="waffle-item-label">Shipment Jobs</div></div>
+      <div class="waffle-item" data-page="alerts" onclick="showPage('alerts','Alerts')"><div class="waffle-icon-wrap" style="background:linear-gradient(135deg,#b91c1c,#ef4444);"><svg viewBox="0 0 24 24"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg></div><div class="waffle-item-label">Alerts</div></div>
+      <div class="waffle-item" data-page="vessels" onclick="showPage('vessels','Vessel Calendar')"><div class="waffle-icon-wrap" style="background:linear-gradient(135deg,#0891b2,#06b6d4);"><svg viewBox="0 0 24 24"><circle cx="12" cy="5" r="3"/><line x1="12" y1="22" x2="12" y2="8"/><path d="M5 12H2a10 10 0 0 0 20 0h-3"/></svg></div><div class="waffle-item-label">Vessel Calendar</div></div>
+      <div class="waffle-item" data-page="revenue" onclick="showPage('revenue','Revenue')"><div class="waffle-icon-wrap" style="background:linear-gradient(135deg,#059669,#10b981);"><svg viewBox="0 0 24 24"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/><polyline points="17 6 23 6 23 12"/></svg></div><div class="waffle-item-label">Revenue</div></div>
+      <div class="waffle-item" data-page="ar" onclick="showPage('ar','AR Aging')"><div class="waffle-icon-wrap" style="background:linear-gradient(135deg,#d97706,#f59e0b);"><svg viewBox="0 0 24 24"><rect x="1" y="4" width="22" height="16" rx="2" ry="2"/><line x1="1" y1="10" x2="23" y2="10"/></svg></div><div class="waffle-item-label">AR Aging</div></div>
+      <div class="waffle-item" data-page="roles" onclick="showPage('roles','Roles & Access')"><div class="waffle-icon-wrap" style="background:linear-gradient(135deg,#7c3aed,#8b5cf6);"><svg viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg></div><div class="waffle-item-label">Roles & Access</div></div>
+      <div class="waffle-item" data-page="audit" onclick="showPage('audit','Audit Log')"><div class="waffle-icon-wrap" style="background:linear-gradient(135deg,#475569,#64748b);"><svg viewBox="0 0 24 24"><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/><rect x="8" y="2" width="8" height="4" rx="1" ry="1"/></svg></div><div class="waffle-item-label">Audit Log</div></div>
+      <div class="waffle-item" data-page="config" onclick="showPage('config','System Config')"><div class="waffle-icon-wrap" style="background:linear-gradient(135deg,#374151,#6b7280);"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg></div><div class="waffle-item-label">System Config</div></div>
+    </div>
+  </div>
+</div>
+
+<div class="page-body">
+
+  <div id="page-dashboard">
+    <div class="page-header"><div class="breadcrumb">FreightFlow ERP / <span>Dashboard</span></div><h1>Operational Overview</h1><p>Real-time snapshot — Shanti Shipping Services, Gandhidham</p></div>
+    <div class="kpi-row cols-4">
+      <div class="kpi-card"><div class="kpi-icon">📦</div><div class="kpi-label">Active Imports</div><div class="kpi-value">48</div><div class="kpi-delta">↑ 6 from last week</div></div>
+      <div class="kpi-card green"><div class="kpi-icon">🚢</div><div class="kpi-label">Active Exports</div><div class="kpi-value">31</div><div class="kpi-delta">↑ 3 from last week</div></div>
+      <div class="kpi-card blue"><div class="kpi-icon">₹</div><div class="kpi-label">Revenue MTD</div><div class="kpi-value">₹24L</div><div class="kpi-delta">82% of ₹29.2L target</div></div>
+      <div class="kpi-card amber"><div class="kpi-icon">⏳</div><div class="kpi-label">Outstanding AR</div><div class="kpi-value">₹8.4L</div><div class="kpi-delta down">↑ ₹1.2L overdue 60d+</div></div>
+    </div>
+    <div class="grid-2">
+      <div class="card"><div class="card-header"><div class="card-title"><div class="card-title-dot"></div>Alert Feed</div><span class="pill pill-red">7 open</span></div><div class="card-body">
+        <div class="alert-item a-red"><div class="alert-icon">🚨</div><div class="alert-text"><strong>IMP-2026-0137 — Customs Examination Hold</strong><span>China→JNPT · 3 days delayed · First Check ordered</span></div></div>
+        <div class="alert-item a-amber"><div class="alert-icon">⚠️</div><div class="alert-text"><strong>EXP-2026-0098 — Packing List Missing</strong><span>SI cutoff in 6 hours · Upload immediately</span></div></div>
+        <div class="alert-item a-amber"><div class="alert-icon">⏰</div><div class="alert-text"><strong>Container TCKU3456789 — Detention Risk</strong><span>2 days free time remaining · MSC</span></div></div>
+        <div class="alert-item a-green"><div class="alert-icon">✅</div><div class="alert-text"><strong>EXP-2026-0101 — LEO Obtained</strong><span>MSC ISABELLA departs tonight 21:30</span></div></div>
+      </div></div>
+      <div class="card"><div class="card-header"><div class="card-title"><div class="card-title-dot"></div>14-Day Vessel Calendar</div></div><div class="card-body">
+        <div class="data-cards-grid">
+          <div class="data-card">
+            <div class="data-card-header">
+              <span class="data-card-title">🚢 MSC ISABELLA</span>
+              <span class="pill pill-green">On Time</span>
+            </div>
+            <div class="data-card-body">
+              <div class="data-card-row"><span class="data-card-label">Shipping Line</span><span class="data-card-value">MSC</span></div>
+              <div class="data-card-row"><span class="data-card-label">ETA</span><span class="data-card-value">Jun 05, 2026</span></div>
+              <div class="data-card-row"><span class="data-card-label">Active Jobs</span><span class="data-card-value">3 Jobs</span></div>
+            </div>
+          </div>
+          <div class="data-card">
+            <div class="data-card-header">
+              <span class="data-card-title">🚢 EVER GIVEN II</span>
+              <span class="pill pill-green">On Time</span>
+            </div>
+            <div class="data-card-body">
+              <div class="data-card-row"><span class="data-card-label">Shipping Line</span><span class="data-card-value">Evergreen</span></div>
+              <div class="data-card-row"><span class="data-card-label">ETA</span><span class="data-card-value">Jun 07, 2026</span></div>
+              <div class="data-card-row"><span class="data-card-label">Active Jobs</span><span class="data-card-value">2 Jobs</span></div>
+            </div>
+          </div>
+          <div class="data-card">
+            <div class="data-card-header">
+              <span class="data-card-title">🚢 COSCO PACIFIC</span>
+              <span class="pill pill-amber">+1 Day</span>
+            </div>
+            <div class="data-card-body">
+              <div class="data-card-row"><span class="data-card-label">Shipping Line</span><span class="data-card-value">COSCO</span></div>
+              <div class="data-card-row"><span class="data-card-label">ETA</span><span class="data-card-value">Jun 09, 2026</span></div>
+              <div class="data-card-row"><span class="data-card-label">Active Jobs</span><span class="data-card-value">5 Jobs</span></div>
+            </div>
+          </div>
+          <div class="data-card">
+            <div class="data-card-header">
+              <span class="data-card-title">🚢 MAERSK SELETAR</span>
+              <span class="pill pill-green">On Time</span>
+            </div>
+            <div class="data-card-body">
+              <div class="data-card-row"><span class="data-card-label">Shipping Line</span><span class="data-card-value">Maersk</span></div>
+              <div class="data-card-row"><span class="data-card-label">ETA</span><span class="data-card-value">Jun 11, 2026</span></div>
+              <div class="data-card-row"><span class="data-card-label">Active Jobs</span><span class="data-card-value">4 Jobs</span></div>
+            </div>
+          </div>
+        </div>
+      </div></div>
+    </div>
+    <div class="card mt-3"><div class="card-header"><div class="card-title"><div class="card-title-dot"></div>Revenue by Trade Lane — MTD</div></div><div class="card-body"><div class="bar-chart">
+      <div class="bar-row"><div class="bar-label">India → UAE</div><div class="bar-track"><div class="bar-fill" style="width:85%"></div></div><div class="bar-val">₹7.2L</div></div>
+      <div class="bar-row"><div class="bar-label">China → India</div><div class="bar-track"><div class="bar-fill" style="width:72%"></div></div><div class="bar-val">₹6.1L</div></div>
+      <div class="bar-row"><div class="bar-label">India → UK</div><div class="bar-track"><div class="bar-fill" style="width:55%"></div></div><div class="bar-val">₹4.7L</div></div>
+      <div class="bar-row"><div class="bar-label">India → USA</div><div class="bar-track"><div class="bar-fill" style="width:42%"></div></div><div class="bar-val">₹3.5L</div></div>
+    </div></div></div>
+  </div>
+
+  <div id="page-jobs" style="display:none">
+    <div class="page-header">
+      <div class="breadcrumb">FreightFlow ERP / <span>Shipment Jobs</span></div>
+      <div style="display:flex;align-items:center;justify-content:space-between;">
+        <div><h1>All Shipment Jobs</h1><p style="color:#6b7280;font-size:.875rem;margin-top:.25rem;">79 active jobs across import &amp; export</p></div>
+        <div style="display:flex;gap:.6rem;">
+          <button class="btn btn-outline btn-sm" style="border-radius:8px;">📥 Import (48)</button>
+          <button class="btn btn-outline btn-sm" style="border-radius:8px;">📤 Export (31)</button>
+          <button class="btn btn-primary btn-sm" style="border-radius:8px;">+ New Job</button>
+        </div>
+      </div>
+    </div>
+    <div class="job-cards-grid">
+
+      <!-- Card 1 -->
+      <div class="job-card imp">
+        <div class="job-card-top">
+          <span class="job-num-badge">IMP-2026-0142</span>
+          <span class="pill pill-green">On Track</span>
+        </div>
+        <div class="job-card-customer">Tata Chemicals Ltd.</div>
+        <div class="job-card-route">🛳️ Dubai <span class="arrow">→</span> Mundra</div>
+        <div class="job-card-meta">
+          <div class="job-meta-item"><div class="job-meta-label">Vessel</div><div class="job-meta-value">MSC ISABELLA</div></div>
+          <div class="job-meta-item"><div class="job-meta-label">ETA</div><div class="job-meta-value">Jun 05, 2026</div></div>
+          <div class="job-meta-item"><div class="job-meta-label">Container</div><div class="job-meta-value">1 × 20GP</div></div>
+          <div class="job-meta-item"><div class="job-meta-label">Mode</div><div class="job-meta-value">Ocean FCL</div></div>
+        </div>
+        <div class="job-card-stage">
+          <div class="stage-label"><span>Current: BL Verified</span><span>Stage 6/16</span></div>
+          <div class="stage-bar"><div class="stage-fill green" style="width:37%"></div></div>
+        </div>
+        <div class="job-card-actions">
+          <button class="btn btn-outline">📄 Documents</button>
+          <button class="btn btn-primary">Open Job →</button>
+        </div>
+      </div>
+
+      <!-- Card 2 -->
+      <div class="job-card exp">
+        <div class="job-card-top">
+          <span class="job-num-badge">EXP-2026-0098</span>
+          <span class="pill pill-amber">Action Needed</span>
+        </div>
+        <div class="job-card-customer">Reliance Exports</div>
+        <div class="job-card-route">🚢 Chennai <span class="arrow">→</span> United Kingdom</div>
+        <div class="job-card-meta">
+          <div class="job-meta-item"><div class="job-meta-label">Vessel</div><div class="job-meta-value">EVER GREEN</div></div>
+          <div class="job-meta-item"><div class="job-meta-label">ETD</div><div class="job-meta-value">Jun 07, 2026</div></div>
+          <div class="job-meta-item"><div class="job-meta-label">Container</div><div class="job-meta-value">3 × 40GP</div></div>
+          <div class="job-meta-item"><div class="job-meta-label">SI Cutoff</div><div class="job-meta-value" style="color:#c0392b;font-weight:700;">⏰ 6h Left</div></div>
+        </div>
+        <div class="job-card-stage">
+          <div class="stage-label"><span>Current: Doc Collection</span><span>Stage 3/16</span></div>
+          <div class="stage-bar"><div class="stage-fill amber" style="width:19%"></div></div>
+        </div>
+        <div class="job-card-actions">
+          <button class="btn btn-outline">📤 Upload Docs</button>
+          <button class="btn btn-primary">Open Job →</button>
+        </div>
+      </div>
+
+      <!-- Card 3 -->
+      <div class="job-card delayed">
+        <div class="job-card-top">
+          <span class="job-num-badge">IMP-2026-0137</span>
+          <span class="pill pill-red">Delayed</span>
+        </div>
+        <div class="job-card-customer">Adani Logistics Pvt. Ltd.</div>
+        <div class="job-card-route">🛳️ Shanghai <span class="arrow">→</span> JNPT, Mumbai</div>
+        <div class="job-card-meta">
+          <div class="job-meta-item"><div class="job-meta-label">Vessel</div><div class="job-meta-value">COSCO PACIFIC</div></div>
+          <div class="job-meta-item"><div class="job-meta-label">ETA</div><div class="job-meta-value">Jun 09, 2026</div></div>
+          <div class="job-meta-item"><div class="job-meta-label">Container</div><div class="job-meta-value">2 × 40HC</div></div>
+          <div class="job-meta-item"><div class="job-meta-label">Hold Reason</div><div class="job-meta-value" style="color:#c0392b;">First Check</div></div>
+        </div>
+        <div class="job-card-stage">
+          <div class="stage-label"><span>Current: Customs Hold 🚨</span><span>Stage 9/16</span></div>
+          <div class="stage-bar"><div class="stage-fill" style="width:56%"></div></div>
+        </div>
+        <div class="job-card-actions">
+          <button class="btn btn-outline">🛃 Customs</button>
+          <button class="btn btn-primary">Open Job →</button>
+        </div>
+      </div>
+
+      <!-- Card 4 -->
+      <div class="job-card exp">
+        <div class="job-card-top">
+          <span class="job-num-badge">EXP-2026-0101</span>
+          <span class="pill pill-green">On Track</span>
+        </div>
+        <div class="job-card-customer">Mahindra International</div>
+        <div class="job-card-route">🚢 JNPT <span class="arrow">→</span> New York, USA</div>
+        <div class="job-card-meta">
+          <div class="job-meta-item"><div class="job-meta-label">Vessel</div><div class="job-meta-value">HMM OSLO</div></div>
+          <div class="job-meta-item"><div class="job-meta-label">ETD</div><div class="job-meta-value">Jun 14, 2026</div></div>
+          <div class="job-meta-item"><div class="job-meta-label">Container</div><div class="job-meta-value">1 × 40HC</div></div>
+          <div class="job-meta-item"><div class="job-meta-label">LEO Status</div><div class="job-meta-value" style="color:#10b981;">✅ Obtained</div></div>
+        </div>
+        <div class="job-card-stage">
+          <div class="stage-label"><span>Current: LEO Obtained</span><span>Stage 14/16</span></div>
+          <div class="stage-bar"><div class="stage-fill green" style="width:87%"></div></div>
+        </div>
+        <div class="job-card-actions">
+          <button class="btn btn-outline">📋 BL Details</button>
+          <button class="btn btn-primary">Open Job →</button>
+        </div>
+      </div>
+
+      <!-- Card 5 -->
+      <div class="job-card imp">
+        <div class="job-card-top">
+          <span class="job-num-badge">IMP-2026-0139</span>
+          <span class="pill pill-green">On Track</span>
+        </div>
+        <div class="job-card-customer">Welspun Corp. Ltd.</div>
+        <div class="job-card-route">🛳️ Jakarta <span class="arrow">→</span> Mundra</div>
+        <div class="job-card-meta">
+          <div class="job-meta-item"><div class="job-meta-label">Vessel</div><div class="job-meta-value">MAERSK SELETAR</div></div>
+          <div class="job-meta-item"><div class="job-meta-label">ETA</div><div class="job-meta-value">Jun 11, 2026</div></div>
+          <div class="job-meta-item"><div class="job-meta-label">Container</div><div class="job-meta-value">2 × 20GP</div></div>
+          <div class="job-meta-item"><div class="job-meta-label">Free Days</div><div class="job-meta-value">3 left ⚠</div></div>
+        </div>
+        <div class="job-card-stage">
+          <div class="stage-label"><span>Current: In Transit</span><span>Stage 8/16</span></div>
+          <div class="stage-bar"><div class="stage-fill green" style="width:50%"></div></div>
+        </div>
+        <div class="job-card-actions">
+          <button class="btn btn-outline">📍 Track</button>
+          <button class="btn btn-primary">Open Job →</button>
+        </div>
+      </div>
+
+      <!-- Card 6 -->
+      <div class="job-card imp">
+        <div class="job-card-top">
+          <span class="job-num-badge">IMP-2026-0141</span>
+          <span class="pill pill-blue">New</span>
+        </div>
+        <div class="job-card-customer">Bharat Forge Limited</div>
+        <div class="job-card-route">🛳️ Hamburg <span class="arrow">→</span> JNPT, Mumbai</div>
+        <div class="job-card-meta">
+          <div class="job-meta-item"><div class="job-meta-label">Vessel</div><div class="job-meta-value">TBD</div></div>
+          <div class="job-meta-item"><div class="job-meta-label">ETA</div><div class="job-meta-value">Jun 20, 2026</div></div>
+          <div class="job-meta-item"><div class="job-meta-label">Container</div><div class="job-meta-value">1 × 40HC</div></div>
+          <div class="job-meta-item"><div class="job-meta-label">Booking</div><div class="job-meta-value" style="color:#f59e0b;">Pending</div></div>
+        </div>
+        <div class="job-card-stage">
+          <div class="stage-label"><span>Current: Pre-Alert</span><span>Stage 1/16</span></div>
+          <div class="stage-bar"><div class="stage-fill amber" style="width:6%"></div></div>
+        </div>
+        <div class="job-card-actions">
+          <button class="btn btn-outline">✏ Edit</button>
+          <button class="btn btn-primary">Open Job →</button>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <div id="page-alerts" style="display:none"><div class="page-header"><h1>Alert Feed</h1></div><div class="card"><div class="card-body">
+    <div class="alert-item a-red"><div class="alert-icon">🚨</div><div class="alert-text"><strong>IMP-2026-0137 — Customs Hold</strong><span>China→JNPT · 3 days delayed</span></div></div>
+    <div class="alert-item a-amber"><div class="alert-icon">⚠️</div><div class="alert-text"><strong>EXP-2026-0098 — Packing List Missing</strong><span>SI cutoff in 6 hours</span></div></div>
+    <div class="alert-item a-amber"><div class="alert-icon">⏰</div><div class="alert-text"><strong>Container TCKU3456789 — Detention</strong><span>2 days free time remaining</span></div></div>
+    <div class="alert-item a-green"><div class="alert-icon">✅</div><div class="alert-text"><strong>EXP-2026-0101 — LEO Obtained</strong><span>All clear for vessel departure</span></div></div>
+  </div></div></div>
+
+  <div id="page-vessels" style="display:none"><div class="page-header"><h1>Vessel Arrival Calendar</h1></div>
+    <div class="data-cards-grid">
+      <div class="data-card">
+        <div class="data-card-header">
+          <span class="data-card-title">🚢 MSC ISABELLA</span>
+          <span class="pill pill-green">On Time</span>
+        </div>
+        <div class="data-card-body">
+          <div class="data-card-row"><span class="data-card-label">Shipping Line</span><span class="data-card-value">MSC</span></div>
+          <div class="data-card-row"><span class="data-card-label">ETA</span><span class="data-card-value">Jun 05, 2026</span></div>
+          <div class="data-card-row"><span class="data-card-label">Active Jobs</span><span class="data-card-value">3 Jobs</span></div>
+        </div>
+      </div>
+      <div class="data-card">
+        <div class="data-card-header">
+          <span class="data-card-title">🚢 EVER GIVEN II</span>
+          <span class="pill pill-green">On Time</span>
+        </div>
+        <div class="data-card-body">
+          <div class="data-card-row"><span class="data-card-label">Shipping Line</span><span class="data-card-value">Evergreen</span></div>
+          <div class="data-card-row"><span class="data-card-label">ETA</span><span class="data-card-value">Jun 07, 2026</span></div>
+          <div class="data-card-row"><span class="data-card-label">Active Jobs</span><span class="data-card-value">2 Jobs</span></div>
+        </div>
+      </div>
+      <div class="data-card">
+        <div class="data-card-header">
+          <span class="data-card-title">🚢 COSCO PACIFIC</span>
+          <span class="pill pill-amber">+1 Day</span>
+        </div>
+        <div class="data-card-body">
+          <div class="data-card-row"><span class="data-card-label">Shipping Line</span><span class="data-card-value">COSCO</span></div>
+          <div class="data-card-row"><span class="data-card-label">ETA</span><span class="data-card-value">Jun 09, 2026</span></div>
+          <div class="data-card-row"><span class="data-card-label">Active Jobs</span><span class="data-card-value">5 Jobs</span></div>
+        </div>
+      </div>
+      <div class="data-card">
+        <div class="data-card-header">
+          <span class="data-card-title">🚢 MAERSK SELETAR</span>
+          <span class="pill pill-green">On Time</span>
+        </div>
+        <div class="data-card-body">
+          <div class="data-card-row"><span class="data-card-label">Shipping Line</span><span class="data-card-value">Maersk</span></div>
+          <div class="data-card-row"><span class="data-card-label">ETA</span><span class="data-card-value">Jun 11, 2026</span></div>
+          <div class="data-card-row"><span class="data-card-label">Active Jobs</span><span class="data-card-value">4 Jobs</span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div id="page-revenue" style="display:none"><div class="page-header"><h1>Revenue Reports</h1></div>
+    <div class="kpi-row cols-3"><div class="kpi-card"><div class="kpi-label">Revenue MTD</div><div class="kpi-value">₹24L</div></div><div class="kpi-card green"><div class="kpi-label">Revenue YTD</div><div class="kpi-value">₹1.8Cr</div></div><div class="kpi-card amber"><div class="kpi-label">Gross Margin</div><div class="kpi-value">34%</div></div></div>
+    <div class="card"><div class="card-body"><div class="bar-chart"><div class="bar-row"><div class="bar-label">January</div><div class="bar-track"><div class="bar-fill green" style="width:70%"></div></div><div class="bar-val">₹28L</div></div><div class="bar-row"><div class="bar-label">February</div><div class="bar-track"><div class="bar-fill green" style="width:75%"></div></div><div class="bar-val">₹30L</div></div><div class="bar-row"><div class="bar-label">March</div><div class="bar-track"><div class="bar-fill green" style="width:82%"></div></div><div class="bar-val">₹33L</div></div><div class="bar-row"><div class="bar-label">June (MTD)</div><div class="bar-track"><div class="bar-fill" style="width:60%"></div></div><div class="bar-val">₹24L</div></div></div></div></div>
+  </div>
+
+  <div id="page-ar" style="display:none"><div class="page-header"><h1>AR Aging</h1></div><div class="kpi-row cols-4"><div class="kpi-card"><div class="kpi-label">Total</div><div class="kpi-value">₹8.4L</div></div><div class="kpi-card green"><div class="kpi-label">0–30 Days</div><div class="kpi-value">₹4.1L</div></div><div class="kpi-card amber"><div class="kpi-label">31–60 Days</div><div class="kpi-value">₹2.8L</div></div><div class="kpi-card"><div class="kpi-label">60+ Days</div><div class="kpi-value">₹1.5L</div></div></div>
+    <div class="data-cards-grid">
+      <div class="data-card">
+        <div class="data-card-header">
+          <span class="data-card-title">👤 Reliance Exports</span>
+          <span class="pill pill-green">Current</span>
+        </div>
+        <div class="data-card-body">
+          <div class="data-card-row"><span class="data-card-label">0–30 Days</span><span class="data-card-value">₹1.2L</span></div>
+          <div class="data-card-row"><span class="data-card-label">31–60 Days</span><span class="data-card-value">—</span></div>
+          <div class="data-card-row"><span class="data-card-label">61–90 Days</span><span class="data-card-value">—</span></div>
+          <div class="data-card-row" style="font-weight:800;border-top:1px dashed var(--border);padding-top:0.4rem;margin-top:0.2rem;"><span class="data-card-label" style="color:var(--text);">Total Due</span><span class="data-card-value" style="color:var(--red);">₹1.2L</span></div>
+        </div>
+      </div>
+      <div class="data-card">
+        <div class="data-card-header">
+          <span class="data-card-title">👤 Welspun Corp.</span>
+          <span class="pill pill-amber">Overdue</span>
+        </div>
+        <div class="data-card-body">
+          <div class="data-card-row"><span class="data-card-label">0–30 Days</span><span class="data-card-value">₹0.6L</span></div>
+          <div class="data-card-row"><span class="data-card-label">31–60 Days</span><span class="data-card-value">₹1.6L</span></div>
+          <div class="data-card-row"><span class="data-card-label">61–90 Days</span><span class="data-card-value">—</span></div>
+          <div class="data-card-row" style="font-weight:800;border-top:1px dashed var(--border);padding-top:0.4rem;margin-top:0.2rem;"><span class="data-card-label" style="color:var(--text);">Total Due</span><span class="data-card-value" style="color:var(--red);">₹2.2L</span></div>
+        </div>
+      </div>
+      <div class="data-card">
+        <div class="data-card-header">
+          <span class="data-card-title">👤 Bharat Forge</span>
+          <span class="pill pill-red">Critical</span>
+        </div>
+        <div class="data-card-body">
+          <div class="data-card-row"><span class="data-card-label">0–30 Days</span><span class="data-card-value">₹0.5L</span></div>
+          <div class="data-card-row"><span class="data-card-label">31–60 Days</span><span class="data-card-value">₹1.2L</span></div>
+          <div class="data-card-row"><span class="data-card-label">61–90 Days</span><span class="data-card-value">₹1.5L</span></div>
+          <div class="data-card-row" style="font-weight:800;border-top:1px dashed var(--border);padding-top:0.4rem;margin-top:0.2rem;"><span class="data-card-label" style="color:var(--text);">Total Due</span><span class="data-card-value" style="color:var(--red);">₹3.2L</span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div id="page-roles" style="display:none"><div class="page-header"><h1>Role &amp; Permission Matrix</h1></div>
+    <div class="data-cards-grid">
+      <div class="data-card">
+        <div class="data-card-header"><span class="data-card-title">💼 Branch Manager</span><span class="pill pill-green">Super Admin</span></div>
+        <div class="data-card-body">
+          <div class="data-card-row"><span class="data-card-label">CRM / Customers</span><span class="data-card-value">✅ Full</span></div>
+          <div class="data-card-row"><span class="data-card-label">Inquiry &amp; Quotation</span><span class="data-card-value">✅ Full + Approve</span></div>
+          <div class="data-card-row"><span class="data-card-label">Shipment Jobs</span><span class="data-card-value">✅ Full</span></div>
+          <div class="data-card-row"><span class="data-card-label">Customs Clearance</span><span class="data-card-value">✅ Full</span></div>
+          <div class="data-card-row"><span class="data-card-label">Billing &amp; Finance</span><span class="data-card-value">✅ Full + Approve</span></div>
+          <div class="data-card-row"><span class="data-card-label">Admin / Config</span><span class="data-card-value">✅ Full</span></div>
+        </div>
+      </div>
+      <div class="data-card">
+        <div class="data-card-header"><span class="data-card-title">📢 Sales Executive</span><span class="pill pill-blue">Sales</span></div>
+        <div class="data-card-body">
+          <div class="data-card-row"><span class="data-card-label">CRM / Customers</span><span class="data-card-value">✅ Full</span></div>
+          <div class="data-card-row"><span class="data-card-label">Inquiry &amp; Quotation</span><span class="data-card-value">✅ Create</span></div>
+          <div class="data-card-row"><span class="data-card-label">Shipment Jobs</span><span class="data-card-value">👁 View</span></div>
+          <div class="data-card-row"><span class="data-card-label">Customs Clearance</span><span class="data-card-value">❌ None</span></div>
+          <div class="data-card-row"><span class="data-card-label">Billing &amp; Finance</span><span class="data-card-value">❌ None</span></div>
+          <div class="data-card-row"><span class="data-card-label">Admin / Config</span><span class="data-card-value">❌ None</span></div>
+        </div>
+      </div>
+      <div class="data-card">
+        <div class="data-card-header"><span class="data-card-title">⚙️ Operations Manager</span><span class="pill pill-amber">Operations</span></div>
+        <div class="data-card-body">
+          <div class="data-card-row"><span class="data-card-label">CRM / Customers</span><span class="data-card-value">👁 View</span></div>
+          <div class="data-card-row"><span class="data-card-label">Inquiry &amp; Quotation</span><span class="data-card-value">👁 View</span></div>
+          <div class="data-card-row"><span class="data-card-label">Shipment Jobs</span><span class="data-card-value">✅ Full</span></div>
+          <div class="data-card-row"><span class="data-card-label">Customs Clearance</span><span class="data-card-value">👁 View</span></div>
+          <div class="data-card-row"><span class="data-card-label">Billing &amp; Finance</span><span class="data-card-value">❌ None</span></div>
+          <div class="data-card-row"><span class="data-card-label">Admin / Config</span><span class="data-card-value">❌ None</span></div>
+        </div>
+      </div>
+      <div class="data-card">
+        <div class="data-card-header"><span class="data-card-title">🛂 Customs Officer</span><span class="pill pill-purple">Customs</span></div>
+        <div class="data-card-body">
+          <div class="data-card-row"><span class="data-card-label">CRM / Customers</span><span class="data-card-value">👁 View</span></div>
+          <div class="data-card-row"><span class="data-card-label">Inquiry &amp; Quotation</span><span class="data-card-value">❌ None</span></div>
+          <div class="data-card-row"><span class="data-card-label">Shipment Jobs</span><span class="data-card-value">✅ Customs</span></div>
+          <div class="data-card-row"><span class="data-card-label">Customs Clearance</span><span class="data-card-value">✅ Full</span></div>
+          <div class="data-card-row"><span class="data-card-label">Billing &amp; Finance</span><span class="data-card-value">❌ None</span></div>
+          <div class="data-card-row"><span class="data-card-label">Admin / Config</span><span class="data-card-value">❌ None</span></div>
+        </div>
+      </div>
+      <div class="data-card">
+        <div class="data-card-header"><span class="data-card-title">💰 Finance Manager</span><span class="pill pill-red">Finance</span></div>
+        <div class="data-card-body">
+          <div class="data-card-row"><span class="data-card-label">CRM / Customers</span><span class="data-card-value">👁 View</span></div>
+          <div class="data-card-row"><span class="data-card-label">Inquiry &amp; Quotation</span><span class="data-card-value">👁 View</span></div>
+          <div class="data-card-row"><span class="data-card-label">Shipment Jobs</span><span class="data-card-value">👁 View</span></div>
+          <div class="data-card-row"><span class="data-card-label">Customs Clearance</span><span class="data-card-value">❌ None</span></div>
+          <div class="data-card-row"><span class="data-card-label">Billing &amp; Finance</span><span class="data-card-value">✅ Full</span></div>
+          <div class="data-card-row"><span class="data-card-label">Admin / Config</span><span class="data-card-value">❌ None</span></div>
+        </div>
+      </div>
+      <div class="data-card">
+        <div class="data-card-header"><span class="data-card-title">👤 Customer Portal</span><span class="pill pill-grey">Client</span></div>
+        <div class="data-card-body">
+          <div class="data-card-row"><span class="data-card-label">CRM / Customers</span><span class="data-card-value">❌ None</span></div>
+          <div class="data-card-row"><span class="data-card-label">Inquiry &amp; Quotation</span><span class="data-card-value">❌ None</span></div>
+          <div class="data-card-row"><span class="data-card-label">Shipment Jobs</span><span class="data-card-value">Own Only</span></div>
+          <div class="data-card-row"><span class="data-card-label">Customs Clearance</span><span class="data-card-value">❌ None</span></div>
+          <div class="data-card-row"><span class="data-card-label">Billing &amp; Finance</span><span class="data-card-value">Own Invoices</span></div>
+          <div class="data-card-row"><span class="data-card-label">Admin / Config</span><span class="data-card-value">❌ None</span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div id="page-audit" style="display:none"><div class="page-header"><h1>Audit Log</h1></div>
+    <div class="data-cards-grid">
+      <div class="data-card" style="border-left: 3px solid var(--blue);">
+        <div class="data-card-header">
+          <span class="data-card-title">📝 Created Quotation</span>
+          <span class="pill pill-blue">Sales</span>
+        </div>
+        <div class="data-card-body">
+          <div class="data-card-row"><span class="data-card-label">User</span><span class="data-card-value">Priya Mehta</span></div>
+          <div class="data-card-row"><span class="data-card-label">Record</span><span class="data-card-value" style="font-family:monospace;font-weight:700;">QUO-2026-0089</span></div>
+          <div class="data-card-row"><span class="data-card-label">Timestamp</span><span class="data-card-value" style="color:var(--muted);font-size:0.75rem;">2026-06-03 07:42:11</span></div>
+        </div>
+      </div>
+      <div class="data-card" style="border-left: 3px solid var(--amber);">
+        <div class="data-card-header">
+          <span class="data-card-title">⚙️ Status Updated</span>
+          <span class="pill pill-amber">Ops</span>
+        </div>
+        <div class="data-card-body">
+          <div class="data-card-row"><span class="data-card-label">User</span><span class="data-card-value">Ravi Patel</span></div>
+          <div class="data-card-row"><span class="data-card-label">Record</span><span class="data-card-value" style="font-family:monospace;font-weight:700;">IMP-2026-0142</span></div>
+          <div class="data-card-row"><span class="data-card-label">Timestamp</span><span class="data-card-value" style="color:var(--muted);font-size:0.75rem;">2026-06-03 07:38:05</span></div>
+        </div>
+      </div>
+      <div class="data-card" style="border-left: 3px solid var(--purple);">
+        <div class="data-card-header">
+          <span class="data-card-title">🛂 BOE Filed</span>
+          <span class="pill pill-purple">Customs</span>
+        </div>
+        <div class="data-card-body">
+          <div class="data-card-row"><span class="data-card-label">User</span><span class="data-card-value">Ankit Joshi</span></div>
+          <div class="data-card-row"><span class="data-card-label">Record</span><span class="data-card-value" style="font-family:monospace;font-weight:700;">IMP-2026-0137</span></div>
+          <div class="data-card-row"><span class="data-card-label">Timestamp</span><span class="data-card-value" style="color:var(--muted);font-size:0.75rem;">2026-06-03 07:31:50</span></div>
+        </div>
+      </div>
+      <div class="data-card" style="border-left: 3px solid var(--red);">
+        <div class="data-card-header">
+          <span class="data-card-title">💰 Invoice Generated</span>
+          <span class="pill pill-red">Finance</span>
+        </div>
+        <div class="data-card-body">
+          <div class="data-card-row"><span class="data-card-label">User</span><span class="data-card-value">Seema Desai</span></div>
+          <div class="data-card-row"><span class="data-card-label">Record</span><span class="data-card-value" style="font-family:monospace;font-weight:700;">INV-2026-0201</span></div>
+          <div class="data-card-row"><span class="data-card-label">Timestamp</span><span class="data-card-value" style="color:var(--muted);font-size:0.75rem;">2026-06-03 07:22:18</span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div id="page-config" style="display:none"><div class="page-header"><h1>System Configuration</h1></div><div class="grid-2">
+    <div class="card"><div class="card-header"><div class="card-title"><div class="card-title-dot"></div>Branch Config</div></div><div class="card-body"><div class="form-group"><div class="form-label">Branch Name</div><input class="form-input" value="Shanti Shipping — Gandhidham"/></div><div class="form-group"><div class="form-label">GSTIN</div><input class="form-input" value="24AAACS1234A1Z5"/></div><button class="btn btn-primary mt-2">Save</button></div></div>
+    <div class="card"><div class="card-header"><div class="card-title"><div class="card-title-dot"></div>Invoice Series</div></div><div class="card-body"><div class="form-group"><div class="form-label">Import Prefix</div><input class="form-input" value="IMP-2026-"/></div><div class="form-group"><div class="form-label">Export Prefix</div><input class="form-input" value="EXP-2026-"/></div><button class="btn btn-primary mt-2">Save</button></div></div>
+  </div></div>
+
+</div>
+</div>
+<script src="../shared/waffle.js"></script>
+</body></html>
