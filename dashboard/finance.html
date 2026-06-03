@@ -1,0 +1,451 @@
+<!DOCTYPE html><html lang="en"><head>
+<meta charset="UTF-8"/><meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+<title>Finance Dashboard — FreightFlow ERP</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Bebas+Neue&display=swap" rel="stylesheet"/>
+<link rel="stylesheet" href="../shared/erp.css"/>
+</head>
+<body>
+<div class="erp-layout">
+<!-- TOPBAR -->
+<div class="topbar">
+  <div class="topbar-brand">
+    <img src="../Shanti Shipping Logo (1).png" alt="Logo"/>
+    <div><div class="topbar-brand-name">Shanti Shipping</div><div class="topbar-brand-role" id="topbar-role">Finance Manager</div></div>
+  </div>
+  <div class="topbar-title" id="pageTitle">Dashboard</div>
+  <div class="topbar-right">
+    <div class="topbar-search"><svg class="search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width: 14px; height: 14px; color: var(--light);"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg><input placeholder="Search…"/></div>
+    <div class="notif-btn"><svg class="notif-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width: 16px; height: 16px; color: var(--light);"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path><path d="M13.73 21a2 2 0 0 1-3.46 0"></path></svg><div class="notif-dot"></div></div>
+    <span class="role-chip" style="background:rgba(0,0,0,.06);color:#374151;border-color:rgba(0,0,0,.1);"><svg class="user-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width: 13px; height: 13px; margin-right: 5px; vertical-align: middle; color: var(--light);"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg> <span id="topbar-username">User</span></span>
+    <button class="waffle-btn" id="waffleBtn" onclick="toggleWaffle()" title="All Modules" aria-label="Open module menu"><svg viewBox="0 0 18 18" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <rect x="1" y="1" width="4" height="4" rx="1" stroke-width="1.5"/>
+  <rect x="7" y="1" width="4" height="4" rx="1" stroke-width="1.5"/>
+  <rect x="13" y="1" width="4" height="4" rx="1" stroke-width="1.5"/>
+  <rect x="1" y="7" width="4" height="4" rx="1" stroke-width="1.5"/>
+  <rect x="7" y="7" width="4" height="4" rx="1" stroke-width="1.5"/>
+  <rect x="13" y="7" width="4" height="4" rx="1" stroke-width="1.5"/>
+  <rect x="1" y="13" width="4" height="4" rx="1" stroke-width="1.5"/>
+  <rect x="7" y="13" width="4" height="4" rx="1" stroke-width="1.5"/>
+  <rect x="13" y="13" width="4" height="4" rx="1" stroke-width="1.5"/>
+</svg></button>
+    <button class="btn btn-outline btn-sm" onclick="logout()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="width: 13px; height: 13px; margin-right: 4px; vertical-align: middle; color: inherit;"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path><polyline points="16 17 21 12 16 7"></polyline><line x1="21" y1="12" x2="9" y2="12"></line></svg><span>Logout</span></button>
+  </div>
+</div>
+<!-- WAFFLE OVERLAY -->
+<div class="waffle-overlay" id="waffleOverlay">
+  <div class="waffle-panel">
+    <div class="waffle-header">
+      <div class="waffle-header-title">FreightFlow ERP — Finance Manager Modules</div>
+      <button class="waffle-close" onclick="closeWaffle()">✕</button>
+    </div>
+    <div class="waffle-grid">
+      <div class="waffle-item active" data-page="dashboard" onclick="showPage('dashboard','Finance Dashboard')"><div class="waffle-icon-wrap" style="background:linear-gradient(135deg,#1a1a2a,#374151);"><svg viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg></div><div class="waffle-item-label">Finance Dashboard</div></div>
+      <div class="waffle-item" data-page="invoices" onclick="showPage('invoices','Invoices')"><div class="waffle-icon-wrap" style="background:linear-gradient(135deg,#0ea5e9,#38bdf8);"><svg viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg></div><div class="waffle-item-label">Invoices</div></div>
+      <div class="waffle-item" data-page="create-invoice" onclick="showPage('create-invoice','New Invoice')"><div class="waffle-icon-wrap" style="background:linear-gradient(135deg,#10b981,#34d399);"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="16"/><line x1="8" y1="12" x2="16" y2="12"/></svg></div><div class="waffle-item-label">New Invoice</div></div>
+      <div class="waffle-item" data-page="pending" onclick="showPage('pending','Pending Approvals')"><div class="waffle-icon-wrap" style="background:linear-gradient(135deg,#f59e0b,#fbbf24);"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg></div><div class="waffle-item-label">Pending Approvals</div></div>
+      <div class="waffle-item" data-page="ar" onclick="showPage('ar','AR Aging')"><div class="waffle-icon-wrap" style="background:linear-gradient(135deg,#8b5cf6,#a78bfa);"><svg viewBox="0 0 24 24"><rect x="1" y="4" width="22" height="16" rx="2" ry="2"/><line x1="1" y1="10" x2="23" y2="10"/></svg></div><div class="waffle-item-label">AR Aging</div></div>
+      <div class="waffle-item" data-page="customers-pl" onclick="showPage('customers-pl','Customers P&L')"><div class="waffle-icon-wrap" style="background:linear-gradient(135deg,#ef4444,#f87171);"><svg viewBox="0 0 24 24"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg></div><div class="waffle-item-label">Customers P&L</div></div>
+      <div class="waffle-item" data-page="revenue" onclick="showPage('revenue','Revenue Analytics')"><div class="waffle-icon-wrap" style="background:linear-gradient(135deg,#06b6d4,#22d3ee);"><svg viewBox="0 0 24 24"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/><polyline points="17 6 23 6 23 12"/></svg></div><div class="waffle-item-label">Revenue Analytics</div></div>
+      <div class="waffle-item" data-page="gstr" onclick="showPage('gstr','GSTR Export')"><div class="waffle-icon-wrap" style="background:linear-gradient(135deg,#475569,#64748b);"><svg viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg></div><div class="waffle-item-label">GSTR Export</div></div>
+    </div>
+  </div>
+</div>
+
+<div class="page-body">
+
+    <div id="page-dashboard">
+      <div class="page-header"><div class="breadcrumb">FreightFlow ERP / <span>Finance</span></div><h1>Finance Dashboard</h1><p>Revenue, billing and receivables — June 2026</p></div>
+      <div class="kpi-row cols-4">
+        <div class="kpi-card blue"><div class="kpi-icon">₹</div><div class="kpi-label">Revenue MTD</div><div class="kpi-value">₹24L</div><div class="kpi-delta">82% of ₹29.2L target</div></div>
+        <div class="kpi-card green"><div class="kpi-icon">✅</div><div class="kpi-label">Collected MTD</div><div class="kpi-value">₹18.2L</div><div class="kpi-delta">↑ ₹3.1L this week</div></div>
+        <div class="kpi-card amber"><div class="kpi-icon">⏳</div><div class="kpi-label">Outstanding AR</div><div class="kpi-value">₹8.4L</div><div class="kpi-delta down">₹1.5L overdue 60d+</div></div>
+        <div class="kpi-card"><div class="kpi-icon">📋</div><div class="kpi-label">Pending Approval</div><div class="kpi-value">3</div><div class="kpi-delta down">₹3.2L awaiting</div></div>
+      </div>
+      <div class="grid-2">
+        <div class="card"><div class="card-header"><div class="card-title"><div class="card-title-dot"></div>Revenue vs Target — MTD</div></div><div class="card-body">
+          <div class="bar-chart">
+            <div class="bar-row"><div class="bar-label">Revenue</div><div class="bar-track"><div class="bar-fill" style="width:82%"></div></div><div class="bar-val">₹24L</div></div>
+            <div class="bar-row"><div class="bar-label">Target</div><div class="bar-track"><div class="bar-fill green" style="width:100%"></div></div><div class="bar-val">₹29.2L</div></div>
+            <div class="bar-row"><div class="bar-label">Collected</div><div class="bar-track"><div class="bar-fill blue" style="width:62%"></div></div><div class="bar-val">₹18.2L</div></div>
+            <div class="bar-row"><div class="bar-label">Outstanding</div><div class="bar-track"><div class="bar-fill" style="width:29%"></div></div><div class="bar-val">₹8.4L</div></div>
+          </div>
+        </div></div>
+        <div class="card"><div class="card-header"><div class="card-title"><div class="card-title-dot"></div>Top 5 Customers — Revenue MTD</div></div><div class="card-body">
+          <div class="data-cards-grid" style="grid-template-columns: 1fr;">
+            <div class="data-card">
+              <div class="data-card-header">
+                <span class="data-card-title">🏢 Tata Chemicals</span>
+                <span class="pill pill-green">Fully Collected</span>
+              </div>
+              <div class="data-card-body">
+                <div class="data-card-row"><span class="data-card-label">Total Invoiced</span><span class="data-card-value">₹5.1L</span></div>
+                <div class="data-card-row"><span class="data-card-label">Collected</span><span class="data-card-value">₹5.1L</span></div>
+                <div class="data-card-row"><span class="data-card-label">AR Due</span><span class="data-card-value text-green">₹0</span></div>
+              </div>
+            </div>
+            <div class="data-card">
+              <div class="data-card-header">
+                <span class="data-card-title">🏢 Reliance Exports</span>
+                <span class="pill pill-amber">Partially Paid</span>
+              </div>
+              <div class="data-card-body">
+                <div class="data-card-row"><span class="data-card-label">Total Invoiced</span><span class="data-card-value">₹4.3L</span></div>
+                <div class="data-card-row"><span class="data-card-label">Collected</span><span class="data-card-value">₹3.1L</span></div>
+                <div class="data-card-row"><span class="data-card-label">AR Due</span><span class="data-card-value text-amber">₹1.2L</span></div>
+              </div>
+            </div>
+            <div class="data-card">
+              <div class="data-card-header">
+                <span class="data-card-title">🏢 Adani Logistics</span>
+                <span class="pill pill-amber">Partially Paid</span>
+              </div>
+              <div class="data-card-body">
+                <div class="data-card-row"><span class="data-card-label">Total Invoiced</span><span class="data-card-value">₹3.8L</span></div>
+                <div class="data-card-row"><span class="data-card-label">Collected</span><span class="data-card-value">₹3.0L</span></div>
+                <div class="data-card-row"><span class="data-card-label">AR Due</span><span class="data-card-value text-amber">₹0.8L</span></div>
+              </div>
+            </div>
+            <div class="data-card">
+              <div class="data-card-header">
+                <span class="data-card-title">🏢 Mahindra Intl.</span>
+                <span class="pill pill-green">Fully Collected</span>
+              </div>
+              <div class="data-card-body">
+                <div class="data-card-row"><span class="data-card-label">Total Invoiced</span><span class="data-card-value">₹2.9L</span></div>
+                <div class="data-card-row"><span class="data-card-label">Collected</span><span class="data-card-value">₹2.9L</span></div>
+                <div class="data-card-row"><span class="data-card-label">AR Due</span><span class="data-card-value text-green">₹0</span></div>
+              </div>
+            </div>
+            <div class="data-card" style="border-left:3px solid var(--red);">
+              <div class="data-card-header">
+                <span class="data-card-title">🏢 Welspun Corp.</span>
+                <span class="pill pill-red">No Payment</span>
+              </div>
+              <div class="data-card-body">
+                <div class="data-card-row"><span class="data-card-label">Total Invoiced</span><span class="data-card-value">₹2.2L</span></div>
+                <div class="data-card-row"><span class="data-card-label">Collected</span><span class="data-card-value">₹0</span></div>
+                <div class="data-card-row"><span class="data-card-label">AR Due</span><span class="data-card-value text-red">₹2.2L</span></div>
+              </div>
+            </div>
+          </div>
+        </div></div>
+      </div>
+    </div>
+
+    <div id="page-invoices" style="display:none">
+      <div class="page-header"><div class="breadcrumb">FreightFlow ERP / Billing / <span>Invoices</span></div><h1>All Invoices</h1></div>
+      <div class="card"><div class="card-header"><div class="card-title"><div class="card-title-dot"></div>Invoice List</div><button class="btn btn-primary btn-sm" onclick="showPage('create-invoice')">+ Create Invoice</button></div>
+        <div class="card-body">
+          <div class="data-cards-grid">
+            <div class="data-card">
+              <div class="data-card-header">
+                <span class="data-card-title" style="font-family:monospace;font-weight:800;">INV-2026-0201</span>
+                <span class="pill pill-green">Paid</span>
+              </div>
+              <div class="data-card-body">
+                <div class="data-card-row"><span class="data-card-label">Job Number</span><span class="data-card-value font-mono">EXP-2026-0101</span></div>
+                <div class="data-card-row"><span class="data-card-label">Customer</span><span class="data-card-value">Mahindra Intl.</span></div>
+                <div class="data-card-row"><span class="data-card-label">Invoice Date</span><span class="data-card-value">Jun 03, 2026</span></div>
+                <div class="data-card-row" style="border-top:1px dashed var(--border);padding-top:0.4rem;margin-top:0.2rem;font-weight:700;"><span class="data-card-label" style="color:var(--text);">Amount (Incl. GST)</span><span class="data-card-value" style="color:var(--red);">₹2,18,650</span></div>
+              </div>
+              <div class="data-card-actions">
+                <button class="btn btn-outline">Download PDF</button>
+              </div>
+            </div>
+            <div class="data-card">
+              <div class="data-card-header">
+                <span class="data-card-title" style="font-family:monospace;font-weight:800;">INV-2026-0200</span>
+                <span class="pill pill-blue">Dispatched</span>
+              </div>
+              <div class="data-card-body">
+                <div class="data-card-row"><span class="data-card-label">Job Number</span><span class="data-card-value font-mono">IMP-2026-0142</span></div>
+                <div class="data-card-row"><span class="data-card-label">Customer</span><span class="data-card-value">Tata Chemicals</span></div>
+                <div class="data-card-row"><span class="data-card-label">Invoice Date</span><span class="data-card-value">Jun 02, 2026</span></div>
+                <div class="data-card-row" style="border-top:1px dashed var(--border);padding-top:0.4rem;margin-top:0.2rem;font-weight:700;"><span class="data-card-label" style="color:var(--text);">Amount (Incl. GST)</span><span class="data-card-value" style="color:var(--red);">₹6,02,400</span></div>
+              </div>
+              <div class="data-card-actions">
+                <button class="btn btn-outline">Download PDF</button>
+              </div>
+            </div>
+            <div class="data-card" style="border-left:3px solid var(--amber);">
+              <div class="data-card-header">
+                <span class="data-card-title" style="font-family:monospace;font-weight:800;">INV-2026-0199</span>
+                <span class="pill pill-amber">Pending Approval</span>
+              </div>
+              <div class="data-card-body">
+                <div class="data-card-row"><span class="data-card-label">Job Number</span><span class="data-card-value font-mono">EXP-2026-0098</span></div>
+                <div class="data-card-row"><span class="data-card-label">Customer</span><span class="data-card-value">Reliance Exports</span></div>
+                <div class="data-card-row"><span class="data-card-label">Invoice Date</span><span class="data-card-value">Jun 01, 2026</span></div>
+                <div class="data-card-row" style="border-top:1px dashed var(--border);padding-top:0.4rem;margin-top:0.2rem;font-weight:700;"><span class="data-card-label" style="color:var(--text);">Amount (Incl. GST)</span><span class="data-card-value" style="color:var(--red);">₹4,54,300</span></div>
+              </div>
+              <div class="data-card-actions">
+                <button class="btn btn-primary">Approve Invoice</button>
+              </div>
+            </div>
+            <div class="data-card" style="border-left:3px solid var(--red);">
+              <div class="data-card-header">
+                <span class="data-card-title" style="font-family:monospace;font-weight:800;">INV-2026-0198</span>
+                <span class="pill pill-red">Overdue 30d</span>
+              </div>
+              <div class="data-card-body">
+                <div class="data-card-row"><span class="data-card-label">Job Number</span><span class="data-card-value font-mono">IMP-2026-0139</span></div>
+                <div class="data-card-row"><span class="data-card-label">Customer</span><span class="data-card-value">Welspun Corp.</span></div>
+                <div class="data-card-row"><span class="data-card-label">Invoice Date</span><span class="data-card-value">May 30, 2026</span></div>
+                <div class="data-card-row" style="border-top:1px dashed var(--border);padding-top:0.4rem;margin-top:0.2rem;font-weight:700;"><span class="data-card-label" style="color:var(--text);">Amount (Incl. GST)</span><span class="data-card-value" style="color:var(--red);">₹2,97,150</span></div>
+              </div>
+              <div class="data-card-actions">
+                <button class="btn btn-outline">Send Reminder</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div id="page-create-invoice" style="display:none">
+      <div class="page-header"><div class="breadcrumb">FreightFlow ERP / Billing / <span>Create</span></div><h1>Create GST Invoice</h1></div>
+      <div class="card"><div class="card-body">
+        <div class="form-grid cols-2">
+          <div class="form-group"><div class="form-label">Job No. *</div><select class="form-select"><option>Select Job…</option><option>IMP-2026-0137</option><option>EXP-2026-0099</option></select></div>
+          <div class="form-group"><div class="form-label">Customer</div><input class="form-input" value="Auto-filled from job" readonly/></div>
+        </div>
+        <div class="section-divider"></div>
+        <table class="erp-table" style="margin-bottom:1rem;"><thead><tr><th>Charge Description</th><th>SAC Code</th><th>Amount (₹)</th><th>GST %</th><th>GST (₹)</th><th>Total</th></tr></thead><tbody>
+          <tr><td><input class="form-input" style="padding:.3rem;" value="Ocean Freight Charges"/></td><td><input class="form-input" style="padding:.3rem;width:80px;" value="996511"/></td><td><input class="form-input" style="padding:.3rem;width:90px;" value="85000"/></td><td><select class="form-select" style="padding:.3rem;width:70px;"><option>18%</option><option>5%</option><option>0%</option></select></td><td>₹15,300</td><td>₹1,00,300</td></tr>
+          <tr><td><input class="form-input" style="padding:.3rem;" value="Customs Agency Charges"/></td><td><input class="form-input" style="padding:.3rem;width:80px;" value="996713"/></td><td><input class="form-input" style="padding:.3rem;width:90px;" value="12000"/></td><td><select class="form-select" style="padding:.3rem;width:70px;"><option>18%</option></select></td><td>₹2,160</td><td>₹14,160</td></tr>
+        </tbody></table>
+        <div style="text-align:right;font-size:1rem;font-weight:800;">Grand Total: <span style="color:#c0392b;">₹1,14,460</span></div>
+        <div class="flex gap-2 mt-2"><button class="btn btn-primary">Generate GST Invoice PDF</button><button class="btn btn-outline">Send to Finance Approval</button></div>
+      </div></div>
+    </div>
+
+    <div id="page-pending" style="display:none">
+      <div class="page-header"><div class="breadcrumb">FreightFlow ERP / Billing / <span>Pending</span></div><h1>Invoices Pending Approval</h1></div>
+      <div class="data-cards-grid">
+        <div class="data-card">
+          <div class="data-card-header">
+            <span class="data-card-title" style="font-family:monospace;font-weight:800;">INV-2026-0199</span>
+            <span class="pill pill-amber">Awaiting Approval</span>
+          </div>
+          <div class="data-card-body">
+            <div class="data-card-row"><span class="data-card-label">Job Number</span><span class="data-card-value font-mono">EXP-2026-0098</span></div>
+            <div class="data-card-row"><span class="data-card-label">Customer</span><span class="data-card-value">Reliance Exports</span></div>
+            <div class="data-card-row"><span class="data-card-label">Amount</span><span class="data-card-value" style="color:var(--red);font-weight:700;">₹4,54,300</span></div>
+            <div class="data-card-row"><span class="data-card-label">Submitted By</span><span class="data-card-value">Ravi Patel</span></div>
+            <div class="data-card-row"><span class="data-card-label">Submitted At</span><span class="data-card-value">Jun 01, 09:22</span></div>
+          </div>
+          <div class="data-card-actions" style="display:flex;gap:.5rem;">
+            <button class="btn btn-primary" style="flex:1;">✅ Approve</button>
+            <button class="btn btn-outline" style="flex:1;">❌ Reject</button>
+          </div>
+        </div>
+        <div class="data-card">
+          <div class="data-card-header">
+            <span class="data-card-title" style="font-family:monospace;font-weight:800;">INV-2026-0197</span>
+            <span class="pill pill-amber">Awaiting Approval</span>
+          </div>
+          <div class="data-card-body">
+            <div class="data-card-row"><span class="data-card-label">Job Number</span><span class="data-card-value font-mono">IMP-2026-0140</span></div>
+            <div class="data-card-row"><span class="data-card-label">Customer</span><span class="data-card-value">Tata Steel</span></div>
+            <div class="data-card-row"><span class="data-card-label">Amount</span><span class="data-card-value" style="color:var(--red);font-weight:700;">₹1,82,750</span></div>
+            <div class="data-card-row"><span class="data-card-label">Submitted By</span><span class="data-card-value">Ravi Patel</span></div>
+            <div class="data-card-row"><span class="data-card-label">Submitted At</span><span class="data-card-value">Jun 01, 11:05</span></div>
+          </div>
+          <div class="data-card-actions" style="display:flex;gap:.5rem;">
+            <button class="btn btn-primary" style="flex:1;">✅ Approve</button>
+            <button class="btn btn-outline" style="flex:1;">❌ Reject</button>
+          </div>
+        </div>
+        <div class="data-card">
+          <div class="data-card-header">
+            <span class="data-card-title" style="font-family:monospace;font-weight:800;">INV-2026-0195</span>
+            <span class="pill pill-amber">Awaiting Approval</span>
+          </div>
+          <div class="data-card-body">
+            <div class="data-card-row"><span class="data-card-label">Job Number</span><span class="data-card-value font-mono">EXP-2026-0095</span></div>
+            <div class="data-card-row"><span class="data-card-label">Customer</span><span class="data-card-value">Tata Chemicals</span></div>
+            <div class="data-card-row"><span class="data-card-label">Amount</span><span class="data-card-value" style="color:var(--red);font-weight:700;">₹97,500</span></div>
+            <div class="data-card-row"><span class="data-card-label">Submitted By</span><span class="data-card-value">Priya Mehta</span></div>
+            <div class="data-card-row"><span class="data-card-label">Submitted At</span><span class="data-card-value">May 31, 16:40</span></div>
+          </div>
+          <div class="data-card-actions" style="display:flex;gap:.5rem;">
+            <button class="btn btn-primary" style="flex:1;">✅ Approve</button>
+            <button class="btn btn-outline" style="flex:1;">❌ Reject</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div id="page-ar" style="display:none">
+      <div class="page-header"><div class="breadcrumb">FreightFlow ERP / Receivables / <span>AR Aging</span></div><h1>Accounts Receivable Aging</h1></div>
+      <div class="kpi-row cols-4">
+        <div class="kpi-card"><div class="kpi-label">Total Outstanding</div><div class="kpi-value">₹8.4L</div></div>
+        <div class="kpi-card green"><div class="kpi-label">0–30 Days</div><div class="kpi-value">₹4.1L</div></div>
+        <div class="kpi-card amber"><div class="kpi-label">31–60 Days</div><div class="kpi-value">₹2.8L</div></div>
+        <div class="kpi-card"><div class="kpi-label" style="color:#991b1b;">60+ Days (Critical)</div><div class="kpi-value" style="color:#c0392b;">₹1.5L</div></div>
+      </div>
+      <div class="data-cards-grid">
+        <div class="data-card">
+          <div class="data-card-header">
+            <span class="data-card-title">🏢 Reliance Exports</span>
+            <span class="pill pill-green">Current</span>
+          </div>
+          <div class="data-card-body">
+            <div class="data-card-row"><span class="data-card-label">0–30 Days</span><span class="data-card-value">₹1.2L</span></div>
+            <div class="data-card-row"><span class="data-card-label">31–60 Days</span><span class="data-card-value">—</span></div>
+            <div class="data-card-row"><span class="data-card-label">61–90 Days</span><span class="data-card-value">—</span></div>
+            <div class="data-card-row"><span class="data-card-label">90+ Days</span><span class="data-card-value">—</span></div>
+            <div class="data-card-row" style="border-top:1px dashed var(--border);padding-top:0.4rem;margin-top:0.2rem;font-weight:700;"><span class="data-card-label" style="color:var(--text);">Total Due</span><span class="data-card-value" style="color:var(--red);">₹1.2L</span></div>
+          </div>
+        </div>
+        <div class="data-card">
+          <div class="data-card-header">
+            <span class="data-card-title">🏢 Adani Logistics</span>
+            <span class="pill pill-green">Current</span>
+          </div>
+          <div class="data-card-body">
+            <div class="data-card-row"><span class="data-card-label">0–30 Days</span><span class="data-card-value">₹0.8L</span></div>
+            <div class="data-card-row"><span class="data-card-label">31–60 Days</span><span class="data-card-value">—</span></div>
+            <div class="data-card-row"><span class="data-card-label">61–90 Days</span><span class="data-card-value">—</span></div>
+            <div class="data-card-row"><span class="data-card-label">90+ Days</span><span class="data-card-value">—</span></div>
+            <div class="data-card-row" style="border-top:1px dashed var(--border);padding-top:0.4rem;margin-top:0.2rem;font-weight:700;"><span class="data-card-label" style="color:var(--text);">Total Due</span><span class="data-card-value" style="color:var(--red);">₹0.8L</span></div>
+          </div>
+        </div>
+        <div class="data-card">
+          <div class="data-card-header">
+            <span class="data-card-title">🏢 Welspun Corp.</span>
+            <span class="pill pill-amber">Overdue</span>
+          </div>
+          <div class="data-card-body">
+            <div class="data-card-row"><span class="data-card-label">0–30 Days</span><span class="data-card-value">₹0.6L</span></div>
+            <div class="data-card-row"><span class="data-card-label">31–60 Days</span><span class="data-card-value">₹1.6L</span></div>
+            <div class="data-card-row"><span class="data-card-label">61–90 Days</span><span class="data-card-value">—</span></div>
+            <div class="data-card-row"><span class="data-card-label">90+ Days</span><span class="data-card-value">—</span></div>
+            <div class="data-card-row" style="border-top:1px dashed var(--border);padding-top:0.4rem;margin-top:0.2rem;font-weight:700;"><span class="data-card-label" style="color:var(--text);">Total Due</span><span class="data-card-value" style="color:var(--red);">₹2.2L</span></div>
+          </div>
+        </div>
+        <div class="data-card" style="border-left:3px solid var(--red);">
+          <div class="data-card-header">
+            <span class="data-card-title">🏢 Bharat Forge</span>
+            <span class="pill pill-red">Critical</span>
+          </div>
+          <div class="data-card-body">
+            <div class="data-card-row"><span class="data-card-label">0–30 Days</span><span class="data-card-value">₹0.5L</span></div>
+            <div class="data-card-row"><span class="data-card-label">31–60 Days</span><span class="data-card-value">₹1.2L</span></div>
+            <div class="data-card-row"><span class="data-card-label">61–90 Days</span><span class="data-card-value">₹0.8L</span></div>
+            <div class="data-card-row"><span class="data-card-label">90+ Days</span><span class="data-card-value">₹0.7L</span></div>
+            <div class="data-card-row" style="border-top:1px dashed var(--border);padding-top:0.4rem;margin-top:0.2rem;font-weight:700;"><span class="data-card-label" style="color:var(--text);">Total Due</span><span class="data-card-value" style="color:var(--red);">₹3.2L</span></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div id="page-customers-pl" style="display:none">
+      <div class="page-header"><div class="breadcrumb">FreightFlow ERP / Reports / <span>P&amp;L</span></div><h1>Customer-wise P&amp;L</h1></div>
+      <div class="data-cards-grid">
+        <div class="data-card">
+          <div class="data-card-header">
+            <span class="data-card-title">🏢 Tata Chemicals</span>
+            <span class="pill pill-green">35.3% Margin</span>
+          </div>
+          <div class="data-card-body">
+            <div class="data-card-row"><span class="data-card-label">Jobs Done</span><span class="data-card-value">8 Jobs</span></div>
+            <div class="data-card-row"><span class="data-card-label">Total Revenue</span><span class="data-card-value">₹5.1L</span></div>
+            <div class="data-card-row"><span class="data-card-label">Direct Cost</span><span class="data-card-value">₹3.3L</span></div>
+            <div class="data-card-row" style="border-top:1px dashed var(--border);padding-top:0.4rem;margin-top:0.2rem;font-weight:700;"><span class="data-card-label" style="color:var(--text);">Gross Margin</span><span class="data-card-value" style="color:var(--green);">₹1.8L</span></div>
+          </div>
+        </div>
+        <div class="data-card">
+          <div class="data-card-header">
+            <span class="data-card-title">🏢 Reliance Exports</span>
+            <span class="pill pill-green">32.6% Margin</span>
+          </div>
+          <div class="data-card-body">
+            <div class="data-card-row"><span class="data-card-label">Jobs Done</span><span class="data-card-value">6 Jobs</span></div>
+            <div class="data-card-row"><span class="data-card-label">Total Revenue</span><span class="data-card-value">₹4.3L</span></div>
+            <div class="data-card-row"><span class="data-card-label">Direct Cost</span><span class="data-card-value">₹2.9L</span></div>
+            <div class="data-card-row" style="border-top:1px dashed var(--border);padding-top:0.4rem;margin-top:0.2rem;font-weight:700;"><span class="data-card-label" style="color:var(--text);">Gross Margin</span><span class="data-card-value" style="color:var(--green);">₹1.4L</span></div>
+          </div>
+        </div>
+        <div class="data-card">
+          <div class="data-card-header">
+            <span class="data-card-title">🏢 Adani Logistics</span>
+            <span class="pill pill-amber">28.9% Margin</span>
+          </div>
+          <div class="data-card-body">
+            <div class="data-card-row"><span class="data-card-label">Jobs Done</span><span class="data-card-value">5 Jobs</span></div>
+            <div class="data-card-row"><span class="data-card-label">Total Revenue</span><span class="data-card-value">₹3.8L</span></div>
+            <div class="data-card-row"><span class="data-card-label">Direct Cost</span><span class="data-card-value">₹2.7L</span></div>
+            <div class="data-card-row" style="border-top:1px dashed var(--border);padding-top:0.4rem;margin-top:0.2rem;font-weight:700;"><span class="data-card-label" style="color:var(--text);">Gross Margin</span><span class="data-card-value" style="color:var(--amber);">₹1.1L</span></div>
+          </div>
+        </div>
+        <div class="data-card" style="border-left:3px solid var(--red);">
+          <div class="data-card-header">
+            <span class="data-card-title">🏢 Welspun Corp.</span>
+            <span class="pill pill-red">18.2% Margin</span>
+          </div>
+          <div class="data-card-body">
+            <div class="data-card-row"><span class="data-card-label">Jobs Done</span><span class="data-card-value">3 Jobs</span></div>
+            <div class="data-card-row"><span class="data-card-label">Total Revenue</span><span class="data-card-value">₹2.2L</span></div>
+            <div class="data-card-row"><span class="data-card-label">Direct Cost</span><span class="data-card-value">₹1.8L</span></div>
+            <div class="data-card-row" style="border-top:1px dashed var(--border);padding-top:0.4rem;margin-top:0.2rem;font-weight:700;"><span class="data-card-label" style="color:var(--text);">Gross Margin</span><span class="data-card-value" style="color:var(--red);">₹0.4L</span></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div id="page-revenue" style="display:none">
+      <div class="page-header"><div class="breadcrumb">FreightFlow ERP / Reports / <span>Revenue</span></div><h1>Revenue vs Target</h1></div>
+      <div class="card"><div class="card-body"><div class="bar-chart">
+        <div class="bar-row"><div class="bar-label">January</div><div class="bar-track"><div class="bar-fill green" style="width:96%"></div></div><div class="bar-val">₹28L / ₹29L</div></div>
+        <div class="bar-row"><div class="bar-label">February</div><div class="bar-track"><div class="bar-fill green" style="width:100%"></div></div><div class="bar-val">₹30L / ₹30L</div></div>
+        <div class="bar-row"><div class="bar-label">March</div><div class="bar-track"><div class="bar-fill green" style="width:100%"></div></div><div class="bar-val">₹33L / ₹32L ✓</div></div>
+        <div class="bar-row"><div class="bar-label">April</div><div class="bar-track"><div class="bar-fill" style="width:87%"></div></div><div class="bar-val">₹27L / ₹31L</div></div>
+        <div class="bar-row"><div class="bar-label">May</div><div class="bar-track"><div class="bar-fill green" style="width:97%"></div></div><div class="bar-val">₹31L / ₹32L</div></div>
+        <div class="bar-row"><div class="bar-label">June (MTD)</div><div class="bar-track"><div class="bar-fill" style="width:82%"></div></div><div class="bar-val">₹24L / ₹29.2L</div></div>
+      </div></div></div>
+    </div>
+
+    <div id="page-gstr" style="display:none">
+      <div class="page-header"><div class="breadcrumb">FreightFlow ERP / Reports / <span>GSTR</span></div><h1>GSTR Export Report</h1></div>
+      <div class="data-cards-grid">
+        <div class="data-card">
+          <div class="data-card-header">
+            <span class="data-card-title" style="font-family:monospace;font-weight:800;">INV-2026-0201</span>
+            <span class="pill pill-green">Reported</span>
+          </div>
+          <div class="data-card-body">
+            <div class="data-card-row"><span class="data-card-label">Customer GSTIN</span><span class="data-card-value font-mono">27AAACM1234A1Z1</span></div>
+            <div class="data-card-row"><span class="data-card-label">Invoice Date</span><span class="data-card-value">03/06/2026</span></div>
+            <div class="data-card-row"><span class="data-card-label">Taxable Value</span><span class="data-card-value">₹1,85,300</span></div>
+            <div class="data-card-row"><span class="data-card-label">IGST (18%)</span><span class="data-card-value">₹33,354</span></div>
+            <div class="data-card-row"><span class="data-card-label">CGST / SGST</span><span class="data-card-value">—</span></div>
+            <div class="data-card-row" style="border-top:1px dashed var(--border);padding-top:0.4rem;margin-top:0.2rem;font-weight:700;"><span class="data-card-label" style="color:var(--text);">Total Amount</span><span class="data-card-value" style="color:var(--red);">₹2,18,654</span></div>
+          </div>
+        </div>
+        <div class="data-card">
+          <div class="data-card-header">
+            <span class="data-card-title" style="font-family:monospace;font-weight:800;">INV-2026-0200</span>
+            <span class="pill pill-green">Reported</span>
+          </div>
+          <div class="data-card-body">
+            <div class="data-card-row"><span class="data-card-label">Customer GSTIN</span><span class="data-card-value font-mono">24AAACT1234A1Z1</span></div>
+            <div class="data-card-row"><span class="data-card-label">Invoice Date</span><span class="data-card-value">02/06/2026</span></div>
+            <div class="data-card-row"><span class="data-card-label">Taxable Value</span><span class="data-card-value">₹5,10,508</span></div>
+            <div class="data-card-row"><span class="data-card-label">IGST (18%)</span><span class="data-card-value">₹91,892</span></div>
+            <div class="data-card-row"><span class="data-card-label">CGST / SGST</span><span class="data-card-value">—</span></div>
+            <div class="data-card-row" style="border-top:1px dashed var(--border);padding-top:0.4rem;margin-top:0.2rem;font-weight:700;"><span class="data-card-label" style="color:var(--text);">Total Amount</span><span class="data-card-value" style="color:var(--red);">₹6,02,400</span></div>
+          </div>
+        </div>
+      </div>
+      <div style="margin-top:1rem;"><button class="btn btn-primary">Download GSTR-1 Excel</button></div>
+    </div>
+
+  </div>
+</div>
+<script src="../shared/waffle.js"></script>
+<script>
+(function(){const u=JSON.parse(sessionStorage.getItem('erp_user')||'{}');if(!u.role){location.href='../login.html';}if(u.name)document.getElementById('un').textContent=u.name;})();
+
+</script>
+</body></html>

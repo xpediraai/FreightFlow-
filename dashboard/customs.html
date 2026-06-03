@@ -1,0 +1,371 @@
+<!DOCTYPE html><html lang="en"><head>
+<meta charset="UTF-8"/><meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+<title>Customs Dashboard — FreightFlow ERP</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Bebas+Neue&display=swap" rel="stylesheet"/>
+<link rel="stylesheet" href="../shared/erp.css"/>
+</head>
+<body>
+<div class="erp-layout">
+<!-- TOPBAR -->
+<div class="topbar">
+  <div class="topbar-brand">
+    <img src="../Shanti Shipping Logo (1).png" alt="Logo"/>
+    <div><div class="topbar-brand-name">Shanti Shipping</div><div class="topbar-brand-role" id="topbar-role">Customs Officer</div></div>
+  </div>
+  <div class="topbar-title" id="pageTitle">Dashboard</div>
+  <div class="topbar-right">
+    <div class="topbar-search"><svg class="search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width: 14px; height: 14px; color: var(--light);"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg><input placeholder="Search…"/></div>
+    <div class="notif-btn"><svg class="notif-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width: 16px; height: 16px; color: var(--light);"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path><path d="M13.73 21a2 2 0 0 1-3.46 0"></path></svg><div class="notif-dot"></div></div>
+    <span class="role-chip" style="background:rgba(0,0,0,.06);color:#374151;border-color:rgba(0,0,0,.1);"><svg class="user-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width: 13px; height: 13px; margin-right: 5px; vertical-align: middle; color: var(--light);"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg> <span id="topbar-username">User</span></span>
+    <button class="waffle-btn" id="waffleBtn" onclick="toggleWaffle()" title="All Modules" aria-label="Open module menu"><svg viewBox="0 0 18 18" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <rect x="1" y="1" width="4" height="4" rx="1" stroke-width="1.5"/>
+  <rect x="7" y="1" width="4" height="4" rx="1" stroke-width="1.5"/>
+  <rect x="13" y="1" width="4" height="4" rx="1" stroke-width="1.5"/>
+  <rect x="1" y="7" width="4" height="4" rx="1" stroke-width="1.5"/>
+  <rect x="7" y="7" width="4" height="4" rx="1" stroke-width="1.5"/>
+  <rect x="13" y="7" width="4" height="4" rx="1" stroke-width="1.5"/>
+  <rect x="1" y="13" width="4" height="4" rx="1" stroke-width="1.5"/>
+  <rect x="7" y="13" width="4" height="4" rx="1" stroke-width="1.5"/>
+  <rect x="13" y="13" width="4" height="4" rx="1" stroke-width="1.5"/>
+</svg></button>
+    <button class="btn btn-outline btn-sm" onclick="logout()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="width: 13px; height: 13px; margin-right: 4px; vertical-align: middle; color: inherit;"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path><polyline points="16 17 21 12 16 7"></polyline><line x1="21" y1="12" x2="9" y2="12"></line></svg><span>Logout</span></button>
+  </div>
+</div>
+<!-- WAFFLE OVERLAY -->
+<div class="waffle-overlay" id="waffleOverlay">
+  <div class="waffle-panel">
+    <div class="waffle-header">
+      <div class="waffle-header-title">FreightFlow ERP — Customs Officer Modules</div>
+      <button class="waffle-close" onclick="closeWaffle()">✕</button>
+    </div>
+    <div class="waffle-grid">
+      <div class="waffle-item active" data-page="dashboard" onclick="showPage('dashboard','Customs Dashboard')"><div class="waffle-icon-wrap" style="background:linear-gradient(135deg,#1a1a2a,#374151);"><svg viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg></div><div class="waffle-item-label">Customs Dashboard</div></div>
+      <div class="waffle-item" data-page="boe" onclick="showPage('boe','Bill of Entry')"><div class="waffle-icon-wrap" style="background:linear-gradient(135deg,#0ea5e9,#38bdf8);"><svg viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg></div><div class="waffle-item-label">Bill of Entry</div></div>
+      <div class="waffle-item" data-page="duty" onclick="showPage('duty','Duty Calc')"><div class="waffle-icon-wrap" style="background:linear-gradient(135deg,#10b981,#34d399);"><svg viewBox="0 0 24 24"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg></div><div class="waffle-item-label">Duty Calc</div></div>
+      <div class="waffle-item" data-page="examination" onclick="showPage('examination','Examination')"><div class="waffle-icon-wrap" style="background:linear-gradient(135deg,#f59e0b,#fbbf24);"><svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg></div><div class="waffle-item-label">Examination</div></div>
+      <div class="waffle-item" data-page="ooc" onclick="showPage('ooc','OOC Tracker')"><div class="waffle-icon-wrap" style="background:linear-gradient(135deg,#8b5cf6,#a78bfa);"><svg viewBox="0 0 24 24"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg></div><div class="waffle-item-label">OOC Tracker</div></div>
+      <div class="waffle-item" data-page="leo" onclick="showPage('leo','LEO Tracker')"><div class="waffle-icon-wrap" style="background:linear-gradient(135deg,#ef4444,#f87171);"><svg viewBox="0 0 24 24"><path d="M2 21c.6.5 1.2 1 2.5 1C7 22 7 20 9.5 20c2.6 0 2.4 2 5 2 2.5 0 2.5-2 5-2 1.3 0 1.9.5 2.5 1"/><path d="M19.38 20A11.6 11.6 0 0 0 21 14l-9-4-9 4c0 2.8.7 5.3 1.62 6"/><path d="M19 13V7a2 2 0 0 0-2-2H7a2 2 0 0 0-2 2v6"/><line x1="12" y1="10" x2="12" y2="10.01"/></svg></div><div class="waffle-item-label">LEO Tracker</div></div>
+      <div class="waffle-item" data-page="sb" onclick="showPage('sb','Shipping Bills')"><div class="waffle-icon-wrap" style="background:linear-gradient(135deg,#06b6d4,#22d3ee);"><svg viewBox="0 0 24 24"><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/><rect x="8" y="2" width="8" height="4" rx="1" ry="1"/></svg></div><div class="waffle-item-label">Shipping Bills</div></div>
+    </div>
+  </div>
+</div>
+
+<div class="page-body">
+
+    <div id="page-dashboard">
+      <div class="page-header"><div class="breadcrumb">FreightFlow ERP / <span>Customs</span></div><h1>Customs Clearance Dashboard</h1></div>
+      <div class="kpi-row cols-4">
+        <div class="kpi-card amber"><div class="kpi-label">BOE Pending Assessment</div><div class="kpi-value">6</div></div>
+        <div class="kpi-card"><div class="kpi-label">Examination Orders</div><div class="kpi-value">3</div><div class="kpi-delta down">Action required</div></div>
+        <div class="kpi-card green"><div class="kpi-label">OOC Granted Today</div><div class="kpi-value">4</div></div>
+        <div class="kpi-card blue"><div class="kpi-label">LEO Pending</div><div class="kpi-value">5</div></div>
+      </div>
+      <div class="grid-2">
+        <div class="card"><div class="card-header"><div class="card-title"><div class="card-title-dot"></div>Priority Actions</div></div><div class="card-body">
+          <div class="alert-item a-red"><div class="alert-icon">🚨</div><div class="alert-text"><strong>IMP-2026-0137 — First Check Ordered</strong><span>China→JNPT · BOE filed Jun 01 · Examination pending 3 days</span></div></div>
+          <div class="alert-item a-amber"><div class="alert-icon">⚠️</div><div class="alert-text"><strong>IMP-2026-0139 — Duty Payment Overdue</strong><span>Indonesia→Mundra · Assessment done · Payment not recorded</span></div></div>
+          <div class="alert-item a-amber"><div class="alert-icon">📋</div><div class="alert-text"><strong>EXP-2026-0095 — SB Amendment Pending</strong><span>Shipping Bill filed but correction needed from shipper</span></div></div>
+          <div class="alert-item a-green"><div class="alert-icon">✅</div><div class="alert-text"><strong>IMP-2026-0134 — OOC Granted</strong><span>Cargo released · Delivery arrangement initiated</span></div></div>
+        </div></div>
+        <div class="card"><div class="card-header"><div class="card-title"><div class="card-title-dot"></div>Clearance Performance</div></div><div class="card-body">
+          <div class="bar-chart">
+            <div class="bar-row"><div class="bar-label">Mundra</div><div class="bar-track"><div class="bar-fill green" style="width:72%"></div></div><div class="bar-val">2.1 days</div></div>
+            <div class="bar-row"><div class="bar-label">JNPT</div><div class="bar-track"><div class="bar-fill" style="width:58%"></div></div><div class="bar-val">3.4 days</div></div>
+            <div class="bar-row"><div class="bar-label">Chennai</div><div class="bar-track"><div class="bar-fill green" style="width:80%"></div></div><div class="bar-val">1.8 days</div></div>
+            <div class="bar-row"><div class="bar-label">ICD Ahmedabad</div><div class="bar-track"><div class="bar-fill green" style="width:90%"></div></div><div class="bar-val">1.2 days</div></div>
+          </div>
+          <div style="font-size:.75rem;color:#6b7280;margin-top:1rem;">Avg. clearance time by customs station (lower = better)</div>
+        </div></div>
+      </div>
+    </div>
+
+    <div id="page-boe" style="display:none">
+      <div class="page-header"><div class="breadcrumb">FreightFlow ERP / Import / <span>BOE</span></div><h1>Bill of Entry Status</h1></div>
+      <div class="data-cards-grid">
+        <div class="data-card">
+          <div class="data-card-header">
+            <span class="data-card-title" style="font-family:monospace;font-weight:800;">IMP-2026-0142</span>
+            <span class="pill pill-green">OOC Granted</span>
+          </div>
+          <div class="data-card-body">
+            <div class="data-card-row"><span class="data-card-label">BOE Number</span><span class="data-card-value font-mono">4521234</span></div>
+            <div class="data-card-row"><span class="data-card-label">Customer</span><span class="data-card-value">Tata Chemicals</span></div>
+            <div class="data-card-row"><span class="data-card-label">Route</span><span class="data-card-value">Dubai→Mundra</span></div>
+            <div class="data-card-row"><span class="data-card-label">Filed Date</span><span class="data-card-value">May 30, 2026</span></div>
+            <div class="data-card-row"><span class="data-card-label">Assessment</span><span class="data-card-value">RMS Facilitated</span></div>
+            <div class="data-card-row" style="border-top:1px dashed var(--border);padding-top:0.4rem;margin-top:0.2rem;font-weight:700;"><span class="data-card-label" style="color:var(--text);">Duty Amount</span><span class="data-card-value" style="color:var(--red);">₹4,21,500</span></div>
+          </div>
+        </div>
+        <div class="data-card">
+          <div class="data-card-header">
+            <span class="data-card-title" style="font-family:monospace;font-weight:800;">IMP-2026-0137</span>
+            <span class="pill pill-red">Examination</span>
+          </div>
+          <div class="data-card-body">
+            <div class="data-card-row"><span class="data-card-label">BOE Number</span><span class="data-card-value font-mono">4519876</span></div>
+            <div class="data-card-row"><span class="data-card-label">Customer</span><span class="data-card-value">Adani Logistics</span></div>
+            <div class="data-card-row"><span class="data-card-label">Route</span><span class="data-card-value">China→JNPT</span></div>
+            <div class="data-card-row"><span class="data-card-label">Filed Date</span><span class="data-card-value">Jun 01, 2026</span></div>
+            <div class="data-card-row"><span class="data-card-label">Assessment</span><span class="data-card-value">First Check</span></div>
+            <div class="data-card-row" style="border-top:1px dashed var(--border);padding-top:0.4rem;margin-top:0.2rem;font-weight:700;"><span class="data-card-label" style="color:var(--text);">Duty Amount</span><span class="data-card-value" style="color:var(--red);">₹8,90,000</span></div>
+          </div>
+        </div>
+        <div class="data-card">
+          <div class="data-card-header">
+            <span class="data-card-title" style="font-family:monospace;font-weight:800;">IMP-2026-0139</span>
+            <span class="pill pill-amber">Duty Pending</span>
+          </div>
+          <div class="data-card-body">
+            <div class="data-card-row"><span class="data-card-label">BOE Number</span><span class="data-card-value font-mono">4520543</span></div>
+            <div class="data-card-row"><span class="data-card-label">Customer</span><span class="data-card-value">Welspun Corp.</span></div>
+            <div class="data-card-row"><span class="data-card-label">Route</span><span class="data-card-value">Indonesia→Mundra</span></div>
+            <div class="data-card-row"><span class="data-card-label">Filed Date</span><span class="data-card-value">Jun 02, 2026</span></div>
+            <div class="data-card-row"><span class="data-card-label">Assessment</span><span class="data-card-value">Assessment Done</span></div>
+            <div class="data-card-row" style="border-top:1px dashed var(--border);padding-top:0.4rem;margin-top:0.2rem;font-weight:700;"><span class="data-card-label" style="color:var(--text);">Duty Amount</span><span class="data-card-value" style="color:var(--red);">₹2,14,000</span></div>
+          </div>
+        </div>
+        <div class="data-card">
+          <div class="data-card-header">
+            <span class="data-card-title" style="font-family:monospace;font-weight:800;">IMP-2026-0141</span>
+            <span class="pill pill-grey">Awaiting Docs</span>
+          </div>
+          <div class="data-card-body">
+            <div class="data-card-row"><span class="data-card-label">BOE Number</span><span class="data-card-value font-mono">—</span></div>
+            <div class="data-card-row"><span class="data-card-label">Customer</span><span class="data-card-value">Mahindra Intl.</span></div>
+            <div class="data-card-row"><span class="data-card-label">Route</span><span class="data-card-value">USA→JNPT</span></div>
+            <div class="data-card-row"><span class="data-card-label">Filed Date</span><span class="data-card-value">—</span></div>
+            <div class="data-card-row"><span class="data-card-label">Assessment</span><span class="data-card-value">Not Filed</span></div>
+            <div class="data-card-row" style="border-top:1px dashed var(--border);padding-top:0.4rem;margin-top:0.2rem;font-weight:700;"><span class="data-card-label" style="color:var(--text);">Duty Amount</span><span class="data-card-value">—</span></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div id="page-duty" style="display:none">
+      <div class="page-header"><div class="breadcrumb">FreightFlow ERP / Import / <span>Duty</span></div><h1>Duty Calculator</h1></div>
+      <div class="grid-2">
+        <div class="card"><div class="card-header"><div class="card-title"><div class="card-title-dot"></div>Calculate Import Duty</div></div><div class="card-body">
+          <div class="form-group"><div class="form-label">Job No.</div><select class="form-select"><option>IMP-2026-0139</option><option>IMP-2026-0141</option></select></div>
+          <div class="form-group"><div class="form-label">HS Code</div><input class="form-input" placeholder="e.g. 2836.20" value="2836.20"/></div>
+          <div class="form-group"><div class="form-label">Assessable Value (₹)</div><input class="form-input" value="1250000" id="av" oninput="calcDuty()"/></div>
+          <div class="form-group"><div class="form-label">Basic Customs Duty (%)</div><input class="form-input" value="10" id="bcd" oninput="calcDuty()"/></div>
+          <div class="form-group"><div class="form-label">IGST (%)</div><input class="form-input" value="18" id="igst" oninput="calcDuty()"/></div>
+          <button class="btn btn-primary mt-2" onclick="calcDuty()">Calculate</button>
+        </div></div>
+        <div class="card"><div class="card-header"><div class="card-title"><div class="card-title-dot"></div>Duty Breakdown</div></div><div class="card-body">
+          <table class="erp-table"><thead><tr><th>Component</th><th>Rate</th><th>Amount</th></tr></thead><tbody>
+            <tr><td>Assessable Value</td><td>—</td><td id="r-av">₹12,50,000</td></tr>
+            <tr><td>Basic Customs Duty</td><td>10%</td><td id="r-bcd">₹1,25,000</td></tr>
+            <tr><td>Social Welfare Surcharge</td><td>10% on BCD</td><td id="r-sws">₹12,500</td></tr>
+            <tr><td>IGST</td><td>18%</td><td id="r-igst">₹2,49,750</td></tr>
+            <tr style="font-weight:700;"><td colspan="2">Total Duty Payable</td><td id="r-total" style="color:#c0392b;font-size:1rem;">₹3,87,250</td></tr>
+          </tbody></table>
+          <button class="btn btn-primary mt-2">Generate Challan</button>
+        </div></div>
+      </div>
+    </div>
+
+    <div id="page-examination" style="display:none">
+      <div class="page-header"><div class="breadcrumb">FreightFlow ERP / Import / <span>Examination</span></div><h1>Examination Orders</h1></div>
+      <div class="data-cards-grid">
+        <div class="data-card">
+          <div class="data-card-header">
+            <span class="data-card-title" style="font-family:monospace;font-weight:800;">IMP-2026-0137</span>
+            <span class="pill pill-red">First Check</span>
+          </div>
+          <div class="data-card-body">
+            <div class="data-card-row"><span class="data-card-label">BOE Number</span><span class="data-card-value font-mono">4519876</span></div>
+            <div class="data-card-row"><span class="data-card-label">Customer</span><span class="data-card-value">Adani Logistics</span></div>
+            <div class="data-card-row"><span class="data-card-label">Customs Officer</span><span class="data-card-value">K.P. Sharma</span></div>
+            <div class="data-card-row"><span class="data-card-label">Remarks</span><span class="data-card-value">Quantity verification required</span></div>
+          </div>
+          <div class="data-card-actions">
+            <button class="btn btn-primary">Update Status</button>
+          </div>
+        </div>
+        <div class="data-card">
+          <div class="data-card-header">
+            <span class="data-card-title" style="font-family:monospace;font-weight:800;">IMP-2026-0133</span>
+            <span class="pill pill-amber">Second Check</span>
+          </div>
+          <div class="data-card-body">
+            <div class="data-card-row"><span class="data-card-label">BOE Number</span><span class="data-card-value font-mono">4515432</span></div>
+            <div class="data-card-row"><span class="data-card-label">Customer</span><span class="data-card-value">Sun Pharma</span></div>
+            <div class="data-card-row"><span class="data-card-label">Customs Officer</span><span class="data-card-value">R.K. Verma</span></div>
+            <div class="data-card-row"><span class="data-card-label">Remarks</span><span class="data-card-value">FSSAI inspection pending</span></div>
+          </div>
+          <div class="data-card-actions">
+            <button class="btn btn-primary">Update Status</button>
+          </div>
+        </div>
+        <div class="data-card">
+          <div class="data-card-header">
+            <span class="data-card-title" style="font-family:monospace;font-weight:800;">IMP-2026-0140</span>
+            <span class="pill pill-green">OOC Issued</span>
+          </div>
+          <div class="data-card-body">
+            <div class="data-card-row"><span class="data-card-label">BOE Number</span><span class="data-card-value font-mono">4520890</span></div>
+            <div class="data-card-row"><span class="data-card-label">Customer</span><span class="data-card-value">Tata Steel</span></div>
+            <div class="data-card-row"><span class="data-card-label">Customs Officer</span><span class="data-card-value">—</span></div>
+            <div class="data-card-row"><span class="data-card-label">Remarks</span><span class="data-card-value">RMS facilitated (No Exam)</span></div>
+          </div>
+          <div class="data-card-actions">
+            <button class="btn btn-outline" disabled>Completed</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div id="page-ooc" style="display:none">
+      <div class="page-header"><div class="breadcrumb">FreightFlow ERP / Import / <span>OOC</span></div><h1>Out of Charge Tracker</h1></div>
+      <div class="data-cards-grid">
+        <div class="data-card">
+          <div class="data-card-header">
+            <span class="data-card-title" style="font-family:monospace;font-weight:800;">IMP-2026-0142</span>
+            <span class="pill pill-green">Released</span>
+          </div>
+          <div class="data-card-body">
+            <div class="data-card-row"><span class="data-card-label">Customer</span><span class="data-card-value">Tata Chemicals</span></div>
+            <div class="data-card-row"><span class="data-card-label">BOE Number</span><span class="data-card-value font-mono">4521234</span></div>
+            <div class="data-card-row"><span class="data-card-label">OOC Date</span><span class="data-card-value">Jun 01, 2026</span></div>
+            <div class="data-card-row"><span class="data-card-label">Cargo Released</span><span class="data-card-value">✅ Jun 02, 2026</span></div>
+          </div>
+        </div>
+        <div class="data-card">
+          <div class="data-card-header">
+            <span class="data-card-title" style="font-family:monospace;font-weight:800;">IMP-2026-0134</span>
+            <span class="pill pill-green">Released</span>
+          </div>
+          <div class="data-card-body">
+            <div class="data-card-row"><span class="data-card-label">Customer</span><span class="data-card-value">Mahindra Intl.</span></div>
+            <div class="data-card-row"><span class="data-card-label">BOE Number</span><span class="data-card-value font-mono">4518765</span></div>
+            <div class="data-card-row"><span class="data-card-label">OOC Date</span><span class="data-card-value">Jun 03, 2026</span></div>
+            <div class="data-card-row"><span class="data-card-label">Cargo Released</span><span class="data-card-value">✅ Jun 03, 2026</span></div>
+          </div>
+        </div>
+        <div class="data-card">
+          <div class="data-card-header">
+            <span class="data-card-title" style="font-family:monospace;font-weight:800;">IMP-2026-0137</span>
+            <span class="pill pill-red">Examination Pending</span>
+          </div>
+          <div class="data-card-body">
+            <div class="data-card-row"><span class="data-card-label">Customer</span><span class="data-card-value">Adani Logistics</span></div>
+            <div class="data-card-row"><span class="data-card-label">BOE Number</span><span class="data-card-value font-mono">4519876</span></div>
+            <div class="data-card-row"><span class="data-card-label">OOC Date</span><span class="data-card-value">—</span></div>
+            <div class="data-card-row"><span class="data-card-label">Cargo Released</span><span class="data-card-value">❌ Pending Examination</span></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div id="page-leo" style="display:none">
+      <div class="page-header"><div class="breadcrumb">FreightFlow ERP / Export / <span>LEO</span></div><h1>Let Export Order Tracker</h1></div>
+      <div class="data-cards-grid">
+        <div class="data-card">
+          <div class="data-card-header">
+            <span class="data-card-title" style="font-family:monospace;font-weight:800;">EXP-2026-0101</span>
+            <span class="pill pill-green">LEO Granted</span>
+          </div>
+          <div class="data-card-body">
+            <div class="data-card-row"><span class="data-card-label">Shipping Bill</span><span class="data-card-value font-mono">SB-5678901</span></div>
+            <div class="data-card-row"><span class="data-card-label">Customer</span><span class="data-card-value">Mahindra Intl.</span></div>
+            <div class="data-card-row"><span class="data-card-label">SB Filed Date</span><span class="data-card-value">Jun 02, 2026</span></div>
+            <div class="data-card-row"><span class="data-card-label">RMS Status</span><span class="data-card-value">Facilitated</span></div>
+            <div class="data-card-row"><span class="data-card-label">LEO Date</span><span class="data-card-value">Jun 03, 2026</span></div>
+          </div>
+        </div>
+        <div class="data-card">
+          <div class="data-card-header">
+            <span class="data-card-title" style="font-family:monospace;font-weight:800;">EXP-2026-0098</span>
+            <span class="pill pill-amber">Awaiting LEO</span>
+          </div>
+          <div class="data-card-body">
+            <div class="data-card-row"><span class="data-card-label">Shipping Bill</span><span class="data-card-value font-mono">SB-5678765</span></div>
+            <div class="data-card-row"><span class="data-card-label">Customer</span><span class="data-card-value">Reliance Exports</span></div>
+            <div class="data-card-row"><span class="data-card-label">SB Filed Date</span><span class="data-card-value">Jun 03, 2026</span></div>
+            <div class="data-card-row"><span class="data-card-label">RMS Status</span><span class="data-card-value">Pending Inspection</span></div>
+            <div class="data-card-row"><span class="data-card-label">LEO Date</span><span class="data-card-value">—</span></div>
+          </div>
+        </div>
+        <div class="data-card" style="border-left:3px solid var(--red);">
+          <div class="data-card-header">
+            <span class="data-card-title" style="font-family:monospace;font-weight:800;">EXP-2026-0095</span>
+            <span class="pill pill-red">On Hold</span>
+          </div>
+          <div class="data-card-body">
+            <div class="data-card-row"><span class="data-card-label">Shipping Bill</span><span class="data-card-value font-mono">SB-5677890</span></div>
+            <div class="data-card-row"><span class="data-card-label">Customer</span><span class="data-card-value">Tata Chemicals</span></div>
+            <div class="data-card-row"><span class="data-card-label">SB Filed Date</span><span class="data-card-value">Jun 01, 2026</span></div>
+            <div class="data-card-row"><span class="data-card-label">RMS Status</span><span class="data-card-value">Amendment Required</span></div>
+            <div class="data-card-row"><span class="data-card-label">LEO Date</span><span class="data-card-value">—</span></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div id="page-sb" style="display:none">
+      <div class="page-header"><div class="breadcrumb">FreightFlow ERP / Export / <span>Shipping Bills</span></div><h1>Shipping Bills</h1></div>
+      <div class="data-cards-grid">
+        <div class="data-card">
+          <div class="data-card-header">
+            <span class="data-card-title" style="font-family:monospace;font-weight:800;">EXP-2026-0101</span>
+            <span class="pill pill-green">LEO Granted</span>
+          </div>
+          <div class="data-card-body">
+            <div class="data-card-row"><span class="data-card-label">Shipping Bill No.</span><span class="data-card-value font-mono">5678901</span></div>
+            <div class="data-card-row"><span class="data-card-label">Customer</span><span class="data-card-value">Mahindra Intl.</span></div>
+            <div class="data-card-row"><span class="data-card-label">Port of Export</span><span class="data-card-value">JNPT</span></div>
+            <div class="data-card-row"><span class="data-card-label">Commodity</span><span class="data-card-value">Auto Parts</span></div>
+            <div class="data-card-row" style="border-top:1px dashed var(--border);padding-top:0.4rem;margin-top:0.2rem;font-weight:700;"><span class="data-card-label" style="color:var(--text);">FOB Value</span><span class="data-card-value" style="color:var(--red);">$42,000</span></div>
+          </div>
+        </div>
+        <div class="data-card">
+          <div class="data-card-header">
+            <span class="data-card-title" style="font-family:monospace;font-weight:800;">EXP-2026-0098</span>
+            <span class="pill pill-amber">Filed</span>
+          </div>
+          <div class="data-card-body">
+            <div class="data-card-row"><span class="data-card-label">Shipping Bill No.</span><span class="data-card-value font-mono">5678765</span></div>
+            <div class="data-card-row"><span class="data-card-label">Customer</span><span class="data-card-value">Reliance Exports</span></div>
+            <div class="data-card-row"><span class="data-card-label">Port of Export</span><span class="data-card-value">Chennai</span></div>
+            <div class="data-card-row"><span class="data-card-label">Commodity</span><span class="data-card-value">Petrochemicals</span></div>
+            <div class="data-card-row" style="border-top:1px dashed var(--border);padding-top:0.4rem;margin-top:0.2rem;font-weight:700;"><span class="data-card-label" style="color:var(--text);">FOB Value</span><span class="data-card-value" style="color:var(--red);">$85,000</span></div>
+          </div>
+        </div>
+        <div class="data-card" style="border-left:3px solid var(--red);">
+          <div class="data-card-header">
+            <span class="data-card-title" style="font-family:monospace;font-weight:800;">EXP-2026-0095</span>
+            <span class="pill pill-red">Amendment Required</span>
+          </div>
+          <div class="data-card-body">
+            <div class="data-card-row"><span class="data-card-label">Shipping Bill No.</span><span class="data-card-value font-mono">5677890</span></div>
+            <div class="data-card-row"><span class="data-card-label">Customer</span><span class="data-card-value">Tata Chemicals</span></div>
+            <div class="data-card-row"><span class="data-card-label">Port of Export</span><span class="data-card-value">Mundra</span></div>
+            <div class="data-card-row"><span class="data-card-label">Commodity</span><span class="data-card-value">Soda Ash</span></div>
+            <div class="data-card-row" style="border-top:1px dashed var(--border);padding-top:0.4rem;margin-top:0.2rem;font-weight:700;"><span class="data-card-label" style="color:var(--text);">FOB Value</span><span class="data-card-value" style="color:var(--red);">$38,500</span></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+<script src="../shared/waffle.js"></script>
+<script>
+(function(){const u=JSON.parse(sessionStorage.getItem('erp_user')||'{}');if(!u.role){location.href='../login.html';}if(u.name)document.getElementById('un').textContent=u.name;})();
+
+function calcDuty(){
+  const av=parseFloat(document.getElementById('av').value)||0;
+  const bcd=av*(parseFloat(document.getElementById('bcd').value)||0)/100;
+  const sws=bcd*0.1;
+  const igst=(av+bcd+sws)*(parseFloat(document.getElementById('igst').value)||0)/100;
+  const total=bcd+sws+igst;
+  const fmt=n=>'₹'+Math.round(n).toLocaleString('en-IN');
+  document.getElementById('r-av').textContent=fmt(av);
+  document.getElementById('r-bcd').textContent=fmt(bcd);
+  document.getElementById('r-sws').textContent=fmt(sws);
+  document.getElementById('r-igst').textContent=fmt(igst);
+  document.getElementById('r-total').textContent=fmt(total);
+}
+</script>
+</body></html>
