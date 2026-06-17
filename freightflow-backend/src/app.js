@@ -16,6 +16,9 @@ const helmet = require("helmet");
 const cookieParser = require("cookie-parser");
 const morgan = require("morgan");
 
+const path = require("path");
+const { writeLogToFile } = require("./services/loggerService");
+
 // Initialize Express application instance
 const app = express();
 
@@ -31,8 +34,22 @@ app.use(helmet());
 // Parses cookie headers and populates req.cookies with an object keyed by the cookie names
 app.use(cookieParser());
 
-// HTTP request logger middleware for development environment logging
-app.use(morgan("dev"));
+// Define destination path for the HTTP request log file
+const logFilePath = path.join(__dirname, "../logs/request.txt");
+
+// Custom stream object for Morgan middleware to pipe log output through the logger service
+// Prepend an ISO timestamp to each request log entry for traceability
+const requestLogStream = {
+    write: (message) => {
+        const timestamp = new Date().toISOString();
+        writeLogToFile(`[${timestamp}] ${message.trim()}`, logFilePath);
+    }
+};
+
+// HTTP request logger configured to print logs into request.txt using custom plain text formatting
+app.use(morgan(":method :url :status :response-time ms - :res[content-length]", {
+    stream: requestLogStream
+}));
 
 /**
  * Diagnostic / Health Check Endpoint
