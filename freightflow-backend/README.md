@@ -5,8 +5,17 @@ FreightFlow is a premium logistics and freight management system. This file hous
 ---
 
 ## 📅 Development Progress Log
-- **Last Updated**: June 17, 2026
-- **Status**: Core architecture established, database connection configured, security middlewares integrated, and file-based logging pipeline operational.
+
+### June 17, 2026
+* **Project Setup**: Initialized Node.js, package configurations, and project directory structure.
+* **Security & Middleware Integration**: Configured Express with `cors`, `helmet`, `cookie-parser`, and `morgan` HTTP request loggers.
+* **Logging System**: Created a custom `loggerService` to pipe server traffic and logs into a persistent, git-ignored `logs/request.txt` file using Morgan streams.
+* **Production Documentation**: Documented Express server bootstrap processes and PostgreSQL database connection setup with JSDoc headers.
+
+### June 18, 2026
+* **Database Model Base Architecture**: Designed and implemented `BaseModel.js` containing standardized columns (`id`, `created_by`, `updated_by`, `deleted_by`, `deleted_at`, `is_deleted`) for reuse across all database models (User, Company, Role, etc.).
+* **Model Registry setup**: Established central database registration in `src/database/index.js` for future model migrations, relationships, and queries.
+* **Audit System JSDoc**: Fully documented the BaseModel audit strategy and database configurations with JSDoc block comments.
 
 ---
 
@@ -47,6 +56,11 @@ freightflow-backend/
 │   ├── config/             # Database and ORM client initialization configurations
 │   │   ├── database.js     # Sequelize instance and pool setup
 │   │   └── dbConnection.js # Database authentication lifecycle check
+│   ├── database/           # Database schema migrations, seeders, and models
+│   │   ├── index.js        # Central database and model registry entry point
+│   │   ├── migrations/     # Database migration scripts [Sequelize]
+│   │   ├── models/         # Model definitions (e.g., BaseModel.js)
+│   │   └── seeders/        # Database seed data scripts
 │   ├── middlewares/        # Express application custom middlewares (Auth, validation, error handlers)
 │   ├── modules/            # Domain modules (controllers, models, validation schemas)
 │   ├── routes/             # App route mapping
@@ -74,6 +88,17 @@ To record application requests without bloating terminal runtime performance:
 * We integrated **Morgan** in `src/app.js` with a custom stream (`requestLogStream`) pointing to the helper function `writeLogToFile` in `src/services/loggerService.js`.
 * Standard formatting used: `[:timestamp] :method :url :status :response-time ms - :res[content-length]`.
 * Output file is maintained at `logs/request.txt` (which is git-ignored).
+
+### 3. Reusable BaseModel (Database Audit & Soft Delete System)
+To enforce consistent database audit fields and adhere to DRY (Don't Repeat Yourself) principles across all database tables:
+* We implemented `src/database/models/BaseModel.js` which contains standard audit, tracking, and soft delete fields.
+* Instead of defining these columns manually 50+ times for models like `Company`, `User`, `Role`, `Permission`, `Customer`, `Job`, `Invoice`, etc., they spread/inherit `BaseModel`:
+  * `id`: Unique primary key (UUID v4) for standardized identifiers across components.
+  * `created_by`: UUID identifying the user who created the record.
+  * `updated_by`: UUID identifying the user who last modified the record.
+  * `deleted_by`: UUID identifying the user who soft-deleted the record.
+  * `deleted_at`: Timestamp recording when the record was soft-deleted.
+  * `is_deleted`: Boolean flag indicating soft-delete status (ensuring records are not permanently purged from database tables unless specified).
 
 ---
 
