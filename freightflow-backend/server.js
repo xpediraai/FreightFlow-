@@ -10,7 +10,7 @@
 require("dotenv").config();
 
 const app = require("./app");
-const connectDB = require("./config/dbConnection");
+const connectDB = require("./src/config/dbConnection");
 
 // Default to port 5000 if not specified in environment configuration
 const PORT = process.env.PORT || 5000;

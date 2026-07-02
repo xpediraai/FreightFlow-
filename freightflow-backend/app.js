@@ -17,7 +17,8 @@ const cookieParser = require("cookie-parser");
 const morgan = require("morgan");
 
 const path = require("path");
-const { writeLogToFile } = require("./services/loggerService");
+const { writeLogToFile } = require("./src/services/loggerService");
+const masterRouter = require("./src/routes.index");
 
 // Initialize Express application instance
 const app = express();
@@ -35,7 +36,7 @@ app.use(helmet());
 app.use(cookieParser());
 
 // Define destination path for the HTTP request log file
-const logFilePath = path.join(__dirname, "../logs/request.txt");
+const logFilePath = path.join(__dirname, "logs/request.txt");
 
 // Custom stream object for Morgan middleware to pipe log output through the logger service
 // Prepend an ISO timestamp to each request log entry for traceability
@@ -66,5 +67,8 @@ app.get("/freightflow/test", (req, res) => {
         message: "FreightFlow API Running"
     });
 });
+
+// Mount the master router
+app.use("/api", masterRouter);
 
 module.exports = app;
