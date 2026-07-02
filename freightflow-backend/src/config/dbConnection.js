@@ -18,10 +18,13 @@ const sequelize = require("./database");
  */
 const connectDB = async () => {
     try {
-        // Test if connection parameters are correct and database is reachable
+        // 1. Test if connection parameters are correct and database is reachable
         await sequelize.authenticate();
-
         console.log("✅ PostgreSQL Connected Successfully");
+
+        // 2. Sync all models with the database (alter: true updates tables without dropping them)
+        await sequelize.sync({ alter: true });
+        console.log('📂 Database & tables synced!');
     } catch (error) {
         console.error("❌ Database Connection Failed");
         console.error(error.message);
