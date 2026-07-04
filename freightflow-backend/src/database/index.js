@@ -28,6 +28,8 @@ db.Currency = require("../modules/Masters/CurrencyMasters/currency.model");
 db.Port = require("../modules/Masters/PortMasters/port.model");
 db.ShippingLine = require("../modules/Masters/ShippingLineMasters/shippingLine.model");
 db.ContainerType = require("../modules/Masters/ContainerTypeMasters/containerType.model");
+db.TransportMode = require("../modules/Masters/TransportModeMasters/transportMode.model");
+db.Commodity = require("../modules/Masters/CommodityMasters/commodity.model");
 
 // Define Associations
 db.Users.hasMany(db.RefreshTokens, { foreignKey: "user_id" });
