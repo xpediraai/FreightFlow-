@@ -15,6 +15,8 @@ const commodityRoutes = require('./modules/Masters/CommodityMasters/commodity.ro
 const customerRoutes = require('./modules/Masters/CustomerMasters/customer.routes');
 const vendorRoutes = require('./modules/Masters/VendorMasters/vendor.routes');
 const warehouseRoutes = require('./modules/Masters/WarehouseMasters/warehouse.routes');
+const vehicleRoutes = require('./modules/Masters/VehicleMasters/vehicle.routes');
+const driverRoutes = require('./modules/Masters/DriverMasters/driver.routes');
 
 // Mount routes
 router.use('/auth', authRoutes);
@@ -31,5 +33,7 @@ router.use('/commodity', commodityRoutes);
 router.use('/customer', customerRoutes);
 router.use('/vendor', vendorRoutes);
 router.use('/warehouse', warehouseRoutes);
+router.use('/vehicle', vehicleRoutes);
+router.use('/driver', driverRoutes);
 
 module.exports = router;

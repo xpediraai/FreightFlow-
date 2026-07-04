@@ -40,6 +40,8 @@ db.VendorContact = require("../modules/Masters/VendorMasters/Models/vendorContac
 db.VendorAddress = require("../modules/Masters/VendorMasters/Models/vendorAddress.model");
 db.VendorBank = require("../modules/Masters/VendorMasters/Models/vendorBank.model");
 db.Warehouse = require("../modules/Masters/WarehouseMasters/warehouse.model");
+db.Vehicle = require("../modules/Masters/VehicleMasters/vehicle.model");
+db.Driver = require("../modules/Masters/DriverMasters/driver.model");
 
 // Define Associations
 db.Users.hasMany(db.RefreshTokens, { foreignKey: "user_id" });
@@ -74,6 +76,13 @@ db.Country.hasMany(db.ShippingLine, { foreignKey: 'country_id', as: 'shipping_li
 db.Warehouse.belongsTo(db.Country, { foreignKey: 'country_id', as: 'country' });
 db.Warehouse.belongsTo(db.State, { foreignKey: 'state_id', as: 'state' });
 db.Warehouse.belongsTo(db.City, { foreignKey: 'city_id', as: 'city' });
+
+// Vehicle & Driver Associations
+db.Vehicle.belongsTo(db.Vendor, { foreignKey: 'vendor_id', as: 'vendor' });
+db.Driver.belongsTo(db.Vendor, { foreignKey: 'vendor_id', as: 'vendor' });
+db.Driver.belongsTo(db.Country, { foreignKey: 'country_id', as: 'country' });
+db.Driver.belongsTo(db.State, { foreignKey: 'state_id', as: 'state' });
+db.Driver.belongsTo(db.City, { foreignKey: 'city_id', as: 'city' });
 
 // Customer Associations
 db.Customer.hasMany(db.CustomerContact, { as: 'contacts', foreignKey: 'customer_id' });
