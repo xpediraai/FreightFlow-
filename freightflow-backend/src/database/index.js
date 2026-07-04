@@ -45,6 +45,11 @@ db.Driver = require("../modules/Masters/DriverMasters/driver.model");
 db.Department = require("../modules/Masters/DepartmentMasters/department.model");
 db.Designation = require("../modules/Masters/DesignationMasters/designation.model");
 db.Employee = require("../modules/Masters/EmployeeMasters/employee.model");
+db.UOM = require("../modules/Masters/UOMMasters/uom.model");
+db.PackageType = require("../modules/Masters/PackageTypeMasters/packageType.model");
+db.Incoterm = require("../modules/Masters/IncotermMasters/incoterm.model");
+db.Charge = require("../modules/Masters/ChargeMasters/charge.model");
+db.PaymentTerm = require("../modules/Masters/PaymentTermMasters/paymentTerm.model");
 
 // Define Associations
 db.Users.hasMany(db.RefreshTokens, { foreignKey: "user_id" });

@@ -20,6 +20,11 @@ const driverRoutes = require('./modules/Masters/DriverMasters/driver.routes');
 const departmentRoutes = require('./modules/Masters/DepartmentMasters/department.routes');
 const designationRoutes = require('./modules/Masters/DesignationMasters/designation.routes');
 const employeeRoutes = require('./modules/Masters/EmployeeMasters/employee.routes');
+const uomRoutes = require('./modules/Masters/UOMMasters/uom.routes');
+const packageTypeRoutes = require('./modules/Masters/PackageTypeMasters/packageType.routes');
+const incotermRoutes = require('./modules/Masters/IncotermMasters/incoterm.routes');
+const chargeRoutes = require('./modules/Masters/ChargeMasters/charge.routes');
+const paymentTermRoutes = require('./modules/Masters/PaymentTermMasters/paymentTerm.routes');
 
 // Mount routes
 router.use('/auth', authRoutes);
@@ -41,5 +46,10 @@ router.use('/driver', driverRoutes);
 router.use('/department', departmentRoutes);
 router.use('/designation', designationRoutes);
 router.use('/employee', employeeRoutes);
+router.use('/uom', uomRoutes);
+router.use('/package-type', packageTypeRoutes);
+router.use('/incoterm', incotermRoutes);
+router.use('/charge', chargeRoutes);
+router.use('/payment-term', paymentTermRoutes);
 
 module.exports = router;
