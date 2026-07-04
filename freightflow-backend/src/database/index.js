@@ -27,6 +27,7 @@ db.City = require("../modules/Masters/CityMasters/city.model");
 db.Currency = require("../modules/Masters/CurrencyMasters/currency.model");
 db.Port = require("../modules/Masters/PortMasters/port.model");
 db.ShippingLine = require("../modules/Masters/ShippingLineMasters/shippingLine.model");
+db.ContainerType = require("../modules/Masters/ContainerTypeMasters/containerType.model");
 
 // Define Associations
 db.Users.hasMany(db.RefreshTokens, { foreignKey: "user_id" });
