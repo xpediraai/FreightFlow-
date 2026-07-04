@@ -20,16 +20,12 @@ const ALLOWED_MIME_TYPES = ["image/jpeg", "image/png", "image/jpg", "image/svg+x
  */
 const storage = multer.diskStorage({
     destination: (req, file, cb) => {
-        // We expect company_id to be available, either in req.params or req.body or generated in service.
-        // Wait, for creating a company, the ID might not exist yet, so we might need a temporary folder 
-        // or generate the UUID in the middleware/controller.
-        // Let's use a temporary fallback if company_id is not in params/body, but usually it should be provided
-        // or we handle upload AFTER company creation. 
-        // A common pattern is generating the UUID in the controller and passing it to req.
-        const companyId = req.body.company_id || req.params.id || req.query.company_id || 'temp';
-        const fieldName = file.fieldname; // 'logo' or 'signature'
+        // Use req.user.company_id if available, fallback to body/params/temp
+        const companyId = (req.user && req.user.company_id) || req.body.company_id || req.params.id || req.query.company_id || 'temp';
+        const fieldName = file.fieldname; 
+        const context = req.uploadContext || "Companies";
 
-        const destFolder = path.join(__dirname, "../../uploads/Companies", companyId, fieldName);
+        const destFolder = path.join(__dirname, "../../uploads", context, companyId, fieldName);
         
         if (!fs.existsSync(destFolder)) {
             fs.mkdirSync(destFolder, { recursive: true });

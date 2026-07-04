@@ -30,6 +30,11 @@ db.ShippingLine = require("../modules/Masters/ShippingLineMasters/shippingLine.m
 db.ContainerType = require("../modules/Masters/ContainerTypeMasters/containerType.model");
 db.TransportMode = require("../modules/Masters/TransportModeMasters/transportMode.model");
 db.Commodity = require("../modules/Masters/CommodityMasters/commodity.model");
+db.Customer = require("../modules/Masters/CustomerMasters/Models/customer.model");
+db.CustomerContact = require("../modules/Masters/CustomerMasters/Models/customerContact.model");
+db.CustomerAddress = require("../modules/Masters/CustomerMasters/Models/customerAddress.model");
+db.CustomerBank = require("../modules/Masters/CustomerMasters/Models/customerBank.model");
+db.CustomerDocument = require("../modules/Masters/CustomerMasters/Models/customerDocument.model");
 
 // Define Associations
 db.Users.hasMany(db.RefreshTokens, { foreignKey: "user_id" });
@@ -59,5 +64,18 @@ db.City.hasMany(db.Port, { foreignKey: 'city_id', as: 'ports' });
 
 db.ShippingLine.belongsTo(db.Country, { foreignKey: 'country_id', as: 'country' });
 db.Country.hasMany(db.ShippingLine, { foreignKey: 'country_id', as: 'shipping_lines' });
+
+// Customer Associations
+db.Customer.hasMany(db.CustomerContact, { as: 'contacts', foreignKey: 'customer_id' });
+db.CustomerContact.belongsTo(db.Customer, { foreignKey: 'customer_id' });
+
+db.Customer.hasMany(db.CustomerAddress, { as: 'addresses', foreignKey: 'customer_id' });
+db.CustomerAddress.belongsTo(db.Customer, { foreignKey: 'customer_id' });
+
+db.Customer.hasMany(db.CustomerBank, { as: 'banks', foreignKey: 'customer_id' });
+db.CustomerBank.belongsTo(db.Customer, { foreignKey: 'customer_id' });
+
+db.Customer.hasMany(db.CustomerDocument, { as: 'documents', foreignKey: 'customer_id' });
+db.CustomerDocument.belongsTo(db.Customer, { foreignKey: 'customer_id' });
 
 module.exports = db;
