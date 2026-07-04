@@ -17,6 +17,9 @@ const vendorRoutes = require('./modules/Masters/VendorMasters/vendor.routes');
 const warehouseRoutes = require('./modules/Masters/WarehouseMasters/warehouse.routes');
 const vehicleRoutes = require('./modules/Masters/VehicleMasters/vehicle.routes');
 const driverRoutes = require('./modules/Masters/DriverMasters/driver.routes');
+const departmentRoutes = require('./modules/Masters/DepartmentMasters/department.routes');
+const designationRoutes = require('./modules/Masters/DesignationMasters/designation.routes');
+const employeeRoutes = require('./modules/Masters/EmployeeMasters/employee.routes');
 
 // Mount routes
 router.use('/auth', authRoutes);
@@ -35,5 +38,8 @@ router.use('/vendor', vendorRoutes);
 router.use('/warehouse', warehouseRoutes);
 router.use('/vehicle', vehicleRoutes);
 router.use('/driver', driverRoutes);
+router.use('/department', departmentRoutes);
+router.use('/designation', designationRoutes);
+router.use('/employee', employeeRoutes);
 
 module.exports = router;

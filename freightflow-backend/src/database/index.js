@@ -42,6 +42,9 @@ db.VendorBank = require("../modules/Masters/VendorMasters/Models/vendorBank.mode
 db.Warehouse = require("../modules/Masters/WarehouseMasters/warehouse.model");
 db.Vehicle = require("../modules/Masters/VehicleMasters/vehicle.model");
 db.Driver = require("../modules/Masters/DriverMasters/driver.model");
+db.Department = require("../modules/Masters/DepartmentMasters/department.model");
+db.Designation = require("../modules/Masters/DesignationMasters/designation.model");
+db.Employee = require("../modules/Masters/EmployeeMasters/employee.model");
 
 // Define Associations
 db.Users.hasMany(db.RefreshTokens, { foreignKey: "user_id" });
@@ -106,5 +109,17 @@ db.VendorAddress.belongsTo(db.Vendor, { foreignKey: 'vendor_id' });
 
 db.Vendor.hasMany(db.VendorBank, { as: 'banks', foreignKey: 'vendor_id' });
 db.VendorBank.belongsTo(db.Vendor, { foreignKey: 'vendor_id' });
+
+// Department & Designation Associations
+db.Department.hasMany(db.Designation, { foreignKey: 'department_id', as: 'designations' });
+db.Designation.belongsTo(db.Department, { foreignKey: 'department_id', as: 'department' });
+
+// Employee Associations
+db.Employee.belongsTo(db.Department, { foreignKey: 'department_id', as: 'department' });
+db.Employee.belongsTo(db.Designation, { foreignKey: 'designation_id', as: 'designation' });
+db.Employee.belongsTo(db.Country, { foreignKey: 'country_id', as: 'country' });
+db.Employee.belongsTo(db.State, { foreignKey: 'state_id', as: 'state' });
+db.Employee.belongsTo(db.City, { foreignKey: 'city_id', as: 'city' });
+db.Employee.belongsTo(db.Employee, { foreignKey: 'reporting_manager', as: 'manager' });
 
 module.exports = db;
