@@ -39,6 +39,7 @@ db.Vendor = require("../modules/Masters/VendorMasters/Models/vendor.model");
 db.VendorContact = require("../modules/Masters/VendorMasters/Models/vendorContact.model");
 db.VendorAddress = require("../modules/Masters/VendorMasters/Models/vendorAddress.model");
 db.VendorBank = require("../modules/Masters/VendorMasters/Models/vendorBank.model");
+db.Warehouse = require("../modules/Masters/WarehouseMasters/warehouse.model");
 
 // Define Associations
 db.Users.hasMany(db.RefreshTokens, { foreignKey: "user_id" });
@@ -68,6 +69,11 @@ db.City.hasMany(db.Port, { foreignKey: 'city_id', as: 'ports' });
 
 db.ShippingLine.belongsTo(db.Country, { foreignKey: 'country_id', as: 'country' });
 db.Country.hasMany(db.ShippingLine, { foreignKey: 'country_id', as: 'shipping_lines' });
+
+// Warehouse Associations
+db.Warehouse.belongsTo(db.Country, { foreignKey: 'country_id', as: 'country' });
+db.Warehouse.belongsTo(db.State, { foreignKey: 'state_id', as: 'state' });
+db.Warehouse.belongsTo(db.City, { foreignKey: 'city_id', as: 'city' });
 
 // Customer Associations
 db.Customer.hasMany(db.CustomerContact, { as: 'contacts', foreignKey: 'customer_id' });
