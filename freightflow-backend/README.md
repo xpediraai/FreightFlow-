@@ -17,6 +17,11 @@ FreightFlow is a premium logistics and freight management system. This file hous
 * **Model Registry setup**: Established central database registration in `src/database/index.js` for future model migrations, relationships, and queries.
 * **Audit System JSDoc**: Fully documented the BaseModel audit strategy and database configurations with JSDoc block comments.
 
+### July 5, 2026
+* **Auth & Company Configuration**: Developed the core authentication flows (`Users`, `RefreshTokens`) and the base `Company` master, including the `UserCompanies` mapping for multi-tenant data isolation. All operations safely secure the `company_id` from the decoded JWT.
+* **Mass Master Implementations**: Built and integrated 23 master modules (e.g. Country, State, City, Customer, Vendor, UOM, Charge, PackageType, Vehicle) with complete CRUD routing, Joi validations, Sequelize transactions, and PostgreSQL case-insensitive unique-checks.
+* **Domain Categorization**: Refactored the flat `Masters` directory into a highly organized architecture structured into domains: `Foundation`, `Common`, `Logistics`, `Organization`, and `Business`.
+
 ---
 
 ## 🛠️ Tech Stack & Dependencies
@@ -54,18 +59,19 @@ freightflow-backend/
 ├── logs/                   # System runtime logs (e.g. request.txt) [git-ignored]
 ├── src/
 │   ├── config/             # Database and ORM client initialization configurations
-│   │   ├── database.js     # Sequelize instance and pool setup
-│   │   └── dbConnection.js # Database authentication lifecycle check
 │   ├── database/           # Database schema migrations, seeders, and models
-│   │   ├── index.js        # Central database and model registry entry point
-│   │   ├── migrations/     # Database migration scripts [Sequelize]
-│   │   ├── models/         # Model definitions (e.g., BaseModel.js)
-│   │   └── seeders/        # Database seed data scripts
-│   ├── middlewares/        # Express application custom middlewares (Auth, validation, error handlers)
+│   │   └── index.js        # Central database and model registry entry point
+│   ├── middlewares/        # Express application custom middlewares (Auth, validation)
 │   ├── modules/            # Domain modules (controllers, models, validation schemas)
-│   ├── routes/             # App route mapping
+│   │   ├── Auth/           # User login and JWT token generation
+│   │   └── Masters/        # ERP core master data configuration
+│   │       ├── Business/     # Customer, Vendor
+│   │       ├── Common/       # Commodity, ContainerType, PackageType, etc.
+│   │       ├── Foundation/   # Company, Location, Currency, PaymentTerms
+│   │       ├── Logistics/    # Port, Warehouse, Vehicle, Driver
+│   │       └── Organization/ # Department, Designation, Employee
+│   ├── routes.index.js     # Master routing aggregator
 │   ├── services/           # Reusable services and utilities
-│   │   └── loggerService.js# Helper class to log messages directly to file streams
 │   ├── app.js              # Express app instantiation and middleware registration
 │   └── index.js            # Server entry point (starts server and binds port listener)
 ├── .env                    # Local environment secrets and parameters [git-ignored]
