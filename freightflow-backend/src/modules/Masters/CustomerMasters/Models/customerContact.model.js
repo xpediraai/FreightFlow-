@@ -3,7 +3,7 @@
  * @description Sequelize model for Customer Contacts.
  */
 const { DataTypes } = require("sequelize");
-const sequelize = require("../../../config/database");
+const sequelize = require("../../../../config/database");
 
 const CustomerContact = sequelize.define("CustomerContact", {
     id: {

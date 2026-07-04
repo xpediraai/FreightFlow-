@@ -3,7 +3,7 @@
  * @description Sequelize model for Customer Addresses.
  */
 const { DataTypes } = require("sequelize");
-const sequelize = require("../../../config/database");
+const sequelize = require("../../../../config/database");
 
 const CustomerAddress = sequelize.define("CustomerAddress", {
     id: {

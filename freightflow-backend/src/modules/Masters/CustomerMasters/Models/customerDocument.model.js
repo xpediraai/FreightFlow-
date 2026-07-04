@@ -3,7 +3,7 @@
  * @description Sequelize model for Customer Documents.
  */
 const { DataTypes } = require("sequelize");
-const sequelize = require("../../../config/database");
+const sequelize = require("../../../../config/database");
 
 const CustomerDocument = sequelize.define("CustomerDocument", {
     id: {

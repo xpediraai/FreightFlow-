@@ -3,7 +3,7 @@
  * @description Sequelize model for Customer Bank Accounts.
  */
 const { DataTypes } = require("sequelize");
-const sequelize = require("../../../config/database");
+const sequelize = require("../../../../config/database");
 
 const CustomerBank = sequelize.define("CustomerBank", {
     id: {

@@ -3,7 +3,7 @@
  * @description Sequelize model for Customer Master (Primary Table).
  */
 const { DataTypes } = require("sequelize");
-const sequelize = require("../../../config/database");
+const sequelize = require("../../../../config/database");
 
 const Customer = sequelize.define("Customer", {
     id: {
