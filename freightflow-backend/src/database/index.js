@@ -20,11 +20,27 @@ db.RefreshTokens = require("../modules/Auth/RefreshTokens/refresh_tokens.model")
 db.Company = require("../modules/Masters/CompanyMasters/company.model");
 db.UserCompanies = require("../modules/Masters/CompanyMasters/user_companies.model");
 
+// Master Models
+db.Country = require("../modules/Masters/CountryMasters/country.model");
+db.State = require("../modules/Masters/StateMasters/state.model");
+db.City = require("../modules/Masters/CityMasters/city.model");
+db.Currency = require("../modules/Masters/CurrencyMasters/currency.model");
+
 // Define Associations
 db.Users.hasMany(db.RefreshTokens, { foreignKey: "user_id" });
 db.RefreshTokens.belongsTo(db.Users, { foreignKey: "user_id" });
 
 db.Users.belongsToMany(db.Company, { through: db.UserCompanies, foreignKey: "user_id" });
 db.Company.belongsToMany(db.Users, { through: db.UserCompanies, foreignKey: "company_id" });
+
+// Master Associations
+db.State.belongsTo(db.Country, { foreignKey: 'country_id', as: 'country' });
+db.Country.hasMany(db.State, { foreignKey: 'country_id', as: 'states' });
+
+db.City.belongsTo(db.Country, { foreignKey: 'country_id', as: 'country' });
+db.Country.hasMany(db.City, { foreignKey: 'country_id', as: 'cities' });
+
+db.City.belongsTo(db.State, { foreignKey: 'state_id', as: 'state' });
+db.State.hasMany(db.City, { foreignKey: 'state_id', as: 'cities' });
 
 module.exports = db;

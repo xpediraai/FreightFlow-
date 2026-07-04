@@ -4,8 +4,6 @@
  */
 const { DataTypes } = require("sequelize");
 const sequelize = require("../../../config/database");
-const Country = require("../CountryMasters/country.model");
-const State = require("../StateMasters/state.model");
 
 const City = sequelize.define("City", {
     id: {
@@ -78,12 +76,5 @@ const City = sequelize.define("City", {
         }
     ]
 });
-
-// Associations
-City.belongsTo(Country, { foreignKey: 'country_id', as: 'country' });
-Country.hasMany(City, { foreignKey: 'country_id', as: 'cities' });
-
-City.belongsTo(State, { foreignKey: 'state_id', as: 'state' });
-State.hasMany(City, { foreignKey: 'state_id', as: 'cities' });
 
 module.exports = City;
