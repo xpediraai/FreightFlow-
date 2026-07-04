@@ -35,6 +35,10 @@ db.CustomerContact = require("../modules/Masters/CustomerMasters/Models/customer
 db.CustomerAddress = require("../modules/Masters/CustomerMasters/Models/customerAddress.model");
 db.CustomerBank = require("../modules/Masters/CustomerMasters/Models/customerBank.model");
 db.CustomerDocument = require("../modules/Masters/CustomerMasters/Models/customerDocument.model");
+db.Vendor = require("../modules/Masters/VendorMasters/Models/vendor.model");
+db.VendorContact = require("../modules/Masters/VendorMasters/Models/vendorContact.model");
+db.VendorAddress = require("../modules/Masters/VendorMasters/Models/vendorAddress.model");
+db.VendorBank = require("../modules/Masters/VendorMasters/Models/vendorBank.model");
 
 // Define Associations
 db.Users.hasMany(db.RefreshTokens, { foreignKey: "user_id" });
@@ -77,5 +81,15 @@ db.CustomerBank.belongsTo(db.Customer, { foreignKey: 'customer_id' });
 
 db.Customer.hasMany(db.CustomerDocument, { as: 'documents', foreignKey: 'customer_id' });
 db.CustomerDocument.belongsTo(db.Customer, { foreignKey: 'customer_id' });
+
+// Vendor Associations
+db.Vendor.hasMany(db.VendorContact, { as: 'contacts', foreignKey: 'vendor_id' });
+db.VendorContact.belongsTo(db.Vendor, { foreignKey: 'vendor_id' });
+
+db.Vendor.hasMany(db.VendorAddress, { as: 'addresses', foreignKey: 'vendor_id' });
+db.VendorAddress.belongsTo(db.Vendor, { foreignKey: 'vendor_id' });
+
+db.Vendor.hasMany(db.VendorBank, { as: 'banks', foreignKey: 'vendor_id' });
+db.VendorBank.belongsTo(db.Vendor, { foreignKey: 'vendor_id' });
 
 module.exports = db;

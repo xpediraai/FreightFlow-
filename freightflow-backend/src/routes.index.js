@@ -13,6 +13,7 @@ const containerTypeRoutes = require('./modules/Masters/ContainerTypeMasters/cont
 const transportModeRoutes = require('./modules/Masters/TransportModeMasters/transportMode.routes');
 const commodityRoutes = require('./modules/Masters/CommodityMasters/commodity.routes');
 const customerRoutes = require('./modules/Masters/CustomerMasters/customer.routes');
+const vendorRoutes = require('./modules/Masters/VendorMasters/vendor.routes');
 
 // Mount routes
 router.use('/auth', authRoutes);
@@ -27,5 +28,6 @@ router.use('/container-type', containerTypeRoutes);
 router.use('/transport-mode', transportModeRoutes);
 router.use('/commodity', commodityRoutes);
 router.use('/customer', customerRoutes);
+router.use('/vendor', vendorRoutes);
 
 module.exports = router;
