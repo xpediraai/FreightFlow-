@@ -8,6 +8,7 @@ const crypto = require("crypto");
 const path = require("path");
 const Users = require("./users.model");
 const RefreshTokens = require("../RefreshTokens/refresh_tokens.model");
+const UserCompanies = require("../../Masters/CompanyMasters/user_companies.model");
 const { writeLogToFile } = require("../../../services/loggerService");
 
 const JWT_SECRET = process.env.JWT_SECRET || "fallback_secret";
@@ -66,12 +67,16 @@ const login = async (credentials, reqInfo) => {
             throw new Error("Invalid email or password");
         }
 
+        const defaultUserCompany = await UserCompanies.findOne({ 
+            where: { user_id: user.id, is_default: true } 
+        });
+
         // We assume company_id will be derived later, for now we set it to null or fetch from UserCompanies
         // Since we are not doing roles yet, we'll leave company_id out or set it if available.
         const tokenPayload = {
             user_id: user.id,
             email: user.email,
-            company_id: null // To be populated from mapping table when needed
+            company_id: defaultUserCompany ? defaultUserCompany.company_id : null
         };
 
         const accessToken = jwt.sign(tokenPayload, JWT_SECRET, { expiresIn: ACCESS_TOKEN_EXPIRES });
@@ -122,11 +127,15 @@ const rotateToken = async (rawRefreshToken) => {
         // Delete the old token (Rotation)
         await rTokenRecord.destroy();
 
+        const defaultUserCompany = await UserCompanies.findOne({ 
+            where: { user_id: user.id, is_default: true } 
+        });
+
         // Generate New Tokens
         const tokenPayload = {
             user_id: user.id,
             email: user.email,
-            company_id: null
+            company_id: defaultUserCompany ? defaultUserCompany.company_id : null
         };
 
         const newAccessToken = jwt.sign(tokenPayload, JWT_SECRET, { expiresIn: ACCESS_TOKEN_EXPIRES });
