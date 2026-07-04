@@ -8,6 +8,7 @@ const stateRoutes = require('./modules/Masters/StateMasters/state.routes');
 const cityRoutes = require('./modules/Masters/CityMasters/city.routes');
 const currencyRoutes = require('./modules/Masters/CurrencyMasters/currency.routes');
 const portRoutes = require('./modules/Masters/PortMasters/port.routes');
+const shippingLineRoutes = require('./modules/Masters/ShippingLineMasters/shippingLine.routes');
 
 // Mount routes
 router.use('/auth', authRoutes);
@@ -17,5 +18,6 @@ router.use('/state', stateRoutes);
 router.use('/city', cityRoutes);
 router.use('/currency', currencyRoutes);
 router.use('/port', portRoutes);
+router.use('/shipping-line', shippingLineRoutes);
 
 module.exports = router;

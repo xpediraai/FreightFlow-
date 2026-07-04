@@ -26,6 +26,7 @@ db.State = require("../modules/Masters/StateMasters/state.model");
 db.City = require("../modules/Masters/CityMasters/city.model");
 db.Currency = require("../modules/Masters/CurrencyMasters/currency.model");
 db.Port = require("../modules/Masters/PortMasters/port.model");
+db.ShippingLine = require("../modules/Masters/ShippingLineMasters/shippingLine.model");
 
 // Define Associations
 db.Users.hasMany(db.RefreshTokens, { foreignKey: "user_id" });
@@ -52,5 +53,8 @@ db.State.hasMany(db.Port, { foreignKey: 'state_id', as: 'ports' });
 
 db.Port.belongsTo(db.City, { foreignKey: 'city_id', as: 'city' });
 db.City.hasMany(db.Port, { foreignKey: 'city_id', as: 'ports' });
+
+db.ShippingLine.belongsTo(db.Country, { foreignKey: 'country_id', as: 'country' });
+db.Country.hasMany(db.ShippingLine, { foreignKey: 'country_id', as: 'shipping_lines' });
 
 module.exports = db;
