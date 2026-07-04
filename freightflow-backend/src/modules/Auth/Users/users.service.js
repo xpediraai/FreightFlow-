@@ -8,7 +8,7 @@ const crypto = require("crypto");
 const path = require("path");
 const Users = require("./users.model");
 const RefreshTokens = require("../RefreshTokens/refresh_tokens.model");
-const UserCompanies = require("../../Masters/CompanyMasters/user_companies.model");
+const UserCompanies = require("../../Masters/Foundation/CompanyMasters/user_companies.model");
 const { writeLogToFile } = require("../../../services/loggerService");
 
 const JWT_SECRET = process.env.JWT_SECRET || "fallback_secret";
