@@ -48,7 +48,7 @@ const Login = () => {
       if (response.user.role === 'SUPER_ADMIN') {
         navigate('/app'); // using /app as the generic protected area for now
       } else if (response.user.role === 'COMPANY_OWNER') {
-        navigate('/app/companies');
+        navigate('/company/dashboard');
       } else {
         navigate('/app');
       }

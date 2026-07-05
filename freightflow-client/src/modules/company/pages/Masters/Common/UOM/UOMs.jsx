@@ -1,47 +1,46 @@
 import React, { useState } from 'react';
-import Page from '../../../../shared/components/Page';
-import PageHeader from '../../../../shared/components/PageHeader';
-import MasterToolbar from '../../../../shared/components/Master/MasterToolbar';
-import ExpandableForm from '../../../../shared/components/Master/ExpandableForm';
-import CompanyList from './CompanyList';
-import CompanyForm from './CompanyForm';
+import Page from '../../../../../../shared/components/Page';
+import PageHeader from '../../../../../../shared/components/PageHeader';
+import MasterToolbar from '../../../../../../shared/components/Master/MasterToolbar';
+import ExpandableForm from '../../../../../../shared/components/Master/ExpandableForm';
+import UOMList from './UOMList';
+import UOMForm from './UOMForm';
 
-const Companies = () => {
+const UOMs = () => {
   const [isFormOpen, setIsFormOpen] = useState(false);
-  const [selectedCompany, setSelectedCompany] = useState(null);
+  const [selectedUOM, setSelectedUOM] = useState(null);
   const [searchTerm, setSearchTerm] = useState('');
   const [viewMode, setViewMode] = useState('table');
   const [refreshTrigger, setRefreshTrigger] = useState(0);
 
   const handleCreateNew = () => {
-    setSelectedCompany(null);
+    setSelectedUOM(null);
     setIsFormOpen(true);
   };
 
-  const handleEdit = (company) => {
-    setSelectedCompany(company);
+  const handleEdit = (uomData) => {
+    setSelectedUOM(uomData);
     setIsFormOpen(true);
-    // scroll to top smoothly
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
   const handleCancel = () => {
     setIsFormOpen(false);
-    setSelectedCompany(null);
+    setSelectedUOM(null);
   };
 
   const handleSuccess = () => {
     setIsFormOpen(false);
-    setSelectedCompany(null);
+    setSelectedUOM(null);
     setRefreshTrigger(prev => prev + 1);
   };
 
   return (
     <Page>
       <PageHeader 
-        title="Company Master" 
-        subtitle="Manage client companies, their organizational structures, and owners." 
-        breadcrumbs={[{ label: 'Dashboard' }, { label: 'Masters' }, { label: 'Company' }]}
+        title="UOM Master" 
+        subtitle="Manage Units of Measurement." 
+        breadcrumbs={[{ label: 'Dashboard' }, { label: 'Masters' }, { label: 'Common' }, { label: 'UOM' }]}
       />
       
       <div className="mt-lg">
@@ -51,18 +50,18 @@ const Companies = () => {
           onAdd={handleCreateNew}
           onToggleView={setViewMode}
           viewMode={viewMode}
-          addLabel="Add Company"
+          addLabel="Add UOM"
         />
 
         <ExpandableForm isOpen={isFormOpen}>
-          <CompanyForm 
+          <UOMForm 
             onCancel={handleCancel} 
             onSuccess={handleSuccess} 
-            initialData={selectedCompany} 
+            initialData={selectedUOM} 
           />
         </ExpandableForm>
 
-        <CompanyList 
+        <UOMList 
           onEdit={handleEdit} 
           searchQuery={searchTerm}
           viewMode={viewMode}
@@ -73,4 +72,4 @@ const Companies = () => {
   );
 };
 
-export default Companies;
+export default UOMs;

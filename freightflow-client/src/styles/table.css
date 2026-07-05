@@ -34,3 +34,30 @@
 .table tbody tr:last-child td {
   border-bottom: none;
 }
+
+/* Action Buttons */
+.action-btn {
+  width: 32px;
+  height: 32px;
+  border-radius: 6px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: none;
+  cursor: pointer;
+  color: white;
+  transition: transform 0.1s, opacity 0.2s;
+}
+.action-btn:hover {
+  opacity: 0.9;
+  transform: scale(1.05);
+}
+.view-btn {
+  background-color: #3b82f6;
+}
+.edit-btn {
+  background-color: #22c55e;
+}
+.delete-btn {
+  background-color: #ef4444;
+}

@@ -5,15 +5,14 @@ import Button from '../../../../shared/components/Button';
 import Badge from '../../../../shared/components/Badge';
 import { adminService } from '../../services/admin.service';
 
-const CompanyList = ({ onEdit }) => {
+const CompanyList = ({ onEdit, searchQuery = '', viewMode = 'table', refreshTrigger = 0 }) => {
   const [companies, setCompanies] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [viewModalData, setViewModalData] = useState(null);
-  const [searchQuery, setSearchQuery] = useState('');
 
   useEffect(() => {
     fetchCompanies();
-  }, []);
+  }, [refreshTrigger]);
 
   const fetchCompanies = async () => {
     setIsLoading(true);
@@ -114,18 +113,33 @@ const CompanyList = ({ onEdit }) => {
     }
   ];
 
+  if (viewMode === 'card') {
+    return (
+      <div className="company-grid-view">
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))', gap: '1.5rem' }}>
+          {filteredCompanies.map(company => (
+            <div key={company.id || company.company_code} className="bg-surface border-light rounded-lg shadow-sm p-lg cursor-pointer hover:shadow-md transition-shadow" onClick={() => onEdit && onEdit(company)}>
+              <div className="flex justify-between align-center mb-md">
+                <h4 className="m-0 text-primary">{company.company_name}</h4>
+                <Badge variant={company.status === 'Active' ? 'success' : 'danger'}>{company.status || 'Active'}</Badge>
+              </div>
+              <p className="text-secondary-light text-sm mb-xs">Code: {company.company_code}</p>
+              <p className="text-secondary-light text-sm mb-xs">Email: {company.company_email || '-'}</p>
+              <p className="text-secondary-light text-sm">City: {company.city || '-'}</p>
+            </div>
+          ))}
+          {filteredCompanies.length === 0 && (
+            <div className="text-center p-xl text-tertiary w-full" style={{ gridColumn: '1 / -1' }}>
+              No companies found. Create one to get started.
+            </div>
+          )}
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="company-list-container bg-surface border-light rounded-lg shadow-sm">
-      <div style={{ padding: '1rem', borderBottom: '1px solid var(--color-border)' }}>
-        <input 
-          type="text" 
-          placeholder="Search by name, code, email, or city..." 
-          value={searchQuery}
-          onChange={(e) => setSearchQuery(e.target.value)}
-          className="form-control"
-          style={{ maxWidth: '400px' }}
-        />
-      </div>
       <TableView
         columns={columns}
         data={filteredCompanies}
@@ -167,32 +181,6 @@ const CompanyList = ({ onEdit }) => {
       )}
 
       <style>{`
-        .action-btn {
-          width: 32px;
-          height: 32px;
-          border-radius: 6px;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          border: none;
-          cursor: pointer;
-          color: white;
-          transition: transform 0.1s, opacity 0.2s;
-        }
-        .action-btn:hover {
-          opacity: 0.9;
-          transform: scale(1.05);
-        }
-        .view-btn {
-          background-color: #3b82f6;
-        }
-        .edit-btn {
-          background-color: #22c55e;
-        }
-        .delete-btn {
-          background-color: #ef4444;
-        }
-
         .modal-overlay {
           position: fixed;
           top: 0; left: 0; right: 0; bottom: 0;

@@ -5,6 +5,7 @@ import MainLayout from '../core/layouts/MainLayout';
 import ProtectedRoute from './ProtectedRoute';
 import PublicRoutes from './PublicRoutes';
 import PrivateRoutes from './PrivateRoutes';
+import CompanyRoutes from './CompanyRoutes';
 import LandingPage from '../modules/landing/LandingPage';
 
 const NotFoundPlaceholder = () => (
@@ -28,6 +29,11 @@ const router = createBrowserRouter([
     path: '/app',
     element: <ProtectedRoute><MainLayout /></ProtectedRoute>,
     children: PrivateRoutes,
+  },
+  {
+    path: '/company',
+    element: <ProtectedRoute><MainLayout /></ProtectedRoute>,
+    children: CompanyRoutes,
   },
   {
     path: '*',

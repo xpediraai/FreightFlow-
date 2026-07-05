@@ -1,47 +1,46 @@
 import React, { useState } from 'react';
-import Page from '../../../../shared/components/Page';
-import PageHeader from '../../../../shared/components/PageHeader';
-import MasterToolbar from '../../../../shared/components/Master/MasterToolbar';
-import ExpandableForm from '../../../../shared/components/Master/ExpandableForm';
-import CompanyList from './CompanyList';
-import CompanyForm from './CompanyForm';
+import Page from '../../../../../../shared/components/Page';
+import PageHeader from '../../../../../../shared/components/PageHeader';
+import MasterToolbar from '../../../../../../shared/components/Master/MasterToolbar';
+import ExpandableForm from '../../../../../../shared/components/Master/ExpandableForm';
+import IncotermList from './IncotermList';
+import IncotermForm from './IncotermForm';
 
-const Companies = () => {
+const Incoterms = () => {
   const [isFormOpen, setIsFormOpen] = useState(false);
-  const [selectedCompany, setSelectedCompany] = useState(null);
+  const [selectedTerm, setSelectedTerm] = useState(null);
   const [searchTerm, setSearchTerm] = useState('');
   const [viewMode, setViewMode] = useState('table');
   const [refreshTrigger, setRefreshTrigger] = useState(0);
 
   const handleCreateNew = () => {
-    setSelectedCompany(null);
+    setSelectedTerm(null);
     setIsFormOpen(true);
   };
 
-  const handleEdit = (company) => {
-    setSelectedCompany(company);
+  const handleEdit = (termData) => {
+    setSelectedTerm(termData);
     setIsFormOpen(true);
-    // scroll to top smoothly
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
   const handleCancel = () => {
     setIsFormOpen(false);
-    setSelectedCompany(null);
+    setSelectedTerm(null);
   };
 
   const handleSuccess = () => {
     setIsFormOpen(false);
-    setSelectedCompany(null);
+    setSelectedTerm(null);
     setRefreshTrigger(prev => prev + 1);
   };
 
   return (
     <Page>
       <PageHeader 
-        title="Company Master" 
-        subtitle="Manage client companies, their organizational structures, and owners." 
-        breadcrumbs={[{ label: 'Dashboard' }, { label: 'Masters' }, { label: 'Company' }]}
+        title="Incoterm Master" 
+        subtitle="Manage international commercial terms." 
+        breadcrumbs={[{ label: 'Dashboard' }, { label: 'Masters' }, { label: 'Common' }, { label: 'Incoterms' }]}
       />
       
       <div className="mt-lg">
@@ -51,18 +50,18 @@ const Companies = () => {
           onAdd={handleCreateNew}
           onToggleView={setViewMode}
           viewMode={viewMode}
-          addLabel="Add Company"
+          addLabel="Add Incoterm"
         />
 
         <ExpandableForm isOpen={isFormOpen}>
-          <CompanyForm 
+          <IncotermForm 
             onCancel={handleCancel} 
             onSuccess={handleSuccess} 
-            initialData={selectedCompany} 
+            initialData={selectedTerm} 
           />
         </ExpandableForm>
 
-        <CompanyList 
+        <IncotermList 
           onEdit={handleEdit} 
           searchQuery={searchTerm}
           viewMode={viewMode}
@@ -73,4 +72,4 @@ const Companies = () => {
   );
 };
 
-export default Companies;
+export default Incoterms;

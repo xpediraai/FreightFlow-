@@ -32,25 +32,64 @@ const CompanyForm = ({ onCancel, onSuccess, initialData }) => {
   });
 
   const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState('');
+  const [globalError, setGlobalError] = useState('');
+  const [errors, setErrors] = useState({});
+  const [touched, setTouched] = useState({});
+
+  const validateField = (name, value) => {
+    let error = '';
+    if (name === 'company_name' && !value.trim()) error = 'Company Name is required';
+    if (name === 'company_code' && !value.trim()) error = 'Company Code is required';
+    if (!isEditMode) {
+      if (name === 'owner_name' && !value.trim()) error = 'Owner Full Name is required';
+      if (name === 'owner_email') {
+        if (!value.trim()) error = 'Owner Email is required';
+        else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value)) error = 'Invalid email format';
+      }
+      if (name === 'owner_password' && !value.trim()) error = 'Owner Password is required';
+    }
+    return error;
+  };
 
   const handleChange = (e) => {
     const { name, value } = e.target;
     setFormData(prev => ({ ...prev, [name]: value }));
+    if (touched[name]) {
+      setErrors(prev => ({ ...prev, [name]: validateField(name, value) }));
+    }
+  };
+
+  const handleBlur = (e) => {
+    const { name, value } = e.target;
+    setTouched(prev => ({ ...prev, [name]: true }));
+    setErrors(prev => ({ ...prev, [name]: validateField(name, value) }));
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    setGlobalError('');
+    
+    // Validate all required fields
+    const newErrors = {};
+    Object.keys(formData).forEach(key => {
+      const err = validateField(key, formData[key]);
+      if (err) newErrors[key] = err;
+    });
+
+    if (Object.keys(newErrors).length > 0) {
+      setErrors(newErrors);
+      setTouched(Object.keys(formData).reduce((acc, key) => ({ ...acc, [key]: true }), {}));
+      setGlobalError('Please fix the errors before submitting.');
+      return;
+    }
+
     setIsLoading(true);
-    setError('');
     
     try {
       if (isEditMode) {
-        // Exclude owner details from update payload if they exist
         const { owner_name, owner_email, owner_password, owner_id, ...updatePayload } = formData;
         await adminService.updateCompany(initialData.id, updatePayload);
       } else {
-        // 1. Create Owner via Register Route
         const ownerResponse = await adminService.createCompanyOwner({
           username: formData.owner_name,
           email: formData.owner_email,
@@ -60,7 +99,6 @@ const CompanyForm = ({ onCancel, onSuccess, initialData }) => {
 
         const newOwnerId = ownerResponse?.data?.user?.user_id || ownerResponse?.data?.user_id;
 
-        // 2. Create Company and map Owner
         const { owner_name, owner_email, owner_password, ...companyPayload } = formData;
         companyPayload.owner_id = newOwnerId;
         
@@ -68,7 +106,7 @@ const CompanyForm = ({ onCancel, onSuccess, initialData }) => {
       }
       onSuccess && onSuccess();
     } catch (err) {
-      setError(err.message || `Failed to ${isEditMode ? 'update' : 'create'} company`);
+      setGlobalError(err.message || `Failed to ${isEditMode ? 'update' : 'create'} company`);
     } finally {
       setIsLoading(false);
     }
@@ -83,34 +121,36 @@ const CompanyForm = ({ onCancel, onSuccess, initialData }) => {
         <Button variant="ghost" onClick={onCancel} leftIcon={X} size="sm">Close</Button>
       </div>
 
-      {error && <div className="alert alert-danger mb-md p-sm">{error}</div>}
+      {globalError && <div className="alert alert-danger mb-md p-sm">{globalError}</div>}
 
       <form onSubmit={handleSubmit} className="dense-form">
         <h4 className="section-title">Company Details</h4>
         <div className="form-grid">
           <div className="form-group">
             <label>Company Name <span className="text-danger">*</span></label>
-            <input type="text" name="company_name" value={formData.company_name} onChange={handleChange} required className="form-control form-control-sm" />
+            <input disabled={isLoading} type="text" name="company_name" value={formData.company_name} onChange={handleChange} required className="form-control form-control-sm" onBlur={handleBlur} />
+            {errors.company_name && <div className="text-danger" style={{ fontSize: '0.75rem', marginTop: '0.25rem' }}>{errors.company_name}</div>}
           </div>
           <div className="form-group">
             <label>Company Code <span className="text-danger">*</span></label>
-            <input type="text" name="company_code" value={formData.company_code} onChange={handleChange} required className="form-control form-control-sm" disabled={isEditMode} />
+            <input disabled={isLoading} type="text" name="company_code" value={formData.company_code} onChange={handleChange} required className="form-control form-control-sm" disabled={isEditMode} onBlur={handleBlur} />
+            {errors.company_code && <div className="text-danger" style={{ fontSize: '0.75rem', marginTop: '0.25rem' }}>{errors.company_code}</div>}
           </div>
           <div className="form-group">
             <label>Email</label>
-            <input type="email" name="company_email" value={formData.company_email} onChange={handleChange} className="form-control form-control-sm" />
+            <input disabled={isLoading} type="email" name="company_email" value={formData.company_email} onChange={handleChange} className="form-control form-control-sm" onBlur={handleBlur} />
           </div>
           <div className="form-group">
             <label>Contact Number</label>
-            <input type="text" name="contact_number" value={formData.contact_number} onChange={handleChange} className="form-control form-control-sm" />
+            <input disabled={isLoading} type="text" name="contact_number" value={formData.contact_number} onChange={handleChange} className="form-control form-control-sm" onBlur={handleBlur} />
           </div>
           <div className="form-group">
             <label>Address</label>
-            <input type="text" name="address" value={formData.address} onChange={handleChange} className="form-control form-control-sm" />
+            <input disabled={isLoading} type="text" name="address" value={formData.address} onChange={handleChange} className="form-control form-control-sm" onBlur={handleBlur} />
           </div>
           <div className="form-group">
             <label>City</label>
-            <input type="text" name="city" value={formData.city} onChange={handleChange} className="form-control form-control-sm" />
+            <input disabled={isLoading} type="text" name="city" value={formData.city} onChange={handleChange} className="form-control form-control-sm" onBlur={handleBlur} />
           </div>
         </div>
 
@@ -118,15 +158,15 @@ const CompanyForm = ({ onCancel, onSuccess, initialData }) => {
         <div className="form-grid">
           <div className="form-group">
             <label>PAN Card Number</label>
-            <input type="text" name="pan_card_number" value={formData.pan_card_number} onChange={handleChange} className="form-control form-control-sm" />
+            <input disabled={isLoading} type="text" name="pan_card_number" value={formData.pan_card_number} onChange={handleChange} className="form-control form-control-sm" onBlur={handleBlur} />
           </div>
           <div className="form-group">
             <label>GST Number</label>
-            <input type="text" name="gst_number" value={formData.gst_number} onChange={handleChange} className="form-control form-control-sm" />
+            <input disabled={isLoading} type="text" name="gst_number" value={formData.gst_number} onChange={handleChange} className="form-control form-control-sm" onBlur={handleBlur} />
           </div>
           <div className="form-group">
             <label>CHA Licence Number</label>
-            <input type="text" name="cha_licence_number" value={formData.cha_licence_number} onChange={handleChange} className="form-control form-control-sm" />
+            <input disabled={isLoading} type="text" name="cha_licence_number" value={formData.cha_licence_number} onChange={handleChange} className="form-control form-control-sm" onBlur={handleBlur} />
           </div>
         </div>
 
@@ -134,19 +174,19 @@ const CompanyForm = ({ onCancel, onSuccess, initialData }) => {
         <div className="form-grid">
           <div className="form-group">
             <label>Bank Name</label>
-            <input type="text" name="bank_name" value={formData.bank_name} onChange={handleChange} className="form-control form-control-sm" />
+            <input disabled={isLoading} type="text" name="bank_name" value={formData.bank_name} onChange={handleChange} className="form-control form-control-sm" onBlur={handleBlur} />
           </div>
           <div className="form-group">
             <label>Account Number</label>
-            <input type="text" name="account_number" value={formData.account_number} onChange={handleChange} className="form-control form-control-sm" />
+            <input disabled={isLoading} type="text" name="account_number" value={formData.account_number} onChange={handleChange} className="form-control form-control-sm" onBlur={handleBlur} />
           </div>
           <div className="form-group">
             <label>IFSC Code</label>
-            <input type="text" name="ifsc_code" value={formData.ifsc_code} onChange={handleChange} className="form-control form-control-sm" />
+            <input disabled={isLoading} type="text" name="ifsc_code" value={formData.ifsc_code} onChange={handleChange} className="form-control form-control-sm" onBlur={handleBlur} />
           </div>
           <div className="form-group">
             <label>Branch Name</label>
-            <input type="text" name="branch_name" value={formData.branch_name} onChange={handleChange} className="form-control form-control-sm" />
+            <input disabled={isLoading} type="text" name="branch_name" value={formData.branch_name} onChange={handleChange} className="form-control form-control-sm" onBlur={handleBlur} />
           </div>
         </div>
 
@@ -154,19 +194,19 @@ const CompanyForm = ({ onCancel, onSuccess, initialData }) => {
         <div className="form-grid">
           <div className="form-group">
             <label>USD Bank</label>
-            <input type="text" name="usd_bank" value={formData.usd_bank} onChange={handleChange} className="form-control form-control-sm" />
+            <input disabled={isLoading} type="text" name="usd_bank" value={formData.usd_bank} onChange={handleChange} className="form-control form-control-sm" onBlur={handleBlur} />
           </div>
           <div className="form-group">
             <label>USD Account Number</label>
-            <input type="text" name="usd_account_number" value={formData.usd_account_number} onChange={handleChange} className="form-control form-control-sm" />
+            <input disabled={isLoading} type="text" name="usd_account_number" value={formData.usd_account_number} onChange={handleChange} className="form-control form-control-sm" onBlur={handleBlur} />
           </div>
           <div className="form-group">
             <label>USD IFSC / SWIFT Code</label>
-            <input type="text" name="usd_ifsc_swift_code" value={formData.usd_ifsc_swift_code} onChange={handleChange} className="form-control form-control-sm" />
+            <input disabled={isLoading} type="text" name="usd_ifsc_swift_code" value={formData.usd_ifsc_swift_code} onChange={handleChange} className="form-control form-control-sm" onBlur={handleBlur} />
           </div>
           <div className="form-group">
             <label>USD Branch</label>
-            <input type="text" name="usd_branch" value={formData.usd_branch} onChange={handleChange} className="form-control form-control-sm" />
+            <input disabled={isLoading} type="text" name="usd_branch" value={formData.usd_branch} onChange={handleChange} className="form-control form-control-sm" onBlur={handleBlur} />
           </div>
         </div>
 
@@ -174,11 +214,11 @@ const CompanyForm = ({ onCancel, onSuccess, initialData }) => {
         <div className="form-grid">
           <div className="form-group">
             <label>E-Invoice Username</label>
-            <input type="text" name="einvoice_username" value={formData.einvoice_username} onChange={handleChange} className="form-control form-control-sm" />
+            <input disabled={isLoading} type="text" name="einvoice_username" value={formData.einvoice_username} onChange={handleChange} className="form-control form-control-sm" onBlur={handleBlur} />
           </div>
           <div className="form-group">
             <label>E-Invoice Password</label>
-            <input type="password" name="einvoice_password" value={formData.einvoice_password} onChange={handleChange} className="form-control form-control-sm" />
+            <input disabled={isLoading} type="password" name="einvoice_password" value={formData.einvoice_password} onChange={handleChange} className="form-control form-control-sm" onBlur={handleBlur} />
           </div>
         </div>
 
@@ -188,15 +228,18 @@ const CompanyForm = ({ onCancel, onSuccess, initialData }) => {
             <div className="form-grid">
               <div className="form-group">
                 <label>Full Name <span className="text-danger">*</span></label>
-                <input type="text" name="owner_name" value={formData.owner_name} onChange={handleChange} required className="form-control form-control-sm" placeholder="John Doe" />
+                <input disabled={isLoading} type="text" name="owner_name" value={formData.owner_name} onChange={handleChange} required className="form-control form-control-sm" placeholder="John Doe" onBlur={handleBlur} />
+            {errors.owner_name && <div className="text-danger" style={{ fontSize: '0.75rem', marginTop: '0.25rem' }}>{errors.owner_name}</div>}
               </div>
               <div className="form-group">
                 <label>Email Address <span className="text-danger">*</span></label>
-                <input type="email" name="owner_email" value={formData.owner_email} onChange={handleChange} required className="form-control form-control-sm" placeholder="john@acme.com" />
+                <input disabled={isLoading} type="email" name="owner_email" value={formData.owner_email} onChange={handleChange} required className="form-control form-control-sm" placeholder="john@acme.com" onBlur={handleBlur} />
+            {errors.owner_email && <div className="text-danger" style={{ fontSize: '0.75rem', marginTop: '0.25rem' }}>{errors.owner_email}</div>}
               </div>
               <div className="form-group">
                 <label>Password <span className="text-danger">*</span></label>
-                <input type="password" name="owner_password" value={formData.owner_password} onChange={handleChange} required className="form-control form-control-sm" placeholder="********" />
+                <input disabled={isLoading} type="password" name="owner_password" value={formData.owner_password} onChange={handleChange} required className="form-control form-control-sm" placeholder="********" onBlur={handleBlur} />
+            {errors.owner_password && <div className="text-danger" style={{ fontSize: '0.75rem', marginTop: '0.25rem' }}>{errors.owner_password}</div>}
               </div>
             </div>
           </>

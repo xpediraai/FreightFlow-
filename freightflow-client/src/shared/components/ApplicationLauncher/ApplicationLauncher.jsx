@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { X } from 'lucide-react';
 import { applications } from '../../../core/config/applications';
 import clsx from 'clsx';
+import { useAuth } from '../../../contexts/AuthContext';
 import './ApplicationLauncher.css';
 
 const ApplicationLauncher = ({ isOpen, onClose }) => {
@@ -29,13 +30,23 @@ const ApplicationLauncher = ({ isOpen, onClose }) => {
 
   if (!isOpen) return null;
 
+  const { currentUser } = useAuth();
+
   const handleAppClick = (route) => {
     navigate(route);
     onClose();
   };
 
   const visibleApps = applications
-    .filter(app => app.isVisible)
+    .filter(app => {
+      if (!app.isVisible) return false;
+      if (currentUser?.role === 'SUPER_ADMIN') {
+        return ['dashboard', 'company', 'roles', 'settings'].includes(app.id); // Or whatever super admin gets
+      } else if (currentUser?.role === 'COMPANY_OWNER') {
+        return ['dashboard', 'company', 'masters', 'settings'].includes(app.id);
+      }
+      return true;
+    })
     .sort((a, b) => a.order - b.order);
 
   return (
