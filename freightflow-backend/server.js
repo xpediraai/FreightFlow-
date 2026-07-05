@@ -11,6 +11,7 @@ require("dotenv").config();
 
 const app = require("./app");
 const connectDB = require("./src/config/dbConnection");
+const { runBootstrap } = require("./src/services/bootstrapService");
 
 // Default to port 5000 if not specified in environment configuration
 const PORT = process.env.PORT || 5000;
@@ -26,6 +27,9 @@ const PORT = process.env.PORT || 5000;
 const startServer = async () => {
     // Wait for a successful connection to database before launching HTTP server
     await connectDB();
+    
+    // Run initial startup verification and seeding
+    await runBootstrap();
 
     app.listen(PORT, () => {
         console.log(`🚀 Server Running On Port ${PORT}`);
