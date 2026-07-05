@@ -76,6 +76,7 @@ const login = async (credentials, reqInfo) => {
         const tokenPayload = {
             user_id: user.id,
             email: user.email,
+            role: user.role,
             company_id: defaultUserCompany ? defaultUserCompany.company_id : null
         };
 
@@ -96,7 +97,7 @@ const login = async (credentials, reqInfo) => {
         writeLogToFile(`[${new Date().toISOString()}] Email: ${user.email} | IP: ${reqInfo.ip} | UserAgent: ${reqInfo.userAgent} | Success: true`, loginLogPath);
 
         return {
-            user: { id: user.id, full_name: user.full_name, email: user.email, status: user.status },
+            user: { id: user.id, full_name: user.full_name, email: user.email, role: user.role, status: user.status },
             accessToken,
             refreshToken: rawRefreshToken // Return raw only once
         };
@@ -135,6 +136,7 @@ const rotateToken = async (rawRefreshToken) => {
         const tokenPayload = {
             user_id: user.id,
             email: user.email,
+            role: user.role,
             company_id: defaultUserCompany ? defaultUserCompany.company_id : null
         };
 

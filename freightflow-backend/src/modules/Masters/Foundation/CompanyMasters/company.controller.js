@@ -83,7 +83,21 @@ const update = async (req, res) => {
 const getMyCompanies = async (req, res) => {
     try {
         const userId = req.user.user_id;
-        const companies = await companyService.getCompaniesByUser(userId);
+        let role = req.user.role;
+        
+        // If the token is old and doesn't have the role, fetch it from DB
+        if (!role) {
+            const Users = require("../../../Auth/Users/users.model");
+            const user = await Users.findByPk(userId);
+            if (user) role = user.role;
+        }
+        
+        let companies;
+        if (role === 'SUPER_ADMIN') {
+            companies = await companyService.getAllCompanies();
+        } else {
+            companies = await companyService.getCompaniesByUser(userId);
+        }
 
         return res.status(200).json(successResponse(
             "COMPANIES_FETCHED",
@@ -122,9 +136,24 @@ const remove = async (req, res) => {
     }
 };
 
+const getDashboardStats = async (req, res) => {
+    try {
+        const stats = await companyService.getDashboardStats();
+        return res.status(200).json(successResponse(
+            "STATS_FETCHED",
+            "Dashboard stats fetched.",
+            "Dashboard stats fetched.",
+            stats
+        ));
+    } catch (err) {
+        return res.status(500).json(errorResponse("INTERNAL_SERVER_ERROR", err.message, "Failed to fetch stats."));
+    }
+};
+
 module.exports = {
     create,
     update,
     remove,
-    getMyCompanies
+    getMyCompanies,
+    getDashboardStats
 };

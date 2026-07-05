@@ -30,7 +30,8 @@ const companyBaseSchema = {
     usd_branch: Joi.string().allow('', null),
     einvoice_username: Joi.string().allow('', null),
     einvoice_password: Joi.string().allow('', null),
-    status: Joi.string().valid("Active", "Inactive").default("Active")
+    status: Joi.string().valid("Active", "Inactive").default("Active"),
+    owner_id: Joi.string().uuid().allow('', null)
 };
 
 const createCompanySchema = Joi.object(companyBaseSchema);

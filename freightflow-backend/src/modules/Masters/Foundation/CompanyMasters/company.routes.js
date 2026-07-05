@@ -40,6 +40,8 @@ router.put(
 
 router.delete("/:id", companyController.remove);
 
+router.get("/dashboard-stats", companyController.getDashboardStats);
+
 router.get("/", companyController.getMyCompanies);
 
 module.exports = router;

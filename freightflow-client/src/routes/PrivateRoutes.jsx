@@ -1,21 +1,24 @@
 import React from 'react';
+import Dashboard from '../modules/admin/pages/Dashboard/Dashboard';
+import Companies from '../modules/admin/pages/Companies/Companies';
+import EmployeeOverview from '../modules/admin/pages/EmployeeOverview/EmployeeOverview';
+import Settings from '../modules/admin/pages/Settings/Settings';
 
 // Placeholders
-const DashboardPlaceholder = () => <div><h2>Dashboard</h2><p>Welcome to FreightFlow ERP</p></div>;
 const GenericPlaceholder = ({ title }) => <div><h2>{title}</h2><p>Module content goes here.</p></div>;
 
 const PrivateRoutes = [
   {
     index: true,
-    element: <DashboardPlaceholder />,
+    element: <Dashboard />,
   },
   {
     path: 'companies',
-    element: <GenericPlaceholder title="Companies" />,
+    element: <Companies />,
   },
   {
-    path: 'masters',
-    element: <GenericPlaceholder title="Masters" />,
+    path: 'employees',
+    element: <EmployeeOverview />,
   },
   {
     path: 'shipments',
@@ -27,7 +30,7 @@ const PrivateRoutes = [
   },
   {
     path: 'settings',
-    element: <GenericPlaceholder title="Settings" />,
+    element: <Settings />,
   },
 ];
 
