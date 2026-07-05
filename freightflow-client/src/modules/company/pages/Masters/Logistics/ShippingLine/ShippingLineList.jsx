@@ -6,11 +6,15 @@ import { logisticsService } from '../../../../../masters/services/logistics.serv
 
 const ShippingLineList = ({ onEdit, searchQuery = '', viewMode = 'table', refreshTrigger = 0 }) => {
   const [lines, setLines] = useState([]);
+  const [page, setPage] = useState(1);
+  const [limit, setLimit] = useState(20);
+  const [totalPages, setTotalPages] = useState(1);
+  const [totalRecords, setTotalRecords] = useState(0);
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
     fetchLines();
-  }, [refreshTrigger]);
+  }, [refreshTrigger, page, limit, searchQuery]);
 
   const fetchLines = async () => {
     setIsLoading(true);
@@ -25,6 +29,8 @@ const ShippingLineList = ({ onEdit, searchQuery = '', viewMode = 'table', refres
         lineData = data;
       }
       setLines(lineData);
+      if (data?.data?.totalPages) setTotalPages(data.data.totalPages);
+      if (data?.data?.total) setTotalRecords(data.data.total);
     } catch (error) {
       console.error('Failed to fetch shipping lines:', error);
     } finally {
@@ -32,15 +38,7 @@ const ShippingLineList = ({ onEdit, searchQuery = '', viewMode = 'table', refres
     }
   };
 
-  const filteredLines = lines.filter(line => {
-    if (!searchQuery) return true;
-    const query = searchQuery.toLowerCase();
-    return (
-      (line.shipping_line_name && line.shipping_line_name.toLowerCase().includes(query)) ||
-      (line.shipping_line_code && line.shipping_line_code.toLowerCase().includes(query)) ||
-      (line.scac_code && line.scac_code.toLowerCase().includes(query))
-    );
-  });
+  
 
   const columns = [
     {
@@ -98,20 +96,24 @@ const ShippingLineList = ({ onEdit, searchQuery = '', viewMode = 'table', refres
   if (viewMode === 'card') {
     return (
       <div className="grid" style={{ gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: '1.5rem' }}>
-        {filteredLines.map(line => (
-          <div key={line.id} className="bg-surface border-light rounded-lg shadow-sm p-lg cursor-pointer hover:shadow-md transition-shadow" onClick={() => onEdit && onEdit(line)}>
-            <div className="flex justify-between align-center mb-sm">
-              <h4 className="m-0 text-primary font-bold">{line.shipping_line_name}</h4>
-              <Badge variant={line.status === 'Active' ? 'success' : 'danger'}>{line.status || 'Active'}</Badge>
-            </div>
-            <p className="text-secondary-light text-sm mb-xs">Code: {line.shipping_line_code} {line.scac_code ? `| SCAC: ${line.scac_code}` : ''}</p>
-            {line.contact_person && <p className="text-secondary-light text-sm mb-xs">Contact: {line.contact_person}</p>}
-            {line.email && <p className="text-secondary-light text-sm">Email: {line.email}</p>}
+        {lines.map(line => (
+          <div key={line.id}>
+            <MasterDataCard
+              title={line.shipping_line_name}
+              code={line.shipping_line_code}
+              subtitle={line.scac_code ? `SCAC: ${line.scac_code}` : ''}
+              status={line.status}
+              onEdit={() => onEdit && onEdit(line)}
+              gridData={[
+                { label: 'Contact', value: line.contact_person },
+                { label: 'Email', value: line.email }
+              ]}
+            />
           </div>
         ))}
-        {filteredLines.length === 0 && !isLoading && (
+        {lines.length === 0 && !isLoading && (
           <div className="text-center p-xl text-tertiary w-full" style={{ gridColumn: '1 / -1' }}>
-            No shipping lines found.
+            No records found.
           </div>
         )}
       </div>
@@ -119,16 +121,22 @@ const ShippingLineList = ({ onEdit, searchQuery = '', viewMode = 'table', refres
   }
 
   return (
-    <div className="bg-surface border-light rounded-lg shadow-sm">
-      <TableView
+    <TableView
         columns={columns}
-        data={filteredLines}
+        data={lines}
         isLoading={isLoading}
         emptyStateMsg="No shipping lines found. Create one to get started."
+        paginationProps={{
+          currentPage: page,
+          totalPages: totalPages,
+          onPageChange: setPage,
+          totalItems: totalRecords,
+          itemsPerPage: limit,
+          onLimitChange: (newLimit) => { setLimit(newLimit); setPage(1); }
+        }}
         onRowClick={(row) => onEdit && onEdit(row)}
       />
-    </div>
-  );
+);
 };
 
 export default ShippingLineList;

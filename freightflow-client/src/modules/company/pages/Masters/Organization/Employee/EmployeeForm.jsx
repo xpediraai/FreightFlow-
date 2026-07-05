@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { X } from 'lucide-react';
 import Button from '../../../../../../shared/components/Button';
 import { organizationService } from '../../../../../masters/services/organization.service';
+import StatusToggle from '../../../../../../shared/components/Input/StatusToggle';
 
 const EmployeeForm = ({ onCancel, onSuccess, initialData }) => {
   const isEditMode = !!initialData;
@@ -247,149 +248,12 @@ const EmployeeForm = ({ onCancel, onSuccess, initialData }) => {
           </div>
           <div className="form-group">
             <label>Department <span className="text-danger">*</span></label>
-            <select 
-              disabled={isLoading} 
-              name="department_id" 
-              value={formData.department_id} 
-              onChange={handleChange} 
-              onBlur={handleBlur}
-              className="form-control form-control-sm"
-            >
-              <option value="">Select Department...</option>
-              {departments.map(d => (
-                <option key={d.id} value={d.id}>{d.department_name}</option>
-              ))}
-            </select>
-            {errors.department_id && <div className="text-danger text-xs mt-xs">{errors.department_id}</div>}
-          </div>
-          <div className="form-group">
-            <label>Designation <span className="text-danger">*</span></label>
-            <select 
-              disabled={isLoading} 
-              name="designation_id" 
-              value={formData.designation_id} 
-              onChange={handleChange} 
-              onBlur={handleBlur}
-              className="form-control form-control-sm"
-            >
-              <option value="">Select Designation...</option>
-              {filteredDesignations.map(d => (
-                <option key={d.id} value={d.id}>{d.designation_name}</option>
-              ))}
-            </select>
-            {errors.designation_id && <div className="text-danger text-xs mt-xs">{errors.designation_id}</div>}
-          </div>
-          <div className="form-group">
-            <label>Gender</label>
-            <select 
-              disabled={isLoading} 
-              name="gender" 
-              value={formData.gender} 
-              onChange={handleChange} 
-              className="form-control form-control-sm"
-            >
-              <option value="">Select...</option>
-              <option value="Male">Male</option>
-              <option value="Female">Female</option>
-              <option value="Other">Other</option>
-            </select>
-          </div>
-          <div className="form-group">
-            <label>Date of Birth</label>
-            <input 
-              disabled={isLoading} 
-              type="date" 
-              name="dob" 
-              value={formData.dob} 
-              onChange={handleChange} 
-              className="form-control form-control-sm" 
+            <StatusToggle 
+              value={formData.status} 
+              onChange={(val) => handleChange({ target: { name: 'status', value: val } })}
+              disabled={isLoading}
             />
-          </div>
-          <div className="form-group">
-            <label>Date of Joining</label>
-            <input 
-              disabled={isLoading} 
-              type="date" 
-              name="doj" 
-              value={formData.doj} 
-              onChange={handleChange} 
-              className="form-control form-control-sm" 
-            />
-          </div>
-          <div className="form-group">
-            <label>Mobile</label>
-            <input 
-              disabled={isLoading} 
-              type="text" 
-              name="mobile" 
-              value={formData.mobile} 
-              onChange={handleChange} 
-              className="form-control form-control-sm" 
-            />
-          </div>
-          <div className="form-group">
-            <label>Email</label>
-            <input 
-              disabled={isLoading} 
-              type="email" 
-              name="email" 
-              value={formData.email} 
-              onChange={handleChange} 
-              className="form-control form-control-sm" 
-            />
-          </div>
-          <div className="form-group">
-            <label>Employment Type</label>
-            <select 
-              disabled={isLoading} 
-              name="employment_type" 
-              value={formData.employment_type} 
-              onChange={handleChange} 
-              className="form-control form-control-sm"
-            >
-              <option value="">Select...</option>
-              <option value="Full-Time">Full-Time</option>
-              <option value="Part-Time">Part-Time</option>
-              <option value="Contract">Contract</option>
-            </select>
-          </div>
-          <div className="form-group">
-            <label>Aadhaar</label>
-            <input 
-              disabled={isLoading} 
-              type="text" 
-              name="aadhaar" 
-              value={formData.aadhaar} 
-              onChange={handleChange} 
-              className="form-control form-control-sm" 
-            />
-          </div>
-          <div className="form-group">
-            <label>PAN</label>
-            <input 
-              disabled={isLoading} 
-              type="text" 
-              name="pan" 
-              value={formData.pan} 
-              onChange={handleChange} 
-              className="form-control form-control-sm uppercase" 
-            />
-          </div>
-          {isEditMode && (
-            <div className="form-group">
-              <label>Status</label>
-              <select 
-                disabled={isLoading} 
-                name="status" 
-                value={formData.status} 
-                onChange={handleChange} 
-                className="form-control form-control-sm"
-              >
-                <option value="Active">Active</option>
-                <option value="Inactive">Inactive</option>
-              </select>
             </div>
-          )}
         </div>
 
         <div className="form-actions mt-lg flex justify-end gap-sm pt-md border-t-light">

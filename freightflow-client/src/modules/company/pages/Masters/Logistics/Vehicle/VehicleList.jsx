@@ -6,16 +6,20 @@ import { logisticsService } from '../../../../../masters/services/logistics.serv
 
 const VehicleList = ({ onEdit, searchQuery = '', viewMode = 'table', refreshTrigger = 0 }) => {
   const [vehicles, setVehicles] = useState([]);
+  const [page, setPage] = useState(1);
+  const [limit, setLimit] = useState(20);
+  const [totalPages, setTotalPages] = useState(1);
+  const [totalRecords, setTotalRecords] = useState(0);
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
     fetchVehicles();
-  }, [refreshTrigger]);
+  }, [refreshTrigger, page, limit, searchQuery]);
 
   const fetchVehicles = async () => {
     setIsLoading(true);
     try {
-      const data = await logisticsService.getVehicles();
+      const data = await logisticsService.getVehicles({ page, limit, search: searchQuery });
       let vehicleData = [];
       if (data?.data?.data && Array.isArray(data.data.data)) {
         vehicleData = data.data.data;
@@ -25,6 +29,8 @@ const VehicleList = ({ onEdit, searchQuery = '', viewMode = 'table', refreshTrig
         vehicleData = data;
       }
       setVehicles(vehicleData);
+      if (data?.data?.totalPages) setTotalPages(data.data.totalPages);
+      if (data?.data?.total) setTotalRecords(data.data.total);
     } catch (error) {
       console.error('Failed to fetch vehicles:', error);
     } finally {
@@ -32,15 +38,7 @@ const VehicleList = ({ onEdit, searchQuery = '', viewMode = 'table', refreshTrig
     }
   };
 
-  const filteredVehicles = vehicles.filter(vehicle => {
-    if (!searchQuery) return true;
-    const query = searchQuery.toLowerCase();
-    return (
-      (vehicle.vehicle_number && vehicle.vehicle_number.toLowerCase().includes(query)) ||
-      (vehicle.vehicle_type && vehicle.vehicle_type.toLowerCase().includes(query)) ||
-      (vehicle.registration_number && vehicle.registration_number.toLowerCase().includes(query))
-    );
-  });
+  
 
   const columns = [
     {
@@ -107,22 +105,24 @@ const VehicleList = ({ onEdit, searchQuery = '', viewMode = 'table', refreshTrig
   if (viewMode === 'card') {
     return (
       <div className="grid" style={{ gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: '1.5rem' }}>
-        {filteredVehicles.map(vehicle => (
-          <div key={vehicle.id} className="bg-surface border-light rounded-lg shadow-sm p-lg cursor-pointer hover:shadow-md transition-shadow" onClick={() => onEdit && onEdit(vehicle)}>
-            <div className="flex justify-between align-center mb-sm">
-              <h4 className="m-0 text-primary font-bold uppercase">{vehicle.vehicle_number}</h4>
-              <Badge variant={vehicle.status === 'Active' ? 'success' : 'danger'}>{vehicle.status || 'Active'}</Badge>
-            </div>
-            <p className="text-secondary-light text-sm mb-xs">Type: {vehicle.vehicle_type || '-'} | Cap: {vehicle.vehicle_capacity ? `${vehicle.vehicle_capacity} kg` : '-'}</p>
-            {vehicle.vehicle_owner && <p className="text-secondary-light text-sm mb-xs">Owner: {vehicle.vehicle_owner}</p>}
-            <p className="text-secondary-light text-sm mt-xs">
-              <Badge variant={vehicle.gps_enabled === 'Yes' ? 'success' : 'neutral'}>GPS: {vehicle.gps_enabled || 'No'}</Badge>
-            </p>
+        {vehicles.map(vehicle => (
+          <div key={vehicle.id}>
+            <MasterDataCard
+              title={vehicle.vehicle_number}
+              code={vehicle.code}
+              status={vehicle.status}
+              onEdit={() => onEdit && onEdit(vehicle)}
+              gridData={[
+                { label: 'Type', value: vehicle.vehicle_type || '-' },
+                { label: 'Capacity', value: vehicle.vehicle_capacity ? `${vehicle.vehicle_capacity} kg` : '-' },
+                { label: 'Owner', value: vehicle.vehicle_owner }
+              ]}
+            />
           </div>
         ))}
-        {filteredVehicles.length === 0 && !isLoading && (
+        {vehicles.length === 0 && !isLoading && (
           <div className="text-center p-xl text-tertiary w-full" style={{ gridColumn: '1 / -1' }}>
-            No vehicles found.
+            No records found.
           </div>
         )}
       </div>
@@ -130,16 +130,22 @@ const VehicleList = ({ onEdit, searchQuery = '', viewMode = 'table', refreshTrig
   }
 
   return (
-    <div className="bg-surface border-light rounded-lg shadow-sm">
-      <TableView
+    <TableView
         columns={columns}
-        data={filteredVehicles}
+        data={vehicles}
         isLoading={isLoading}
         emptyStateMsg="No vehicles found. Create one to get started."
+        paginationProps={{
+          currentPage: page,
+          totalPages: totalPages,
+          onPageChange: setPage,
+          totalItems: totalRecords,
+          itemsPerPage: limit,
+          onLimitChange: (newLimit) => { setLimit(newLimit); setPage(1); }
+        }}
         onRowClick={(row) => onEdit && onEdit(row)}
       />
-    </div>
-  );
+);
 };
 
 export default VehicleList;

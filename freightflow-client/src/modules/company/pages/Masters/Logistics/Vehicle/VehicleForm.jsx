@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { X } from 'lucide-react';
 import Button from '../../../../../../shared/components/Button';
 import { logisticsService } from '../../../../../masters/services/logistics.service';
+import StatusToggle from '../../../../../../shared/components/Input/StatusToggle';
 
 const VehicleForm = ({ onCancel, onSuccess, initialData }) => {
   const isEditMode = !!initialData;
@@ -191,104 +192,12 @@ const VehicleForm = ({ onCancel, onSuccess, initialData }) => {
           </div>
           <div className="form-group">
             <label>GPS Enabled</label>
-            <select 
-              disabled={isLoading} 
-              name="gps_enabled" 
-              value={formData.gps_enabled} 
-              onChange={handleChange} 
-              className="form-control form-control-sm"
-            >
-              <option value="Yes">Yes</option>
-              <option value="No">No</option>
-            </select>
-          </div>
-          <div className="form-group">
-            <label>Registration Number</label>
-            <input 
-              disabled={isLoading} 
-              type="text" 
-              name="registration_number" 
-              value={formData.registration_number} 
-              onChange={handleChange} 
-              onBlur={handleBlur}
-              className="form-control form-control-sm" 
+            <StatusToggle 
+              value={formData.status} 
+              onChange={(val) => handleChange({ target: { name: 'status', value: val } })}
+              disabled={isLoading}
             />
-          </div>
-          <div className="form-group">
-            <label>Registration Expiry</label>
-            <input 
-              disabled={isLoading} 
-              type="date" 
-              name="registration_expiry" 
-              value={formData.registration_expiry} 
-              onChange={handleChange} 
-              onBlur={handleBlur}
-              className="form-control form-control-sm" 
-            />
-          </div>
-          <div className="form-group">
-            <label>Insurance Number</label>
-            <input 
-              disabled={isLoading} 
-              type="text" 
-              name="insurance_number" 
-              value={formData.insurance_number} 
-              onChange={handleChange} 
-              onBlur={handleBlur}
-              className="form-control form-control-sm" 
-            />
-          </div>
-          <div className="form-group">
-            <label>Insurance Expiry</label>
-            <input 
-              disabled={isLoading} 
-              type="date" 
-              name="insurance_expiry" 
-              value={formData.insurance_expiry} 
-              onChange={handleChange} 
-              onBlur={handleBlur}
-              className="form-control form-control-sm" 
-            />
-          </div>
-          <div className="form-group">
-            <label>Fitness Expiry</label>
-            <input 
-              disabled={isLoading} 
-              type="date" 
-              name="fitness_expiry" 
-              value={formData.fitness_expiry} 
-              onChange={handleChange} 
-              onBlur={handleBlur}
-              className="form-control form-control-sm" 
-            />
-          </div>
-          <div className="form-group">
-            <label>Pollution Expiry</label>
-            <input 
-              disabled={isLoading} 
-              type="date" 
-              name="pollution_expiry" 
-              value={formData.pollution_expiry} 
-              onChange={handleChange} 
-              onBlur={handleBlur}
-              className="form-control form-control-sm" 
-            />
-          </div>
-          {isEditMode && (
-            <div className="form-group">
-              <label>Status</label>
-              <select 
-                disabled={isLoading} 
-                name="status" 
-                value={formData.status} 
-                onChange={handleChange} 
-                className="form-control form-control-sm"
-              >
-                <option value="Active">Active</option>
-                <option value="Inactive">Inactive</option>
-              </select>
             </div>
-          )}
         </div>
 
         <div className="form-actions mt-lg flex justify-end gap-sm pt-md border-t-light">

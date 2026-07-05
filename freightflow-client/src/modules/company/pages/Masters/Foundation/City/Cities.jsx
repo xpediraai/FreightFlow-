@@ -10,7 +10,7 @@ const Cities = () => {
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [selectedCity, setSelectedCity] = useState(null);
   const [searchTerm, setSearchTerm] = useState('');
-  const [viewMode, setViewMode] = useState('table');
+  const [viewMode, setViewMode] = useState(localStorage.getItem('preferredViewMode') || 'table');
   const [refreshTrigger, setRefreshTrigger] = useState(0);
 
   const handleCreateNew = () => {
@@ -38,19 +38,15 @@ const Cities = () => {
   return (
     <Page>
       <PageHeader 
-        title="City Master" 
-        subtitle="Manage cities for your organization." 
-        breadcrumbs={[{ label: 'Dashboard' }, { label: 'Masters' }, { label: 'Foundation' }, { label: 'City' }]}
-      />
+        title="City Master"
+      
+        primaryAction={{ label: '+ City', onClick: handleCreateNew }}/>
       
       <div className="mt-lg">
-        <MasterToolbar 
+        <div className="bg-surface border-light rounded-lg shadow-sm">
+          <MasterToolbar entityName="City" 
           searchTerm={searchTerm}
           onSearch={setSearchTerm}
-          onAdd={handleCreateNew}
-          onToggleView={setViewMode}
-          viewMode={viewMode}
-          addLabel="Add City"
         />
 
         <ExpandableForm isOpen={isFormOpen}>
@@ -67,6 +63,7 @@ const Cities = () => {
           viewMode={viewMode}
           refreshTrigger={refreshTrigger}
         />
+        </div>
       </div>
     </Page>
   );

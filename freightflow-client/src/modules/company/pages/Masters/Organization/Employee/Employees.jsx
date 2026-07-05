@@ -10,7 +10,7 @@ const Employees = () => {
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [selectedEmployee, setSelectedEmployee] = useState(null);
   const [searchTerm, setSearchTerm] = useState('');
-  const [viewMode, setViewMode] = useState('table');
+  const [viewMode, setViewMode] = useState(localStorage.getItem('preferredViewMode') || 'table');
   const [refreshTrigger, setRefreshTrigger] = useState(0);
 
   const handleCreateNew = () => {
@@ -38,19 +38,15 @@ const Employees = () => {
   return (
     <Page>
       <PageHeader 
-        title="Employee Master" 
-        subtitle="Manage organization employees and details." 
-        breadcrumbs={[{ label: 'Dashboard' }, { label: 'Masters' }, { label: 'Organization' }, { label: 'Employees' }]}
-      />
+        title="Employee Master"
+      
+        primaryAction={{ label: '+ Employee', onClick: handleCreateNew }}/>
       
       <div className="mt-lg">
-        <MasterToolbar 
+        <div className="bg-surface border-light rounded-lg shadow-sm">
+          <MasterToolbar entityName="Employee" 
           searchTerm={searchTerm}
           onSearch={setSearchTerm}
-          onAdd={handleCreateNew}
-          onToggleView={setViewMode}
-          viewMode={viewMode}
-          addLabel="Add Employee"
         />
 
         <ExpandableForm isOpen={isFormOpen}>
@@ -67,6 +63,7 @@ const Employees = () => {
           viewMode={viewMode}
           refreshTrigger={refreshTrigger}
         />
+        </div>
       </div>
     </Page>
   );

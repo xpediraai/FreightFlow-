@@ -10,7 +10,7 @@ const Incoterms = () => {
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [selectedTerm, setSelectedTerm] = useState(null);
   const [searchTerm, setSearchTerm] = useState('');
-  const [viewMode, setViewMode] = useState('table');
+  const [viewMode, setViewMode] = useState(localStorage.getItem('preferredViewMode') || 'table');
   const [refreshTrigger, setRefreshTrigger] = useState(0);
 
   const handleCreateNew = () => {
@@ -38,19 +38,15 @@ const Incoterms = () => {
   return (
     <Page>
       <PageHeader 
-        title="Incoterm Master" 
-        subtitle="Manage international commercial terms." 
-        breadcrumbs={[{ label: 'Dashboard' }, { label: 'Masters' }, { label: 'Common' }, { label: 'Incoterms' }]}
-      />
+        title="Incoterm Master"
+      
+        primaryAction={{ label: '+ Incoterm', onClick: handleCreateNew }}/>
       
       <div className="mt-lg">
-        <MasterToolbar 
+        <div className="bg-surface border-light rounded-lg shadow-sm">
+          <MasterToolbar entityName="Incoterm" 
           searchTerm={searchTerm}
           onSearch={setSearchTerm}
-          onAdd={handleCreateNew}
-          onToggleView={setViewMode}
-          viewMode={viewMode}
-          addLabel="Add Incoterm"
         />
 
         <ExpandableForm isOpen={isFormOpen}>
@@ -67,6 +63,7 @@ const Incoterms = () => {
           viewMode={viewMode}
           refreshTrigger={refreshTrigger}
         />
+        </div>
       </div>
     </Page>
   );

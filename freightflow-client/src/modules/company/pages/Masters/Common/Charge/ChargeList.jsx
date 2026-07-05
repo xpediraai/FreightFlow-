@@ -6,11 +6,15 @@ import { businessService } from '../../../../../masters/services/business.servic
 
 const ChargeList = ({ onEdit, searchQuery = '', viewMode = 'table', refreshTrigger = 0 }) => {
   const [charges, setCharges] = useState([]);
+  const [page, setPage] = useState(1);
+  const [limit, setLimit] = useState(20);
+  const [totalPages, setTotalPages] = useState(1);
+  const [totalRecords, setTotalRecords] = useState(0);
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
     fetchCharges();
-  }, [refreshTrigger]);
+  }, [refreshTrigger, page, limit, searchQuery]);
 
   const fetchCharges = async () => {
     setIsLoading(true);
@@ -34,15 +38,7 @@ const ChargeList = ({ onEdit, searchQuery = '', viewMode = 'table', refreshTrigg
     }
   };
 
-  const filteredCharges = charges.filter(item => {
-    if (!searchQuery) return true;
-    const query = searchQuery.toLowerCase();
-    return (
-      (item.charge_name && item.charge_name.toLowerCase().includes(query)) ||
-      (item.charge_code && item.charge_code.toLowerCase().includes(query)) ||
-      (item.charge_type && item.charge_type.toLowerCase().includes(query))
-    );
-  });
+  
 
   const columns = [
     {
@@ -109,20 +105,23 @@ const ChargeList = ({ onEdit, searchQuery = '', viewMode = 'table', refreshTrigg
   if (viewMode === 'card') {
     return (
       <div className="grid" style={{ gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: '1.5rem' }}>
-        {filteredCharges.map(c => (
-          <div key={c.id} className="bg-surface border-light rounded-lg shadow-sm p-lg cursor-pointer hover:shadow-md transition-shadow" onClick={() => onEdit && onEdit(c)}>
-            <div className="flex justify-between align-center mb-sm">
-              <h4 className="m-0 text-primary font-bold">{c.charge_name}</h4>
-              <Badge variant={c.status === 'Active' ? 'success' : 'danger'}>{c.status || 'Active'}</Badge>
-            </div>
-            <p className="text-secondary-light text-sm mb-xs">Code: <span className="uppercase">{c.charge_code}</span></p>
-            <p className="text-secondary-light text-sm mb-xs">Type: {c.charge_type}</p>
-            <p className="text-secondary-light text-sm">Module: {c.applicable_module}</p>
+        {charges.map(c => (
+          <div key={c.id}>
+            <MasterDataCard
+              title={c.charge_name}
+              code={c.charge_code}
+              status={c.status}
+              onEdit={() => onEdit && onEdit(c)}
+              gridData={[
+                { label: 'Type', value: c.charge_type },
+                { label: 'Module', value: c.applicable_module }
+              ]}
+            />
           </div>
         ))}
-        {filteredCharges.length === 0 && !isLoading && (
+        {charges.length === 0 && !isLoading && (
           <div className="text-center p-xl text-tertiary w-full" style={{ gridColumn: '1 / -1' }}>
-            No charges found.
+            No records found.
           </div>
         )}
       </div>
@@ -130,16 +129,22 @@ const ChargeList = ({ onEdit, searchQuery = '', viewMode = 'table', refreshTrigg
   }
 
   return (
-    <div className="bg-surface border-light rounded-lg shadow-sm">
-      <TableView
+    <TableView
         columns={columns}
-        data={filteredCharges}
+        data={charges}
         isLoading={isLoading}
         emptyStateMsg="No charges found. Create one to get started."
+        paginationProps={{
+          currentPage: page,
+          totalPages: totalPages,
+          onPageChange: setPage,
+          totalItems: totalRecords,
+          itemsPerPage: limit,
+          onLimitChange: (newLimit) => { setLimit(newLimit); setPage(1); }
+        }}
         onRowClick={(row) => onEdit && onEdit(row)}
       />
-    </div>
-  );
+);
 };
 
 export default ChargeList;

@@ -8,6 +8,7 @@ import { useAuth } from '../../../../contexts/AuthContext';
 const Settings = () => {
   const { currentUser } = useAuth();
   const [activeTab, setActiveTab] = useState('general');
+  const [viewMode, setViewMode] = useState(localStorage.getItem('preferredViewMode') || 'table');
   const [isSaving, setIsSaving] = useState(false);
 
   const handleSave = () => {
@@ -101,10 +102,24 @@ const Settings = () => {
                       <p className="text-sm text-secondary-light m-0 mt-xs">Choose how you want to view lists of data.</p>
                     </div>
                     <div className="flex bg-background border-light rounded-md p-xs gap-xs">
-                      <button className="btn flex align-center gap-xs bg-primary text-white border-none" style={{ padding: '0.4rem 1rem' }}>
+                      <button 
+                        className={`btn flex align-center gap-xs ${viewMode === 'table' ? 'bg-primary text-white' : 'bg-transparent text-secondary'} border-none`} 
+                        style={{ padding: '0.4rem 1rem', boxShadow: viewMode === 'table' ? '' : 'none' }}
+                        onClick={() => {
+                          setViewMode('table');
+                          localStorage.setItem('preferredViewMode', 'table');
+                        }}
+                      >
                         <Table size={16} /> Table
                       </button>
-                      <button className="btn flex align-center gap-xs bg-transparent text-secondary border-none shadow-none" style={{ padding: '0.4rem 1rem' }}>
+                      <button 
+                        className={`btn flex align-center gap-xs ${viewMode === 'card' ? 'bg-primary text-white' : 'bg-transparent text-secondary'} border-none`} 
+                        style={{ padding: '0.4rem 1rem', boxShadow: viewMode === 'card' ? '' : 'none' }}
+                        onClick={() => {
+                          setViewMode('card');
+                          localStorage.setItem('preferredViewMode', 'card');
+                        }}
+                      >
                         <CreditCard size={16} /> Card
                       </button>
                     </div>

@@ -1,16 +1,21 @@
 import React, { useState, useEffect } from 'react';
 import TableView from '../../../../../../shared/components/TableView';
 import Badge from '../../../../../../shared/components/Badge';
-import { Edit2, Trash2 } from 'lucide-react';
+import MasterDataCard from '../../../../../../shared/components/Master/MasterDataCard';
+import { Edit2, Trash2, MapPin } from 'lucide-react';
 import { businessService } from '../../../../../masters/services/business.service';
 
 const VendorList = ({ onEdit, searchQuery = '', viewMode = 'table', refreshTrigger = 0 }) => {
   const [vendors, setVendors] = useState([]);
+  const [page, setPage] = useState(1);
+  const [limit, setLimit] = useState(20);
+  const [totalPages, setTotalPages] = useState(1);
+  const [totalRecords, setTotalRecords] = useState(0);
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
     fetchVendors();
-  }, [refreshTrigger]);
+  }, [refreshTrigger, page, limit, searchQuery]);
 
   const fetchVendors = async () => {
     setIsLoading(true);
@@ -34,18 +39,7 @@ const VendorList = ({ onEdit, searchQuery = '', viewMode = 'table', refreshTrigg
     }
   };
 
-  const filteredVendors = vendors.filter(item => {
-    if (!searchQuery) return true;
-    const query = searchQuery.toLowerCase();
-    return (
-      (item.vendor_name && item.vendor_name.toLowerCase().includes(query)) ||
-      (item.vendor_code && item.vendor_code.toLowerCase().includes(query)) ||
-      (item.vendor_type && item.vendor_type.toLowerCase().includes(query)) ||
-      (item.email && item.email.toLowerCase().includes(query)) ||
-      (item.mobile && item.mobile.toLowerCase().includes(query)) ||
-      (item.gst_number && item.gst_number.toLowerCase().includes(query))
-    );
-  });
+  
 
   const columns = [
     {
@@ -113,38 +107,26 @@ const VendorList = ({ onEdit, searchQuery = '', viewMode = 'table', refreshTrigg
 
   if (viewMode === 'card') {
     return (
-      <div className="grid" style={{ gridTemplateColumns: 'repeat(auto-fill, minmax(320px, 1fr))', gap: '1.5rem' }}>
-        {filteredVendors.map(v => (
-          <div key={v.id} className="bg-surface border-light rounded-lg shadow-sm p-lg cursor-pointer hover:shadow-md transition-shadow" onClick={() => onEdit && onEdit(v)}>
-            <div className="flex justify-between align-center mb-md pb-sm border-b-light">
-              <div>
-                <h4 className="m-0 text-primary font-bold text-lg">{v.vendor_name}</h4>
-                <p className="text-xs text-secondary-light uppercase tracking-wide mt-1">{v.vendor_code}</p>
-              </div>
-              <Badge variant={v.status === 'Active' ? 'success' : 'danger'}>{v.status || 'Active'}</Badge>
-            </div>
-            
-            <div className="space-y-sm text-sm">
-              <div className="flex justify-between">
-                <span className="text-secondary-light">Type:</span>
-                <span className="font-medium text-text">{v.vendor_type || '-'}</span>
-              </div>
-              <div className="flex justify-between">
-                <span className="text-secondary-light">Mobile:</span>
-                <span className="text-text">{v.mobile || '-'}</span>
-              </div>
-              <div className="flex justify-between">
-                <span className="text-secondary-light">Email:</span>
-                <span className="text-text truncate ml-md">{v.email || '-'}</span>
-              </div>
-              <div className="flex justify-between">
-                <span className="text-secondary-light">GST:</span>
-                <span className="text-text">{v.gst_number || '-'}</span>
-              </div>
-            </div>
+      <div className="grid" style={{ gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: '1.5rem' }}>
+        {vendors.map(v => (
+          <div key={v.id}>
+            <MasterDataCard
+              title={v.vendor_name}
+              code={v.vendor_code}
+              status={v.status}
+              locationText={`${v.city?.city_name || 'Global'} → ${v.country?.country_name || 'Worldwide'}`}
+              locationIcon={MapPin}
+              onEdit={() => onEdit && onEdit(v)}
+              gridData={[
+                { label: 'Vendor Type', value: v.vendor_type },
+                { label: 'Mobile', value: v.mobile },
+                { label: 'Currency', value: v.currency?.currency_code },
+                { label: 'Payment Terms', value: v.payment_terms }
+              ]}
+            />
           </div>
         ))}
-        {filteredVendors.length === 0 && !isLoading && (
+        {vendors.length === 0 && !isLoading && (
           <div className="text-center p-xl text-tertiary w-full" style={{ gridColumn: '1 / -1' }}>
             No vendors found.
           </div>
@@ -154,16 +136,22 @@ const VendorList = ({ onEdit, searchQuery = '', viewMode = 'table', refreshTrigg
   }
 
   return (
-    <div className="bg-surface border-light rounded-lg shadow-sm">
-      <TableView
+    <TableView
         columns={columns}
-        data={filteredVendors}
+        data={vendors}
         isLoading={isLoading}
         emptyStateMsg="No vendors found. Create one to get started."
+        paginationProps={{
+          currentPage: page,
+          totalPages: totalPages,
+          onPageChange: setPage,
+          totalItems: totalRecords,
+          itemsPerPage: limit,
+          onLimitChange: (newLimit) => { setLimit(newLimit); setPage(1); }
+        }}
         onRowClick={(row) => onEdit && onEdit(row)}
       />
-    </div>
-  );
+);
 };
 
 export default VendorList;

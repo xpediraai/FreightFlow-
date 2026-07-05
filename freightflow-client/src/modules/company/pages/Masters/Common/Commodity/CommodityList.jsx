@@ -6,11 +6,15 @@ import { businessService } from '../../../../../masters/services/business.servic
 
 const CommodityList = ({ onEdit, searchQuery = '', viewMode = 'table', refreshTrigger = 0 }) => {
   const [commodities, setCommodities] = useState([]);
+  const [page, setPage] = useState(1);
+  const [limit, setLimit] = useState(20);
+  const [totalPages, setTotalPages] = useState(1);
+  const [totalRecords, setTotalRecords] = useState(0);
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
     fetchCommodities();
-  }, [refreshTrigger]);
+  }, [refreshTrigger, page, limit, searchQuery]);
 
   const fetchCommodities = async () => {
     setIsLoading(true);
@@ -34,15 +38,7 @@ const CommodityList = ({ onEdit, searchQuery = '', viewMode = 'table', refreshTr
     }
   };
 
-  const filteredCommodities = commodities.filter(item => {
-    if (!searchQuery) return true;
-    const query = searchQuery.toLowerCase();
-    return (
-      (item.commodity_name && item.commodity_name.toLowerCase().includes(query)) ||
-      (item.commodity_code && item.commodity_code.toLowerCase().includes(query)) ||
-      (item.hs_code && item.hs_code.toLowerCase().includes(query))
-    );
-  });
+  
 
   const columns = [
     {
@@ -104,20 +100,23 @@ const CommodityList = ({ onEdit, searchQuery = '', viewMode = 'table', refreshTr
   if (viewMode === 'card') {
     return (
       <div className="grid" style={{ gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: '1.5rem' }}>
-        {filteredCommodities.map(c => (
-          <div key={c.id} className="bg-surface border-light rounded-lg shadow-sm p-lg cursor-pointer hover:shadow-md transition-shadow" onClick={() => onEdit && onEdit(c)}>
-            <div className="flex justify-between align-center mb-sm">
-              <h4 className="m-0 text-primary font-bold">{c.commodity_name}</h4>
-              <Badge variant={c.status === 'Active' ? 'success' : 'danger'}>{c.status || 'Active'}</Badge>
-            </div>
-            <p className="text-secondary-light text-sm mb-xs">Code: <span className="uppercase">{c.commodity_code}</span></p>
-            {c.hs_code && <p className="text-secondary-light text-sm mb-xs">HS Code: {c.hs_code}</p>}
-            <p className="text-secondary-light text-sm">Hazardous: {c.hazardous}</p>
+        {commodities.map(c => (
+          <div key={c.id}>
+            <MasterDataCard
+              title={c.commodity_name}
+              code={c.commodity_code}
+              status={c.status}
+              onEdit={() => onEdit && onEdit(c)}
+              gridData={[
+                { label: 'HS Code', value: c.hs_code },
+                { label: 'Hazardous', value: c.hazardous }
+              ]}
+            />
           </div>
         ))}
-        {filteredCommodities.length === 0 && !isLoading && (
+        {commodities.length === 0 && !isLoading && (
           <div className="text-center p-xl text-tertiary w-full" style={{ gridColumn: '1 / -1' }}>
-            No commodities found.
+            No records found.
           </div>
         )}
       </div>
@@ -125,16 +124,22 @@ const CommodityList = ({ onEdit, searchQuery = '', viewMode = 'table', refreshTr
   }
 
   return (
-    <div className="bg-surface border-light rounded-lg shadow-sm">
-      <TableView
+    <TableView
         columns={columns}
-        data={filteredCommodities}
+        data={commodities}
         isLoading={isLoading}
         emptyStateMsg="No commodities found. Create one to get started."
+        paginationProps={{
+          currentPage: page,
+          totalPages: totalPages,
+          onPageChange: setPage,
+          totalItems: totalRecords,
+          itemsPerPage: limit,
+          onLimitChange: (newLimit) => { setLimit(newLimit); setPage(1); }
+        }}
         onRowClick={(row) => onEdit && onEdit(row)}
       />
-    </div>
-  );
+);
 };
 
 export default CommodityList;

@@ -10,7 +10,7 @@ const Commodities = () => {
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [selectedCommodity, setSelectedCommodity] = useState(null);
   const [searchTerm, setSearchTerm] = useState('');
-  const [viewMode, setViewMode] = useState('table');
+  const [viewMode, setViewMode] = useState(localStorage.getItem('preferredViewMode') || 'table');
   const [refreshTrigger, setRefreshTrigger] = useState(0);
 
   const handleCreateNew = () => {
@@ -38,19 +38,15 @@ const Commodities = () => {
   return (
     <Page>
       <PageHeader 
-        title="Commodity Master" 
-        subtitle="Manage product commodities and classifications." 
-        breadcrumbs={[{ label: 'Dashboard' }, { label: 'Masters' }, { label: 'Common' }, { label: 'Commodities' }]}
-      />
+        title="Commodity Master"
+      
+        primaryAction={{ label: '+ Commodity', onClick: handleCreateNew }}/>
       
       <div className="mt-lg">
-        <MasterToolbar 
+        <div className="bg-surface border-light rounded-lg shadow-sm">
+          <MasterToolbar entityName="Commodity" 
           searchTerm={searchTerm}
           onSearch={setSearchTerm}
-          onAdd={handleCreateNew}
-          onToggleView={setViewMode}
-          viewMode={viewMode}
-          addLabel="Add Commodity"
         />
 
         <ExpandableForm isOpen={isFormOpen}>
@@ -67,6 +63,7 @@ const Commodities = () => {
           viewMode={viewMode}
           refreshTrigger={refreshTrigger}
         />
+        </div>
       </div>
     </Page>
   );

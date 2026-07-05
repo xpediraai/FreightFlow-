@@ -10,7 +10,7 @@ const Charges = () => {
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [selectedCharge, setSelectedCharge] = useState(null);
   const [searchTerm, setSearchTerm] = useState('');
-  const [viewMode, setViewMode] = useState('table');
+  const [viewMode, setViewMode] = useState(localStorage.getItem('preferredViewMode') || 'table');
   const [refreshTrigger, setRefreshTrigger] = useState(0);
 
   const handleCreateNew = () => {
@@ -38,19 +38,15 @@ const Charges = () => {
   return (
     <Page>
       <PageHeader 
-        title="Charge Master" 
-        subtitle="Manage billing and expense charges across modules." 
-        breadcrumbs={[{ label: 'Dashboard' }, { label: 'Masters' }, { label: 'Common' }, { label: 'Charges' }]}
-      />
+        title="Charge Master"
+      
+        primaryAction={{ label: '+ Charge', onClick: handleCreateNew }}/>
       
       <div className="mt-lg">
-        <MasterToolbar 
+        <div className="bg-surface border-light rounded-lg shadow-sm">
+          <MasterToolbar entityName="Charge" 
           searchTerm={searchTerm}
           onSearch={setSearchTerm}
-          onAdd={handleCreateNew}
-          onToggleView={setViewMode}
-          viewMode={viewMode}
-          addLabel="Add Charge"
         />
 
         <ExpandableForm isOpen={isFormOpen}>
@@ -67,6 +63,7 @@ const Charges = () => {
           viewMode={viewMode}
           refreshTrigger={refreshTrigger}
         />
+        </div>
       </div>
     </Page>
   );

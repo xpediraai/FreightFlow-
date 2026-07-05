@@ -10,6 +10,7 @@
   font-weight: var(--font-weight-medium);
   margin-bottom: var(--spacing-xs);
   color: var(--text-primary);
+  transition: color var(--transition-fast);
 }
 
 .form-label.required::after {
@@ -25,14 +26,24 @@
   border-radius: var(--radius-sm);
   background-color: var(--surface);
   color: var(--text-primary);
-  transition: border-color var(--transition), box-shadow var(--transition);
+  transition: border-color var(--transition-normal), box-shadow var(--transition-normal), background-color var(--transition-normal);
   width: 100%;
+}
+
+.form-control:hover:not(:disabled) {
+  border-color: #BDBDBD;
 }
 
 .form-control:focus {
   outline: none;
   border-color: var(--primary);
-  box-shadow: 0 0 0 3px rgba(211, 47, 47, 0.1);
+  box-shadow: 0 0 0 3px rgba(211, 47, 47, 0.15);
+  background-color: #fff;
+}
+
+.form-group:focus-within .form-label,
+.form-group:focus-within .dense-form label {
+  color: var(--primary);
 }
 
 .form-control:disabled {
@@ -43,12 +54,14 @@
 
 .form-control.is-invalid {
   border-color: var(--danger);
+  animation: fadeIn var(--transition-fast) cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .form-error {
   font-size: var(--font-size-xs);
   color: var(--danger);
   margin-top: var(--spacing-xs);
+  animation: slideDown var(--transition-normal) cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 /* Master Form Grid Layouts */

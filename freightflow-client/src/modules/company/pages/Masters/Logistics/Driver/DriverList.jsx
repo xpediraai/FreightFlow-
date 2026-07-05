@@ -6,16 +6,20 @@ import { logisticsService } from '../../../../../masters/services/logistics.serv
 
 const DriverList = ({ onEdit, searchQuery = '', viewMode = 'table', refreshTrigger = 0 }) => {
   const [drivers, setDrivers] = useState([]);
+  const [page, setPage] = useState(1);
+  const [limit, setLimit] = useState(20);
+  const [totalPages, setTotalPages] = useState(1);
+  const [totalRecords, setTotalRecords] = useState(0);
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
     fetchDrivers();
-  }, [refreshTrigger]);
+  }, [refreshTrigger, page, limit, searchQuery]);
 
   const fetchDrivers = async () => {
     setIsLoading(true);
     try {
-      const data = await logisticsService.getDrivers();
+      const data = await logisticsService.getDrivers({ page, limit, search: searchQuery });
       let driverData = [];
       if (data?.data?.data && Array.isArray(data.data.data)) {
         driverData = data.data.data;
@@ -25,6 +29,8 @@ const DriverList = ({ onEdit, searchQuery = '', viewMode = 'table', refreshTrigg
         driverData = data;
       }
       setDrivers(driverData);
+      if (data?.data?.totalPages) setTotalPages(data.data.totalPages);
+      if (data?.data?.total) setTotalRecords(data.data.total);
     } catch (error) {
       console.error('Failed to fetch drivers:', error);
     } finally {
@@ -32,15 +38,7 @@ const DriverList = ({ onEdit, searchQuery = '', viewMode = 'table', refreshTrigg
     }
   };
 
-  const filteredDrivers = drivers.filter(driver => {
-    if (!searchQuery) return true;
-    const query = searchQuery.toLowerCase();
-    return (
-      (driver.driver_name && driver.driver_name.toLowerCase().includes(query)) ||
-      (driver.driver_code && driver.driver_code.toLowerCase().includes(query)) ||
-      (driver.mobile && driver.mobile.toLowerCase().includes(query))
-    );
-  });
+  
 
   const columns = [
     {
@@ -98,20 +96,23 @@ const DriverList = ({ onEdit, searchQuery = '', viewMode = 'table', refreshTrigg
   if (viewMode === 'card') {
     return (
       <div className="grid" style={{ gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: '1.5rem' }}>
-        {filteredDrivers.map(driver => (
-          <div key={driver.id} className="bg-surface border-light rounded-lg shadow-sm p-lg cursor-pointer hover:shadow-md transition-shadow" onClick={() => onEdit && onEdit(driver)}>
-            <div className="flex justify-between align-center mb-sm">
-              <h4 className="m-0 text-primary font-bold">{driver.driver_name}</h4>
-              <Badge variant={driver.status === 'Active' ? 'success' : 'danger'}>{driver.status || 'Active'}</Badge>
-            </div>
-            <p className="text-secondary-light text-sm mb-xs">Code: <span className="uppercase">{driver.driver_code}</span></p>
-            {driver.mobile && <p className="text-secondary-light text-sm mb-xs">Mobile: {driver.mobile}</p>}
-            {driver.license_number && <p className="text-secondary-light text-sm">License: <span className="uppercase">{driver.license_number}</span></p>}
+        {drivers.map(driver => (
+          <div key={driver.id}>
+            <MasterDataCard
+              title={driver.driver_name}
+              code={driver.driver_code}
+              status={driver.status}
+              onEdit={() => onEdit && onEdit(driver)}
+              gridData={[
+                { label: 'Mobile', value: driver.mobile },
+                { label: 'License', value: driver.license_number }
+              ]}
+            />
           </div>
         ))}
-        {filteredDrivers.length === 0 && !isLoading && (
+        {drivers.length === 0 && !isLoading && (
           <div className="text-center p-xl text-tertiary w-full" style={{ gridColumn: '1 / -1' }}>
-            No drivers found.
+            No records found.
           </div>
         )}
       </div>
@@ -119,16 +120,22 @@ const DriverList = ({ onEdit, searchQuery = '', viewMode = 'table', refreshTrigg
   }
 
   return (
-    <div className="bg-surface border-light rounded-lg shadow-sm">
-      <TableView
+    <TableView
         columns={columns}
-        data={filteredDrivers}
+        data={drivers}
         isLoading={isLoading}
         emptyStateMsg="No drivers found. Create one to get started."
+        paginationProps={{
+          currentPage: page,
+          totalPages: totalPages,
+          onPageChange: setPage,
+          totalItems: totalRecords,
+          itemsPerPage: limit,
+          onLimitChange: (newLimit) => { setLimit(newLimit); setPage(1); }
+        }}
         onRowClick={(row) => onEdit && onEdit(row)}
       />
-    </div>
-  );
+);
 };
 
 export default DriverList;

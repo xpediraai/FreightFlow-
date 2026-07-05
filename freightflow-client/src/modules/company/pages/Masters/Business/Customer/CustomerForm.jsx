@@ -3,6 +3,7 @@ import { X, Plus, Trash2 } from 'lucide-react';
 import Button from '../../../../../../shared/components/Button';
 import { businessService } from '../../../../../masters/services/business.service';
 import { foundationService } from '../../../../../masters/services/foundation.service';
+import StatusToggle from '../../../../../../shared/components/Input/StatusToggle';
 
 const TABS = [
   { id: 'personal', label: 'Personal Info' },
@@ -161,62 +162,12 @@ const CustomerForm = ({ onCancel, onSuccess, initialData }) => {
       </div>
       <div className="form-group">
         <label>Customer Type</label>
-        <select disabled={isLoading} name="customer_type" value={formData.customer_type} onChange={handleMainChange} className="form-control form-control-sm">
-          <option value="">Select...</option>
-          <option value="Corporate">Corporate</option>
-          <option value="Individual">Individual</option>
-        </select>
-      </div>
-      <div className="form-group">
-        <label>Category</label>
-        <input disabled={isLoading} type="text" name="customer_category" value={formData.customer_category} onChange={handleMainChange} className="form-control form-control-sm" />
-      </div>
-      <div className="form-group">
-        <label>GST Number</label>
-        <input disabled={isLoading} type="text" name="gst_number" value={formData.gst_number} onChange={handleMainChange} className="form-control form-control-sm uppercase" />
-      </div>
-      <div className="form-group">
-        <label>PAN Number</label>
-        <input disabled={isLoading} type="text" name="pan_number" value={formData.pan_number} onChange={handleMainChange} className="form-control form-control-sm uppercase" />
-      </div>
-      <div className="form-group">
-        <label>IEC Code</label>
-        <input disabled={isLoading} type="text" name="iec_code" value={formData.iec_code} onChange={handleMainChange} className="form-control form-control-sm uppercase" />
-      </div>
-      <div className="form-group">
-        <label>CIN Number</label>
-        <input disabled={isLoading} type="text" name="cin_number" value={formData.cin_number} onChange={handleMainChange} className="form-control form-control-sm uppercase" />
-      </div>
-      <div className="form-group">
-        <label>TAN Number</label>
-        <input disabled={isLoading} type="text" name="tan_number" value={formData.tan_number} onChange={handleMainChange} className="form-control form-control-sm uppercase" />
-      </div>
-      <div className="form-group">
-        <label>Credit Limit</label>
-        <input disabled={isLoading} type="number" name="credit_limit" value={formData.credit_limit} onChange={handleMainChange} className="form-control form-control-sm" />
-      </div>
-      <div className="form-group">
-        <label>Payment Terms</label>
-        <input disabled={isLoading} type="text" name="payment_terms" value={formData.payment_terms} onChange={handleMainChange} className="form-control form-control-sm" placeholder="e.g. Net 30" />
-      </div>
-      <div className="form-group">
-        <label>Currency <span className="text-danger">*</span></label>
-        <select disabled={isLoading} name="currency_id" value={formData.currency_id} onChange={handleMainChange} className="form-control form-control-sm">
-          <option value="">Select Currency...</option>
-          {currencies.map(c => (
-            <option key={c.id} value={c.id}>{c.currency_code} - {c.currency_name}</option>
-          ))}
-        </select>
-      </div>
-      {isEditMode && (
-        <div className="form-group">
-          <label>Status</label>
-          <select disabled={isLoading} name="status" value={formData.status} onChange={handleMainChange} className="form-control form-control-sm">
-            <option value="Active">Active</option>
-            <option value="Inactive">Inactive</option>
-          </select>
+        <StatusToggle 
+              value={formData.status} 
+              onChange={(val) => handleChange({ target: { name: 'status', value: val } })}
+              disabled={isLoading}
+            />
         </div>
-      )}
     </div>
   );
 

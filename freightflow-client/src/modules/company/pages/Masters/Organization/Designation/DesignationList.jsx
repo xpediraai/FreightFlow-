@@ -6,16 +6,20 @@ import { organizationService } from '../../../../../masters/services/organizatio
 
 const DesignationList = ({ onEdit, searchQuery = '', viewMode = 'table', refreshTrigger = 0 }) => {
   const [designations, setDesignations] = useState([]);
+  const [page, setPage] = useState(1);
+  const [limit, setLimit] = useState(20);
+  const [totalPages, setTotalPages] = useState(1);
+  const [totalRecords, setTotalRecords] = useState(0);
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
     fetchDesignations();
-  }, [refreshTrigger]);
+  }, [refreshTrigger, page, limit, searchQuery]);
 
   const fetchDesignations = async () => {
     setIsLoading(true);
     try {
-      const data = await organizationService.getDesignations();
+      const data = await organizationService.getDesignations({ page, limit, search: searchQuery });
       let desigData = [];
       if (data?.data?.data && Array.isArray(data.data.data)) {
         desigData = data.data.data;
@@ -25,6 +29,8 @@ const DesignationList = ({ onEdit, searchQuery = '', viewMode = 'table', refresh
         desigData = data;
       }
       setDesignations(desigData);
+      if (data?.data?.totalPages) setTotalPages(data.data.totalPages);
+      if (data?.data?.total) setTotalRecords(data.data.total);
     } catch (error) {
       console.error('Failed to fetch designations:', error);
     } finally {
@@ -32,14 +38,7 @@ const DesignationList = ({ onEdit, searchQuery = '', viewMode = 'table', refresh
     }
   };
 
-  const filteredDesignations = designations.filter(desig => {
-    if (!searchQuery) return true;
-    const query = searchQuery.toLowerCase();
-    return (
-      (desig.designation_name && desig.designation_name.toLowerCase().includes(query)) ||
-      (desig.designation_code && desig.designation_code.toLowerCase().includes(query))
-    );
-  });
+  
 
   const columns = [
     {
@@ -92,19 +91,20 @@ const DesignationList = ({ onEdit, searchQuery = '', viewMode = 'table', refresh
   if (viewMode === 'card') {
     return (
       <div className="grid" style={{ gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: '1.5rem' }}>
-        {filteredDesignations.map(desig => (
-          <div key={desig.id} className="bg-surface border-light rounded-lg shadow-sm p-lg cursor-pointer hover:shadow-md transition-shadow" onClick={() => onEdit && onEdit(desig)}>
-            <div className="flex justify-between align-center mb-sm">
-              <h4 className="m-0 text-primary font-bold">{desig.designation_name}</h4>
-              <Badge variant={desig.status === 'Active' ? 'success' : 'danger'}>{desig.status || 'Active'}</Badge>
-            </div>
-            <p className="text-secondary-light text-sm mb-xs">Code: <span className="uppercase">{desig.designation_code}</span></p>
-            {desig.description && <p className="text-secondary-light text-sm">{desig.description}</p>}
+        {designations.map(desig => (
+          <div key={desig.id}>
+            <MasterDataCard
+              title={desig.designation_name}
+              code={desig.designation_code}
+              status={desig.status}
+              onEdit={() => onEdit && onEdit(desig)}
+              
+            />
           </div>
         ))}
-        {filteredDesignations.length === 0 && !isLoading && (
+        {designations.length === 0 && !isLoading && (
           <div className="text-center p-xl text-tertiary w-full" style={{ gridColumn: '1 / -1' }}>
-            No designations found.
+            No records found.
           </div>
         )}
       </div>
@@ -112,16 +112,22 @@ const DesignationList = ({ onEdit, searchQuery = '', viewMode = 'table', refresh
   }
 
   return (
-    <div className="bg-surface border-light rounded-lg shadow-sm">
-      <TableView
+    <TableView
         columns={columns}
-        data={filteredDesignations}
+        data={designations}
         isLoading={isLoading}
         emptyStateMsg="No designations found. Create one to get started."
+        paginationProps={{
+          currentPage: page,
+          totalPages: totalPages,
+          onPageChange: setPage,
+          totalItems: totalRecords,
+          itemsPerPage: limit,
+          onLimitChange: (newLimit) => { setLimit(newLimit); setPage(1); }
+        }}
         onRowClick={(row) => onEdit && onEdit(row)}
       />
-    </div>
-  );
+);
 };
 
 export default DesignationList;

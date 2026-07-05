@@ -37,17 +37,29 @@
 .btn-primary {
   background-color: var(--primary);
   color: #fff;
+  box-shadow: 0 1px 2px rgba(0,0,0,0.05);
 }
 .btn-primary:hover:not(:disabled) {
   background-color: var(--primary-dark);
+  box-shadow: 0 4px 6px rgba(211, 47, 47, 0.2);
+  transform: translateY(-1px);
+}
+.btn-primary:active:not(:disabled) {
+  transform: scale(0.98);
 }
 
 .btn-secondary {
   background-color: var(--secondary);
   color: #fff;
+  box-shadow: 0 1px 2px rgba(0,0,0,0.05);
 }
 .btn-secondary:hover:not(:disabled) {
   background-color: var(--secondary-dark);
+  box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+  transform: translateY(-1px);
+}
+.btn-secondary:active:not(:disabled) {
+  transform: scale(0.98);
 }
 
 .btn-outline {
@@ -58,6 +70,10 @@
 .btn-outline:hover:not(:disabled) {
   border-color: var(--primary);
   color: var(--primary);
+  background-color: rgba(211, 47, 47, 0.04);
+}
+.btn-outline:active:not(:disabled) {
+  transform: scale(0.98);
 }
 
 .btn-ghost {
@@ -66,4 +82,7 @@
 }
 .btn-ghost:hover:not(:disabled) {
   background-color: var(--background);
+}
+.btn-ghost:active:not(:disabled) {
+  transform: scale(0.96);
 }

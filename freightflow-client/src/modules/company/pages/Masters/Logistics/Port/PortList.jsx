@@ -6,16 +6,20 @@ import { logisticsService } from '../../../../../masters/services/logistics.serv
 
 const PortList = ({ onEdit, searchQuery = '', viewMode = 'table', refreshTrigger = 0 }) => {
   const [ports, setPorts] = useState([]);
+  const [page, setPage] = useState(1);
+  const [limit, setLimit] = useState(20);
+  const [totalPages, setTotalPages] = useState(1);
+  const [totalRecords, setTotalRecords] = useState(0);
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
     fetchPorts();
-  }, [refreshTrigger]);
+  }, [refreshTrigger, page, limit, searchQuery]);
 
   const fetchPorts = async () => {
     setIsLoading(true);
     try {
-      const data = await logisticsService.getPorts();
+      const data = await logisticsService.getPorts({ page, limit, search: searchQuery });
       let portData = [];
       if (data?.data?.data && Array.isArray(data.data.data)) {
         portData = data.data.data;
@@ -25,6 +29,8 @@ const PortList = ({ onEdit, searchQuery = '', viewMode = 'table', refreshTrigger
         portData = data;
       }
       setPorts(portData);
+      if (data?.data?.totalPages) setTotalPages(data.data.totalPages);
+      if (data?.data?.total) setTotalRecords(data.data.total);
     } catch (error) {
       console.error('Failed to fetch ports:', error);
     } finally {
@@ -32,15 +38,7 @@ const PortList = ({ onEdit, searchQuery = '', viewMode = 'table', refreshTrigger
     }
   };
 
-  const filteredPorts = ports.filter(port => {
-    if (!searchQuery) return true;
-    const query = searchQuery.toLowerCase();
-    return (
-      (port.port_name && port.port_name.toLowerCase().includes(query)) ||
-      (port.port_code && port.port_code.toLowerCase().includes(query)) ||
-      (port.time_zone && port.time_zone.toLowerCase().includes(query))
-    );
-  });
+  
 
   const columns = [
     {
@@ -93,19 +91,22 @@ const PortList = ({ onEdit, searchQuery = '', viewMode = 'table', refreshTrigger
   if (viewMode === 'card') {
     return (
       <div className="grid" style={{ gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: '1.5rem' }}>
-        {filteredPorts.map(port => (
-          <div key={port.id} className="bg-surface border-light rounded-lg shadow-sm p-lg cursor-pointer hover:shadow-md transition-shadow" onClick={() => onEdit && onEdit(port)}>
-            <div className="flex justify-between align-center mb-sm">
-              <h4 className="m-0 text-primary font-bold">{port.port_name}</h4>
-              <Badge variant={port.status === 'Active' ? 'success' : 'danger'}>{port.status || 'Active'}</Badge>
-            </div>
-            <p className="text-secondary-light text-sm mb-xs">Code: {port.port_code}</p>
-            <p className="text-secondary-light text-sm">Time Zone: {port.time_zone || '-'}</p>
+        {ports.map(port => (
+          <div key={port.id}>
+            <MasterDataCard
+              title={port.port_name}
+              code={port.port_code}
+              status={port.status}
+              onEdit={() => onEdit && onEdit(port)}
+              gridData={[
+                { label: 'Time Zone', value: port.time_zone || '-' }
+              ]}
+            />
           </div>
         ))}
-        {filteredPorts.length === 0 && !isLoading && (
+        {ports.length === 0 && !isLoading && (
           <div className="text-center p-xl text-tertiary w-full" style={{ gridColumn: '1 / -1' }}>
-            No ports found.
+            No records found.
           </div>
         )}
       </div>
@@ -113,16 +114,22 @@ const PortList = ({ onEdit, searchQuery = '', viewMode = 'table', refreshTrigger
   }
 
   return (
-    <div className="bg-surface border-light rounded-lg shadow-sm">
-      <TableView
+    <TableView
         columns={columns}
-        data={filteredPorts}
+        data={ports}
         isLoading={isLoading}
         emptyStateMsg="No ports found. Create one to get started."
+        paginationProps={{
+          currentPage: page,
+          totalPages: totalPages,
+          onPageChange: setPage,
+          totalItems: totalRecords,
+          itemsPerPage: limit,
+          onLimitChange: (newLimit) => { setLimit(newLimit); setPage(1); }
+        }}
         onRowClick={(row) => onEdit && onEdit(row)}
       />
-    </div>
-  );
+);
 };
 
 export default PortList;

@@ -5,51 +5,44 @@ import Button from '../Button';
 const MasterToolbar = ({ 
   onSearch, 
   searchTerm, 
-  onAdd, 
-  onToggleView, 
-  viewMode = 'table', 
-  addLabel = 'Add New',
-  hideAdd = false
+  totalRecords = 0,
+  entityName = 'Records',
+  statusFilter = 'ALL STATUS',
+  onStatusChange
 }) => {
   return (
-    <div className="master-toolbar flex justify-between align-center mb-lg">
+    <div className="master-toolbar flex justify-between align-center p-md" style={{ borderBottom: '1px solid var(--border-light)' }}>
       <div className="toolbar-left">
+        <span className="font-bold text-secondary text-sm">
+          Total {entityName}: {totalRecords}
+        </span>
+      </div>
+      
+      <div className="toolbar-right flex align-center gap-sm">
+        {onStatusChange && (
+          <select 
+            value={statusFilter}
+            onChange={(e) => onStatusChange(e.target.value)}
+            className="form-control"
+            style={{ width: '150px' }}
+          >
+            <option value="ALL STATUS">ALL STATUS</option>
+            <option value="ACTIVE">ACTIVE</option>
+            <option value="INACTIVE">INACTIVE</option>
+          </select>
+        )}
+        
         <div className="search-input-wrapper relative">
-          <Search size={18} className="text-secondary-light absolute" style={{ left: '10px', top: '50%', transform: 'translateY(-50%)' }} />
+          <Search size={16} className="text-secondary-light absolute" style={{ left: '10px', top: '50%', transform: 'translateY(-50%)' }} />
           <input 
             type="text" 
             placeholder="Search..." 
             value={searchTerm}
             onChange={(e) => onSearch(e.target.value)}
             className="form-control"
-            style={{ paddingLeft: '35px', width: '300px' }}
+            style={{ paddingLeft: '32px', width: '250px' }}
           />
         </div>
-      </div>
-      <div className="toolbar-right flex align-center gap-sm">
-        <div className="view-toggle flex bg-background border-light rounded-md p-xs gap-xs">
-          <button 
-            className={`btn flex align-center gap-xs ${viewMode === 'table' ? 'bg-primary text-white border-none' : 'bg-transparent text-secondary border-none shadow-none'}`}
-            style={{ padding: '0.4rem 0.8rem' }}
-            onClick={() => onToggleView('table')}
-            title="Table View"
-          >
-            <List size={16} />
-          </button>
-          <button 
-            className={`btn flex align-center gap-xs ${viewMode === 'card' ? 'bg-primary text-white border-none' : 'bg-transparent text-secondary border-none shadow-none'}`}
-            style={{ padding: '0.4rem 0.8rem' }}
-            onClick={() => onToggleView('card')}
-            title="Card View"
-          >
-            <Grid size={16} />
-          </button>
-        </div>
-        {!hideAdd && (
-          <Button variant="primary" onClick={onAdd} leftIcon={Plus}>
-            {addLabel}
-          </Button>
-        )}
       </div>
     </div>
   );

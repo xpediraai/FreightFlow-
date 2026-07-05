@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { X } from 'lucide-react';
 import Button from '../../../../../../shared/components/Button';
 import { foundationService } from '../../../../../masters/services/foundation.service';
+import StatusToggle from '../../../../../../shared/components/Input/StatusToggle';
 
 const CityForm = ({ onCancel, onSuccess, initialData }) => {
   const isEditMode = !!initialData;
@@ -145,103 +146,12 @@ const CityForm = ({ onCancel, onSuccess, initialData }) => {
         <div className="form-grid">
           <div className="form-group">
             <label>Country <span className="text-danger">*</span></label>
-            <select
-              disabled={isLoading || isEditMode}
-              name="country_id"
-              value={formData.country_id}
-              onChange={handleChange}
-              onBlur={handleBlur}
-              className="form-control form-control-sm"
-            >
-              <option value="">Select Country</option>
-              {countries.map(c => (
-                <option key={c.id} value={c.id}>{c.country_name} ({c.country_code})</option>
-              ))}
-            </select>
-            {errors.country_id && <div className="text-danger text-xs mt-xs">{errors.country_id}</div>}
-          </div>
-          <div className="form-group">
-            <label>State <span className="text-danger">*</span></label>
-            <select
-              disabled={isLoading || isEditMode || !formData.country_id}
-              name="state_id"
-              value={formData.state_id}
-              onChange={handleChange}
-              onBlur={handleBlur}
-              className="form-control form-control-sm"
-            >
-              <option value="">Select State</option>
-              {filteredStates.map(s => (
-                <option key={s.id} value={s.id}>{s.state_name} ({s.state_code})</option>
-              ))}
-            </select>
-            {errors.state_id && <div className="text-danger text-xs mt-xs">{errors.state_id}</div>}
-          </div>
-          <div className="form-group">
-            <label>City Code <span className="text-danger">*</span></label>
-            <input 
-              disabled={isLoading || isEditMode} 
-              type="text" 
-              name="city_code" 
-              value={formData.city_code} 
-              onChange={handleChange} 
-              onBlur={handleBlur}
-              className="form-control form-control-sm" 
+            <StatusToggle 
+              value={formData.status} 
+              onChange={(val) => handleChange({ target: { name: 'status', value: val } })}
+              disabled={isLoading}
             />
-            {errors.city_code && <div className="text-danger text-xs mt-xs">{errors.city_code}</div>}
-          </div>
-          <div className="form-group">
-            <label>City Name <span className="text-danger">*</span></label>
-            <input 
-              disabled={isLoading} 
-              type="text" 
-              name="city_name" 
-              value={formData.city_name} 
-              onChange={handleChange} 
-              onBlur={handleBlur}
-              className="form-control form-control-sm" 
-            />
-            {errors.city_name && <div className="text-danger text-xs mt-xs">{errors.city_name}</div>}
-          </div>
-          <div className="form-group">
-            <label>GST</label>
-            <input 
-              disabled={isLoading} 
-              type="text" 
-              name="gst" 
-              value={formData.gst} 
-              onChange={handleChange} 
-              onBlur={handleBlur}
-              className="form-control form-control-sm" 
-            />
-          </div>
-          <div className="form-group">
-            <label>Pincode</label>
-            <input 
-              disabled={isLoading} 
-              type="text" 
-              name="pincode" 
-              value={formData.pincode} 
-              onChange={handleChange} 
-              onBlur={handleBlur}
-              className="form-control form-control-sm" 
-            />
-          </div>
-          {isEditMode && (
-            <div className="form-group">
-              <label>Status</label>
-              <select 
-                disabled={isLoading} 
-                name="status" 
-                value={formData.status} 
-                onChange={handleChange} 
-                className="form-control form-control-sm"
-              >
-                <option value="Active">Active</option>
-                <option value="Inactive">Inactive</option>
-              </select>
             </div>
-          )}
         </div>
 
         <div className="form-actions mt-lg flex justify-end gap-sm pt-md border-t-light">

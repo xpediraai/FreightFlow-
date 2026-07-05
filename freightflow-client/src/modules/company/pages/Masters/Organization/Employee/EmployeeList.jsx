@@ -6,16 +6,20 @@ import { organizationService } from '../../../../../masters/services/organizatio
 
 const EmployeeList = ({ onEdit, searchQuery = '', viewMode = 'table', refreshTrigger = 0 }) => {
   const [employees, setEmployees] = useState([]);
+  const [page, setPage] = useState(1);
+  const [limit, setLimit] = useState(20);
+  const [totalPages, setTotalPages] = useState(1);
+  const [totalRecords, setTotalRecords] = useState(0);
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
     fetchEmployees();
-  }, [refreshTrigger]);
+  }, [refreshTrigger, page, limit, searchQuery]);
 
   const fetchEmployees = async () => {
     setIsLoading(true);
     try {
-      const data = await organizationService.getEmployees();
+      const data = await organizationService.getEmployees({ page, limit, search: searchQuery });
       let empData = [];
       if (data?.data?.data && Array.isArray(data.data.data)) {
         empData = data.data.data;
@@ -25,6 +29,8 @@ const EmployeeList = ({ onEdit, searchQuery = '', viewMode = 'table', refreshTri
         empData = data;
       }
       setEmployees(empData);
+      if (data?.data?.totalPages) setTotalPages(data.data.totalPages);
+      if (data?.data?.total) setTotalRecords(data.data.total);
     } catch (error) {
       console.error('Failed to fetch employees:', error);
     } finally {
@@ -32,16 +38,7 @@ const EmployeeList = ({ onEdit, searchQuery = '', viewMode = 'table', refreshTri
     }
   };
 
-  const filteredEmployees = employees.filter(emp => {
-    if (!searchQuery) return true;
-    const query = searchQuery.toLowerCase();
-    const fullName = `${emp.first_name || ''} ${emp.last_name || ''}`.trim().toLowerCase();
-    return (
-      fullName.includes(query) ||
-      (emp.employee_code && emp.employee_code.toLowerCase().includes(query)) ||
-      (emp.email && emp.email.toLowerCase().includes(query))
-    );
-  });
+  
 
   const columns = [
     {
@@ -99,20 +96,20 @@ const EmployeeList = ({ onEdit, searchQuery = '', viewMode = 'table', refreshTri
   if (viewMode === 'card') {
     return (
       <div className="grid" style={{ gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: '1.5rem' }}>
-        {filteredEmployees.map(emp => (
-          <div key={emp.id} className="bg-surface border-light rounded-lg shadow-sm p-lg cursor-pointer hover:shadow-md transition-shadow" onClick={() => onEdit && onEdit(emp)}>
-            <div className="flex justify-between align-center mb-sm">
-              <h4 className="m-0 text-primary font-bold">{`${emp.first_name || ''} ${emp.last_name || ''}`.trim()}</h4>
-              <Badge variant={emp.status === 'Active' ? 'success' : 'danger'}>{emp.status || 'Active'}</Badge>
-            </div>
-            <p className="text-secondary-light text-sm mb-xs">Code: <span className="uppercase">{emp.employee_code}</span></p>
-            {emp.email && <p className="text-secondary-light text-sm mb-xs">{emp.email}</p>}
-            {emp.mobile && <p className="text-secondary-light text-sm">{emp.mobile}</p>}
+        {employees.map(emp => (
+          <div key={emp.id}>
+            <MasterDataCard
+              title={`${emp.first_name || ''} ${emp.last_name || ''}`.trim()}
+              code={emp.employee_code}
+              status={emp.status}
+              onEdit={() => onEdit && onEdit(emp)}
+              
+            />
           </div>
         ))}
-        {filteredEmployees.length === 0 && !isLoading && (
+        {employees.length === 0 && !isLoading && (
           <div className="text-center p-xl text-tertiary w-full" style={{ gridColumn: '1 / -1' }}>
-            No employees found.
+            No records found.
           </div>
         )}
       </div>
@@ -120,16 +117,22 @@ const EmployeeList = ({ onEdit, searchQuery = '', viewMode = 'table', refreshTri
   }
 
   return (
-    <div className="bg-surface border-light rounded-lg shadow-sm">
-      <TableView
+    <TableView
         columns={columns}
-        data={filteredEmployees}
+        data={employees}
         isLoading={isLoading}
         emptyStateMsg="No employees found. Create one to get started."
+        paginationProps={{
+          currentPage: page,
+          totalPages: totalPages,
+          onPageChange: setPage,
+          totalItems: totalRecords,
+          itemsPerPage: limit,
+          onLimitChange: (newLimit) => { setLimit(newLimit); setPage(1); }
+        }}
         onRowClick={(row) => onEdit && onEdit(row)}
       />
-    </div>
-  );
+);
 };
 
 export default EmployeeList;

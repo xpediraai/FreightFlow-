@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { X } from 'lucide-react';
 import Button from '../../../../../../shared/components/Button';
 import { logisticsService } from '../../../../../masters/services/logistics.service';
+import StatusToggle from '../../../../../../shared/components/Input/StatusToggle';
 
 const WarehouseForm = ({ onCancel, onSuccess, initialData }) => {
   const isEditMode = !!initialData;
@@ -264,16 +265,11 @@ const WarehouseForm = ({ onCancel, onSuccess, initialData }) => {
           {isEditMode && (
             <div className="form-group">
               <label>Status</label>
-              <select 
-                disabled={isLoading} 
-                name="status" 
-                value={formData.status} 
-                onChange={handleChange} 
-                className="form-control form-control-sm"
-              >
-                <option value="Active">Active</option>
-                <option value="Inactive">Inactive</option>
-              </select>
+              <StatusToggle 
+              value={formData.status} 
+              onChange={(val) => handleChange({ target: { name: 'status', value: val } })}
+              disabled={isLoading}
+            />
             </div>
           )}
         </div>

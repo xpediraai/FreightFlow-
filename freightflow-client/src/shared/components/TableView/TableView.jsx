@@ -1,8 +1,9 @@
 import React from 'react';
-import Loader from '../Loader';
+import Skeleton from '../Skeleton/Skeleton';
 import EmptyState from '../EmptyState';
 import Pagination from '../Pagination';
 import './TableView.css';
+import { motion, AnimatePresence } from 'framer-motion';
 
 const TableView = ({
   columns = [],
@@ -12,18 +13,6 @@ const TableView = ({
   paginationProps,
   onRowClick
 }) => {
-  if (isLoading) {
-    return (
-      <div className="table-view-container loading">
-        <Loader size={32} />
-      </div>
-    );
-  }
-
-  if (!data || data.length === 0) {
-    return <EmptyState description={emptyStateMsg} />;
-  }
-
   return (
     <div className="table-view-wrapper">
       <div className="table-container">
@@ -38,23 +27,59 @@ const TableView = ({
             </tr>
           </thead>
           <tbody>
-            {data.map((row, rowIndex) => (
-              <tr 
-                key={row.id || rowIndex} 
-                onClick={() => onRowClick && onRowClick(row)}
-                className={onRowClick ? 'clickable-row' : ''}
-              >
-                {columns.map((col, colIndex) => (
-                  <td key={col.key || colIndex}>
-                    {col.render ? col.render(row) : row[col.key]}
+            <AnimatePresence mode="wait">
+              {isLoading ? (
+                Array.from({ length: 5 }).map((_, rowIndex) => (
+                  <motion.tr 
+                    key={`skeleton-${rowIndex}`}
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    exit={{ opacity: 0 }}
+                    transition={{ duration: 0.2 }}
+                  >
+                    {columns.map((col, colIndex) => (
+                      <td key={colIndex}>
+                        <Skeleton height="20px" width={colIndex === 0 ? '60%' : '100%'} />
+                      </td>
+                    ))}
+                  </motion.tr>
+                ))
+              ) : (!data || data.length === 0) ? (
+                <motion.tr
+                  key="empty"
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  exit={{ opacity: 0 }}
+                >
+                  <td colSpan={columns.length} style={{ padding: '0' }}>
+                    <div style={{ padding: '2rem' }}>
+                      <EmptyState description={emptyStateMsg} />
+                    </div>
                   </td>
-                ))}
-              </tr>
-            ))}
+                </motion.tr>
+              ) : (
+                data.map((row, rowIndex) => (
+                  <motion.tr 
+                    key={row.id || rowIndex} 
+                    onClick={() => onRowClick && onRowClick(row)}
+                    className={onRowClick ? 'clickable-row' : ''}
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: Math.min(rowIndex * 0.05, 0.5), duration: 0.3 }}
+                  >
+                    {columns.map((col, colIndex) => (
+                      <td key={col.key || colIndex}>
+                        {col.render ? col.render(row) : row[col.key]}
+                      </td>
+                    ))}
+                  </motion.tr>
+                ))
+              )}
+            </AnimatePresence>
           </tbody>
         </table>
       </div>
-      {paginationProps && (
+      {paginationProps && !isLoading && data?.length > 0 && (
         <Pagination {...paginationProps} />
       )}
     </div>

@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { X } from 'lucide-react';
 import Button from '../../../../../../shared/components/Button';
 import { commonService } from '../../../../../masters/services/common.service';
+import StatusToggle from '../../../../../../shared/components/Input/StatusToggle';
 
 const ContainerTypeForm = ({ onCancel, onSuccess, initialData }) => {
   const isEditMode = !!initialData;
@@ -143,73 +144,12 @@ const ContainerTypeForm = ({ onCancel, onSuccess, initialData }) => {
           </div>
           <div className="form-group">
             <label>Size <span className="text-danger">*</span></label>
-            <select 
-              disabled={isLoading} 
-              name="size" 
-              value={formData.size} 
-              onChange={handleChange} 
-              className="form-control form-control-sm"
-            >
-              <option value="20">20'</option>
-              <option value="40">40'</option>
-              <option value="45">45'</option>
-            </select>
-          </div>
-          <div className="form-group">
-            <label>Category <span className="text-danger">*</span></label>
-            <select 
-              disabled={isLoading} 
-              name="category" 
-              value={formData.category} 
-              onChange={handleChange} 
-              className="form-control form-control-sm"
-            >
-              <option value="Dry">Dry</option>
-              <option value="Reefer">Reefer</option>
-              <option value="Open Top">Open Top</option>
-              <option value="Flat Rack">Flat Rack</option>
-              <option value="Tank">Tank</option>
-            </select>
-          </div>
-          <div className="form-group">
-            <label>Capacity (CBM)</label>
-            <input 
-              disabled={isLoading} 
-              type="number" 
-              step="0.01"
-              name="capacity_cbm" 
-              value={formData.capacity_cbm} 
-              onChange={handleChange} 
-              className="form-control form-control-sm" 
+            <StatusToggle 
+              value={formData.status} 
+              onChange={(val) => handleChange({ target: { name: 'status', value: val } })}
+              disabled={isLoading}
             />
-          </div>
-          <div className="form-group">
-            <label>Max Weight (kg)</label>
-            <input 
-              disabled={isLoading} 
-              type="number" 
-              step="0.01"
-              name="max_weight" 
-              value={formData.max_weight} 
-              onChange={handleChange} 
-              className="form-control form-control-sm" 
-            />
-          </div>
-          {isEditMode && (
-            <div className="form-group">
-              <label>Status</label>
-              <select 
-                disabled={isLoading} 
-                name="status" 
-                value={formData.status} 
-                onChange={handleChange} 
-                className="form-control form-control-sm"
-              >
-                <option value="Active">Active</option>
-                <option value="Inactive">Inactive</option>
-              </select>
             </div>
-          )}
         </div>
 
         <div className="form-actions mt-lg flex justify-end gap-sm pt-md border-t-light">

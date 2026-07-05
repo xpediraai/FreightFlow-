@@ -40,3 +40,7 @@
 .d-block { display: block; }
 .w-full { width: 100%; }
 .h-full { height: 100%; }
+
+/* Positioning */
+.relative { position: relative; }
+.absolute { position: absolute; }

@@ -62,7 +62,9 @@
   --shadow-lg: 0 10px 20px rgba(0,0,0,0.15), 0 3px 6px rgba(0,0,0,0.10);
 
   /* Transitions */
-  --transition-fast: 150ms ease;
-  --transition: 250ms ease;
-  --transition-slow: 350ms ease;
+  --transition-fast: 150ms cubic-bezier(0.4, 0, 0.2, 1);
+  --transition-normal: 250ms cubic-bezier(0.4, 0, 0.2, 1);
+  --transition-layout: 300ms cubic-bezier(0.4, 0, 0.2, 1);
+  --transition-large: 400ms cubic-bezier(0.4, 0, 0.2, 1);
+  --transition: var(--transition-normal);
 }

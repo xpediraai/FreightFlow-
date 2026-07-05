@@ -1,8 +1,10 @@
 import React, { useState, useEffect } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
 import { X, Plus, Trash2 } from 'lucide-react';
 import Button from '../../../../../../shared/components/Button';
 import { businessService } from '../../../../../masters/services/business.service';
 import { foundationService } from '../../../../../masters/services/foundation.service';
+import StatusToggle from '../../../../../../shared/components/Input/StatusToggle';
 
 const VendorForm = ({ onCancel, onSuccess, initialData }) => {
   const isEditMode = !!initialData;
@@ -161,25 +163,40 @@ const VendorForm = ({ onCancel, onSuccess, initialData }) => {
 
       {error && <div className="alert alert-danger mb-md p-sm">{error}</div>}
 
-      <div className="border-b-light flex gap-md mb-lg">
+      <div className="border-b-light flex gap-md mb-lg relative">
         {tabs.map(t => (
           <button
             key={t.id}
             type="button"
-            className={`pb-sm font-medium transition-colors ${activeTab === t.id ? 'text-primary border-b-2 border-primary' : 'text-secondary-light hover:text-text'}`}
+            className={`pb-sm font-medium transition-colors relative ${activeTab === t.id ? 'text-primary' : 'text-secondary-light hover:text-text'}`}
             style={{ marginBottom: '-1px' }}
             onClick={() => setActiveTab(t.id)}
           >
             {t.label}
+            {activeTab === t.id && (
+              <motion.div
+                layoutId="vendor-active-tab"
+                className="absolute bottom-0 left-0 right-0 border-b-2 border-primary"
+                initial={false}
+                transition={{ type: 'spring', stiffness: 500, damping: 30 }}
+              />
+            )}
           </button>
         ))}
       </div>
 
       <form onSubmit={handleSubmit} className="dense-form">
-        
+        <AnimatePresence mode="wait">
         {/* TAB 1: Personal Info */}
         {activeTab === 'personal' && (
-          <div className="form-grid">
+          <motion.div 
+            key="personal"
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -10 }}
+            transition={{ duration: 0.2 }}
+            className="form-grid"
+          >
             <div className="form-group">
               <label>Vendor Code *</label>
               <input disabled={isLoading} required type="text" name="vendor_code" value={formData.vendor_code} onChange={handleChange} className="form-control form-control-sm uppercase" />
@@ -190,52 +207,24 @@ const VendorForm = ({ onCancel, onSuccess, initialData }) => {
             </div>
             <div className="form-group">
               <label>Vendor Type</label>
-              <select disabled={isLoading} name="vendor_type" value={formData.vendor_type} onChange={handleChange} className="form-control form-control-sm">
-                <option value="Shipping Line">Shipping Line</option>
-                <option value="Transporter">Transporter</option>
-                <option value="CHA">CHA</option>
-                <option value="CFS">CFS</option>
-                <option value="Warehouse">Warehouse</option>
-                <option value="Surveyor">Surveyor</option>
-                <option value="Other">Other</option>
-              </select>
-            </div>
-            <div className="form-group">
-              <label>Currency</label>
-              <select disabled={isLoading} name="currency_id" value={formData.currency_id || ''} onChange={handleChange} className="form-control form-control-sm">
-                <option value="">Select Currency...</option>
-                {currencies.map(c => (
-                  <option key={c.id} value={c.id}>{c.currency_code} - {c.currency_name}</option>
-                ))}
-              </select>
-            </div>
-            <div className="form-group">
-              <label>GST Number</label>
-              <input disabled={isLoading} type="text" name="gst_number" value={formData.gst_number} onChange={handleChange} className="form-control form-control-sm uppercase" />
-            </div>
-            <div className="form-group">
-              <label>PAN Number</label>
-              <input disabled={isLoading} type="text" name="pan_number" value={formData.pan_number} onChange={handleChange} className="form-control form-control-sm uppercase" />
-            </div>
-            <div className="form-group">
-              <label>Payment Terms</label>
-              <input disabled={isLoading} type="text" name="payment_terms" value={formData.payment_terms} onChange={handleChange} className="form-control form-control-sm" placeholder="e.g. Net 30" />
-            </div>
-            {isEditMode && (
-              <div className="form-group">
-                <label>Status</label>
-                <select disabled={isLoading} name="status" value={formData.status} onChange={handleChange} className="form-control form-control-sm">
-                  <option value="Active">Active</option>
-                  <option value="Inactive">Inactive</option>
-                </select>
+              <StatusToggle 
+              value={formData.status} 
+              onChange={(val) => handleChange({ target: { name: 'status', value: val } })}
+              disabled={isLoading}
+            />
               </div>
-            )}
-          </div>
+          </motion.div>
         )}
 
         {/* TAB 2: Address */}
         {activeTab === 'address' && (
-          <div>
+          <motion.div
+            key="address"
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -10 }}
+            transition={{ duration: 0.2 }}
+          >
             <h4 className="text-md font-semibold mb-sm">Primary Address</h4>
             <div className="form-grid mb-lg border-b-light pb-lg">
               <div className="form-group" style={{ gridColumn: '1 / -1' }}>
@@ -283,12 +272,18 @@ const VendorForm = ({ onCancel, onSuccess, initialData }) => {
                 ))}
               </div>
             )}
-          </div>
+          </motion.div>
         )}
 
         {/* TAB 3: Bank Details */}
         {activeTab === 'bank' && (
-          <div>
+          <motion.div
+            key="bank"
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -10 }}
+            transition={{ duration: 0.2 }}
+          >
             <div className="flex justify-between align-center mb-sm">
               <h4 className="text-md font-semibold m-0">Bank Accounts</h4>
               <Button type="button" variant="outline" size="sm" leftIcon={Plus} onClick={() => handleAddArrayItem('banks', { bank_name: '', branch: '', account_holder: '', account_number: '', ifsc_code: '' })}>
@@ -327,12 +322,18 @@ const VendorForm = ({ onCancel, onSuccess, initialData }) => {
                 ))}
               </div>
             )}
-          </div>
+          </motion.div>
         )}
 
         {/* TAB 4: Contact Info */}
         {activeTab === 'contact' && (
-          <div>
+          <motion.div
+            key="contact"
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -10 }}
+            transition={{ duration: 0.2 }}
+          >
             <h4 className="text-md font-semibold mb-sm">Primary Contact</h4>
             <div className="form-grid mb-lg border-b-light pb-lg">
               <div className="form-group">
@@ -387,8 +388,10 @@ const VendorForm = ({ onCancel, onSuccess, initialData }) => {
                 ))}
               </div>
             )}
-          </div>
+          </motion.div>
         )}
+
+        </AnimatePresence>
 
         <div className="form-actions flex justify-end gap-sm mt-lg pt-md border-t-light">
           <Button variant="outline" type="button" onClick={onCancel} disabled={isLoading}>Cancel</Button>

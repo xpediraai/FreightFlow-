@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { Plus } from 'lucide-react';
 import Page from '../../../../shared/components/Page';
 import PageHeader from '../../../../shared/components/PageHeader';
 import MasterToolbar from '../../../../shared/components/Master/MasterToolbar';
@@ -38,36 +39,33 @@ const Companies = () => {
 
   return (
     <Page>
-      <PageHeader 
-        title="Company Master" 
-        subtitle="Manage client companies, their organizational structures, and owners." 
-        breadcrumbs={[{ label: 'Dashboard' }, { label: 'Masters' }, { label: 'Company' }]}
+      <PageHeader
+        title="Company Master"
+        primaryAction={{ label: '+ Company', onClick: handleCreateNew }}
       />
-      
+
       <div className="mt-lg">
-        <MasterToolbar 
-          searchTerm={searchTerm}
-          onSearch={setSearchTerm}
-          onAdd={handleCreateNew}
-          onToggleView={setViewMode}
-          viewMode={viewMode}
-          addLabel="Add Company"
-        />
-
-        <ExpandableForm isOpen={isFormOpen}>
-          <CompanyForm 
-            onCancel={handleCancel} 
-            onSuccess={handleSuccess} 
-            initialData={selectedCompany} 
+        <div className="bg-surface border-light rounded-lg shadow-sm">
+          <MasterToolbar entityName="Companies"
+            searchTerm={searchTerm}
+            onSearch={setSearchTerm}
           />
-        </ExpandableForm>
 
-        <CompanyList 
-          onEdit={handleEdit} 
-          searchQuery={searchTerm}
-          viewMode={viewMode}
-          refreshTrigger={refreshTrigger}
-        />
+          <ExpandableForm isOpen={isFormOpen}>
+            <CompanyForm
+              onCancel={handleCancel}
+              onSuccess={handleSuccess}
+              initialData={selectedCompany}
+            />
+          </ExpandableForm>
+
+          <CompanyList
+            onEdit={handleEdit}
+            searchQuery={searchTerm}
+            viewMode={viewMode}
+            refreshTrigger={refreshTrigger}
+          />
+        </div>
       </div>
     </Page>
   );

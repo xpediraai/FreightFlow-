@@ -6,16 +6,20 @@ import { commonService } from '../../../../../masters/services/common.service';
 
 const PackageTypeList = ({ onEdit, searchQuery = '', viewMode = 'table', refreshTrigger = 0 }) => {
   const [packageTypes, setPackageTypes] = useState([]);
+  const [page, setPage] = useState(1);
+  const [limit, setLimit] = useState(20);
+  const [totalPages, setTotalPages] = useState(1);
+  const [totalRecords, setTotalRecords] = useState(0);
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
     fetchPackageTypes();
-  }, [refreshTrigger]);
+  }, [refreshTrigger, page, limit, searchQuery]);
 
   const fetchPackageTypes = async () => {
     setIsLoading(true);
     try {
-      const data = await commonService.getPackageTypes();
+      const data = await commonService.getPackageTypes({ page, limit, search: searchQuery });
       let typeData = [];
       if (data?.data?.data && Array.isArray(data.data.data)) {
         typeData = data.data.data;
@@ -25,6 +29,8 @@ const PackageTypeList = ({ onEdit, searchQuery = '', viewMode = 'table', refresh
         typeData = data;
       }
       setPackageTypes(typeData);
+      if (data?.data?.totalPages) setTotalPages(data.data.totalPages);
+      if (data?.data?.total) setTotalRecords(data.data.total);
     } catch (error) {
       console.error('Failed to fetch package types:', error);
     } finally {
@@ -32,14 +38,7 @@ const PackageTypeList = ({ onEdit, searchQuery = '', viewMode = 'table', refresh
     }
   };
 
-  const filteredTypes = packageTypes.filter(type => {
-    if (!searchQuery) return true;
-    const query = searchQuery.toLowerCase();
-    return (
-      (type.package_type_name && type.package_type_name.toLowerCase().includes(query)) ||
-      (type.package_type_code && type.package_type_code.toLowerCase().includes(query))
-    );
-  });
+  
 
   const columns = [
     {
@@ -92,19 +91,20 @@ const PackageTypeList = ({ onEdit, searchQuery = '', viewMode = 'table', refresh
   if (viewMode === 'card') {
     return (
       <div className="grid" style={{ gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: '1.5rem' }}>
-        {filteredTypes.map(type => (
-          <div key={type.id} className="bg-surface border-light rounded-lg shadow-sm p-lg cursor-pointer hover:shadow-md transition-shadow" onClick={() => onEdit && onEdit(type)}>
-            <div className="flex justify-between align-center mb-sm">
-              <h4 className="m-0 text-primary font-bold">{type.package_type_name}</h4>
-              <Badge variant={type.status === 'Active' ? 'success' : 'danger'}>{type.status || 'Active'}</Badge>
-            </div>
-            <p className="text-secondary-light text-sm mb-xs">Code: {type.package_type_code}</p>
-            <p className="text-secondary-light text-sm">{type.description || '-'}</p>
+        {packageTypes.map(type => (
+          <div key={type.id}>
+            <MasterDataCard
+              title={type.package_type_name}
+              code={type.package_type_code}
+              status={type.status}
+              onEdit={() => onEdit && onEdit(type)}
+              
+            />
           </div>
         ))}
-        {filteredTypes.length === 0 && !isLoading && (
+        {packageTypes.length === 0 && !isLoading && (
           <div className="text-center p-xl text-tertiary w-full" style={{ gridColumn: '1 / -1' }}>
-            No package types found.
+            No records found.
           </div>
         )}
       </div>
@@ -112,16 +112,22 @@ const PackageTypeList = ({ onEdit, searchQuery = '', viewMode = 'table', refresh
   }
 
   return (
-    <div className="bg-surface border-light rounded-lg shadow-sm">
-      <TableView
+    <TableView
         columns={columns}
-        data={filteredTypes}
+        data={packageTypes}
         isLoading={isLoading}
         emptyStateMsg="No package types found. Create one to get started."
+        paginationProps={{
+          currentPage: page,
+          totalPages: totalPages,
+          onPageChange: setPage,
+          totalItems: totalRecords,
+          itemsPerPage: limit,
+          onLimitChange: (newLimit) => { setLimit(newLimit); setPage(1); }
+        }}
         onRowClick={(row) => onEdit && onEdit(row)}
       />
-    </div>
-  );
+);
 };
 
 export default PackageTypeList;

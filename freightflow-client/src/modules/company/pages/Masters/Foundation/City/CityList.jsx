@@ -1,21 +1,26 @@
 import React, { useState, useEffect } from 'react';
 import TableView from '../../../../../../shared/components/TableView';
 import Badge from '../../../../../../shared/components/Badge';
-import { Eye, Edit2, Trash2 } from 'lucide-react';
+import MasterDataCard from '../../../../../../shared/components/Master/MasterDataCard';
+import { Eye, Edit2, Trash2, MapPin } from 'lucide-react';
 import { foundationService } from '../../../../../masters/services/foundation.service';
 
 const CityList = ({ onEdit, searchQuery = '', viewMode = 'table', refreshTrigger = 0 }) => {
   const [cities, setCities] = useState([]);
+  const [page, setPage] = useState(1);
+  const [limit, setLimit] = useState(20);
+  const [totalPages, setTotalPages] = useState(1);
+  const [totalRecords, setTotalRecords] = useState(0);
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
     fetchCities();
-  }, [refreshTrigger]);
+  }, [refreshTrigger, page, limit, searchQuery]);
 
   const fetchCities = async () => {
     setIsLoading(true);
     try {
-      const data = await foundationService.getCities();
+      const data = await foundationService.getCities({ page, limit, search: searchQuery });
       let cityData = [];
       if (data?.data?.data && Array.isArray(data.data.data)) {
         cityData = data.data.data;
@@ -25,6 +30,8 @@ const CityList = ({ onEdit, searchQuery = '', viewMode = 'table', refreshTrigger
         cityData = data;
       }
       setCities(cityData);
+      if (data?.data?.totalPages) setTotalPages(data.data.totalPages);
+      if (data?.data?.total) setTotalRecords(data.data.total);
     } catch (error) {
       console.error('Failed to fetch cities:', error);
     } finally {
@@ -32,17 +39,7 @@ const CityList = ({ onEdit, searchQuery = '', viewMode = 'table', refreshTrigger
     }
   };
 
-  const filteredCities = cities.filter(city => {
-    if (!searchQuery) return true;
-    const query = searchQuery.toLowerCase();
-    return (
-      (city.city_name && city.city_name.toLowerCase().includes(query)) ||
-      (city.city_code && city.city_code.toLowerCase().includes(query)) ||
-      (city.State?.state_name && city.State.state_name.toLowerCase().includes(query)) ||
-      (city.Country?.country_name && city.Country.country_name.toLowerCase().includes(query)) ||
-      (city.pincode && city.pincode.toLowerCase().includes(query))
-    );
-  });
+  
 
   const columns = [
     {
@@ -110,18 +107,23 @@ const CityList = ({ onEdit, searchQuery = '', viewMode = 'table', refreshTrigger
   if (viewMode === 'card') {
     return (
       <div className="grid" style={{ gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: '1.5rem' }}>
-        {filteredCities.map(city => (
-          <div key={city.id} className="bg-surface border-light rounded-lg shadow-sm p-lg cursor-pointer hover:shadow-md transition-shadow" onClick={() => onEdit && onEdit(city)}>
-            <div className="flex justify-between align-center mb-sm">
-              <h4 className="m-0 text-primary font-bold">{city.city_name}</h4>
-              <Badge variant={city.status === 'Active' ? 'success' : 'danger'}>{city.status || 'Active'}</Badge>
-            </div>
-            <p className="text-secondary-light text-sm mb-xs">Code: {city.city_code}</p>
-            <p className="text-secondary-light text-sm mb-xs">State: {city.State?.state_name || '-'}</p>
-            <p className="text-secondary-light text-sm">Pincode: {city.pincode || '-'}</p>
+        {cities.map(city => (
+          <div key={city.id}>
+            <MasterDataCard
+              title={city.city_name}
+              code={city.city_code}
+              status={city.status}
+              locationText={`${city.State?.state_name || '-'} → ${city.Country?.country_name || '-'}`}
+              locationIcon={MapPin}
+              onEdit={() => onEdit && onEdit(city)}
+              gridData={[
+                { label: 'Pincode', value: city.pincode },
+                { label: 'GST', value: city.gst }
+              ]}
+            />
           </div>
         ))}
-        {filteredCities.length === 0 && !isLoading && (
+        {cities.length === 0 && !isLoading && (
           <div className="text-center p-xl text-tertiary w-full" style={{ gridColumn: '1 / -1' }}>
             No cities found.
           </div>
@@ -131,16 +133,22 @@ const CityList = ({ onEdit, searchQuery = '', viewMode = 'table', refreshTrigger
   }
 
   return (
-    <div className="bg-surface border-light rounded-lg shadow-sm">
-      <TableView
+    <TableView
         columns={columns}
-        data={filteredCities}
+        data={cities}
         isLoading={isLoading}
         emptyStateMsg="No cities found. Create one to get started."
+        paginationProps={{
+          currentPage: page,
+          totalPages: totalPages,
+          onPageChange: setPage,
+          totalItems: totalRecords,
+          itemsPerPage: limit,
+          onLimitChange: (newLimit) => { setLimit(newLimit); setPage(1); }
+        }}
         onRowClick={(row) => onEdit && onEdit(row)}
       />
-    </div>
-  );
+);
 };
 
 export default CityList;

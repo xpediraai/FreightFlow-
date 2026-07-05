@@ -3,6 +3,7 @@ import { X } from 'lucide-react';
 import Button from '../../../../../../shared/components/Button';
 import { businessService } from '../../../../../masters/services/business.service';
 import { foundationService } from '../../../../../masters/services/foundation.service';
+import StatusToggle from '../../../../../../shared/components/Input/StatusToggle';
 
 const ChargeForm = ({ onCancel, onSuccess, initialData }) => {
   const isEditMode = !!initialData;
@@ -105,51 +106,12 @@ const ChargeForm = ({ onCancel, onSuccess, initialData }) => {
         </div>
         <div className="form-group">
           <label>Charge Type</label>
-          <select disabled={isLoading} name="charge_type" value={formData.charge_type} onChange={handleChange} className="form-control form-control-sm">
-            <option value="Revenue">Revenue</option>
-            <option value="Expense">Expense</option>
-            <option value="Both">Both</option>
-          </select>
-        </div>
-        <div className="form-group">
-          <label>Applicable Module</label>
-          <select disabled={isLoading} name="applicable_module" value={formData.applicable_module} onChange={handleChange} className="form-control form-control-sm">
-            <option value="Inquiry">Inquiry</option>
-            <option value="Quotation">Quotation</option>
-            <option value="Shipment">Shipment</option>
-            <option value="Customs">Customs</option>
-            <option value="Billing">Billing</option>
-            <option value="Transport">Transport</option>
-          </select>
-        </div>
-        <div className="form-group">
-          <label>Default Currency</label>
-          <select disabled={isLoading} name="default_currency" value={formData.default_currency || ''} onChange={handleChange} className="form-control form-control-sm">
-            <option value="">Select Currency...</option>
-            {currencies.map(c => (
-              <option key={c.id} value={c.id}>{c.currency_code} - {c.currency_name}</option>
-            ))}
-          </select>
-        </div>
-        <div className="form-group flex align-center mt-md gap-sm">
-          <input disabled={isLoading} type="checkbox" name="tax_applicable" id="tax_applicable" checked={formData.tax_applicable} onChange={handleChange} />
-          <label htmlFor="tax_applicable" className="mb-0 cursor-pointer">Tax Applicable</label>
-        </div>
-        
-        <div className="form-group" style={{ gridColumn: '1 / -1' }}>
-          <label>Description</label>
-          <textarea disabled={isLoading} name="description" value={formData.description} onChange={handleChange} className="form-control form-control-sm" rows="3" />
-        </div>
-
-        {isEditMode && (
-          <div className="form-group">
-            <label>Status</label>
-            <select disabled={isLoading} name="status" value={formData.status} onChange={handleChange} className="form-control form-control-sm">
-              <option value="Active">Active</option>
-              <option value="Inactive">Inactive</option>
-            </select>
+          <StatusToggle 
+              value={formData.status} 
+              onChange={(val) => handleChange({ target: { name: 'status', value: val } })}
+              disabled={isLoading}
+            />
           </div>
-        )}
         
         <div className="form-actions flex justify-end gap-sm" style={{ gridColumn: '1 / -1' }}>
           <Button variant="outline" type="button" onClick={onCancel} disabled={isLoading}>Cancel</Button>

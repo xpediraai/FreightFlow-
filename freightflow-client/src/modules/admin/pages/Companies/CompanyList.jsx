@@ -139,7 +139,7 @@ const CompanyList = ({ onEdit, searchQuery = '', viewMode = 'table', refreshTrig
   }
 
   return (
-    <div className="company-list-container bg-surface border-light rounded-lg shadow-sm">
+    <>
       <TableView
         columns={columns}
         data={filteredCompanies}
@@ -243,7 +243,7 @@ const CompanyList = ({ onEdit, searchQuery = '', viewMode = 'table', refreshTrig
           cursor: pointer;
         }
       `}</style>
-    </div>
+    </>
   );
 };
 

@@ -1,21 +1,26 @@
 import React, { useState, useEffect } from 'react';
 import TableView from '../../../../../../shared/components/TableView';
 import Badge from '../../../../../../shared/components/Badge';
-import { Edit2, Trash2 } from 'lucide-react';
+import MasterDataCard from '../../../../../../shared/components/Master/MasterDataCard';
+import { Edit2, Trash2, MapPin } from 'lucide-react';
 import { businessService } from '../../../../../masters/services/business.service';
 
 const CustomerList = ({ onEdit, searchQuery = '', viewMode = 'table', refreshTrigger = 0 }) => {
   const [customers, setCustomers] = useState([]);
+  const [page, setPage] = useState(1);
+  const [limit, setLimit] = useState(20);
+  const [totalPages, setTotalPages] = useState(1);
+  const [totalRecords, setTotalRecords] = useState(0);
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
     fetchCustomers();
-  }, [refreshTrigger]);
+  }, [refreshTrigger, page, limit, searchQuery]);
 
   const fetchCustomers = async () => {
     setIsLoading(true);
     try {
-      const data = await businessService.getCustomers();
+      const data = await businessService.getCustomers({ page, limit, search: searchQuery });
       let customerData = [];
       if (data?.data?.data && Array.isArray(data.data.data)) {
         customerData = data.data.data;
@@ -25,6 +30,8 @@ const CustomerList = ({ onEdit, searchQuery = '', viewMode = 'table', refreshTri
         customerData = data;
       }
       setCustomers(customerData);
+      if (data?.data?.totalPages) setTotalPages(data.data.totalPages);
+      if (data?.data?.total) setTotalRecords(data.data.total);
     } catch (error) {
       console.error('Failed to fetch customers:', error);
     } finally {
@@ -32,15 +39,7 @@ const CustomerList = ({ onEdit, searchQuery = '', viewMode = 'table', refreshTri
     }
   };
 
-  const filteredCustomers = customers.filter(c => {
-    if (!searchQuery) return true;
-    const query = searchQuery.toLowerCase();
-    return (
-      (c.customer_name && c.customer_name.toLowerCase().includes(query)) ||
-      (c.customer_code && c.customer_code.toLowerCase().includes(query)) ||
-      (c.customer_category && c.customer_category.toLowerCase().includes(query))
-    );
-  });
+  
 
   const columns = [
     {
@@ -98,18 +97,25 @@ const CustomerList = ({ onEdit, searchQuery = '', viewMode = 'table', refreshTri
   if (viewMode === 'card') {
     return (
       <div className="grid" style={{ gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: '1.5rem' }}>
-        {filteredCustomers.map(c => (
-          <div key={c.id} className="bg-surface border-light rounded-lg shadow-sm p-lg cursor-pointer hover:shadow-md transition-shadow" onClick={() => onEdit && onEdit(c)}>
-            <div className="flex justify-between align-center mb-sm">
-              <h4 className="m-0 text-primary font-bold">{c.customer_name}</h4>
-              <Badge variant={c.status === 'Active' ? 'success' : 'danger'}>{c.status || 'Active'}</Badge>
-            </div>
-            <p className="text-secondary-light text-sm mb-xs">Code: <span className="uppercase">{c.customer_code}</span></p>
-            {c.customer_type && <p className="text-secondary-light text-sm mb-xs">Type: {c.customer_type}</p>}
-            {c.customer_category && <p className="text-secondary-light text-sm">Category: {c.customer_category}</p>}
+        {customers.map(c => (
+          <div key={c.id}>
+            <MasterDataCard
+              title={c.customer_name}
+              code={c.customer_code}
+              status={c.status}
+              locationText={`${c.city?.city_name || 'Global'} → ${c.country?.country_name || 'Worldwide'}`}
+              locationIcon={MapPin}
+              onEdit={() => onEdit && onEdit(c)}
+              gridData={[
+                { label: 'Customer Type', value: c.customer_type },
+                { label: 'Category', value: c.customer_category },
+                { label: 'Currency', value: c.currency?.currency_code },
+                { label: 'Payment Terms', value: c.payment_terms }
+              ]}
+            />
           </div>
         ))}
-        {filteredCustomers.length === 0 && !isLoading && (
+        {customers.length === 0 && !isLoading && (
           <div className="text-center p-xl text-tertiary w-full" style={{ gridColumn: '1 / -1' }}>
             No customers found.
           </div>
@@ -119,16 +125,22 @@ const CustomerList = ({ onEdit, searchQuery = '', viewMode = 'table', refreshTri
   }
 
   return (
-    <div className="bg-surface border-light rounded-lg shadow-sm">
-      <TableView
+    <TableView
         columns={columns}
-        data={filteredCustomers}
+        data={customers}
         isLoading={isLoading}
         emptyStateMsg="No customers found. Create one to get started."
+        paginationProps={{
+          currentPage: page,
+          totalPages: totalPages,
+          onPageChange: setPage,
+          totalItems: totalRecords,
+          itemsPerPage: limit,
+          onLimitChange: (newLimit) => { setLimit(newLimit); setPage(1); }
+        }}
         onRowClick={(row) => onEdit && onEdit(row)}
       />
-    </div>
-  );
+);
 };
 
 export default CustomerList;

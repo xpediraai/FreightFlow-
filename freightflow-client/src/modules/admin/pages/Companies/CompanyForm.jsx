@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { Building2, UserCircle, Mail, MapPin, Save, X } from 'lucide-react';
 import Button from '../../../../shared/components/Button';
 import { adminService } from '../../services/admin.service';
+import StatusToggle from '../../../../shared/components/Input/StatusToggle';
 
 const CompanyForm = ({ onCancel, onSuccess, initialData }) => {
   const isEditMode = !!initialData;

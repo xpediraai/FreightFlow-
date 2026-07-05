@@ -15,16 +15,7 @@ const PageHeader = ({
   return (
     <div className="page-header">
       <div className="page-header-title-section">
-        {breadcrumbs && (
-          <nav className="page-breadcrumbs">
-            {breadcrumbs.map((bc, index) => (
-              <span key={index}>
-                {bc.label}
-                {index < breadcrumbs.length - 1 && <span className="mx-xs">/</span>}
-              </span>
-            ))}
-          </nav>
-        )}
+
         <h1 className="page-title">{title}</h1>
         {subtitle && <p className="page-subtitle">{subtitle}</p>}
       </div>
@@ -46,7 +37,7 @@ const PageHeader = ({
           </Button>
         )}
         {primaryAction && (
-          <Button variant="primary" onClick={primaryAction.onClick}>
+          <Button variant="primary" onClick={primaryAction.onClick} leftIcon={primaryAction.icon}>
             {primaryAction.label}
           </Button>
         )}

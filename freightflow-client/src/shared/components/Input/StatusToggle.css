@@ -1,0 +1,58 @@
+.status-toggle-wrapper {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.status-toggle-btn {
+  position: relative;
+  width: 48px;
+  height: 24px;
+  border-radius: 9999px;
+  border: none;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+  padding: 0;
+}
+
+.status-toggle-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.status-toggle-btn.active {
+  background-color: #2ecc71; /* Emerald green like the screenshot */
+}
+
+.status-toggle-btn.inactive {
+  background-color: #e2e8f0; /* Grey */
+}
+
+.status-toggle-thumb {
+  position: absolute;
+  top: 2px;
+  left: 2px;
+  width: 20px;
+  height: 20px;
+  background-color: #ffffff;
+  border-radius: 50%;
+  transition: transform 0.3s ease;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.status-toggle-btn.active .status-toggle-thumb {
+  transform: translateX(24px);
+}
+
+.status-toggle-label {
+  font-weight: 600;
+  font-size: 14px;
+}
+
+.status-toggle-label.active {
+  color: #2ecc71;
+}
+
+.status-toggle-label.inactive {
+  color: #64748b;
+}
