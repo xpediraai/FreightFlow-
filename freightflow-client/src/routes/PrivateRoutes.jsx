@@ -6,27 +6,27 @@ const GenericPlaceholder = ({ title }) => <div><h2>{title}</h2><p>Module content
 
 const PrivateRoutes = [
   {
-    path: '/',
+    index: true,
     element: <DashboardPlaceholder />,
   },
   {
-    path: '/companies',
+    path: 'companies',
     element: <GenericPlaceholder title="Companies" />,
   },
   {
-    path: '/masters',
+    path: 'masters',
     element: <GenericPlaceholder title="Masters" />,
   },
   {
-    path: '/shipments',
+    path: 'shipments',
     element: <GenericPlaceholder title="Shipments" />,
   },
   {
-    path: '/customers',
+    path: 'customers',
     element: <GenericPlaceholder title="Customers" />,
   },
   {
-    path: '/settings',
+    path: 'settings',
     element: <GenericPlaceholder title="Settings" />,
   },
 ];

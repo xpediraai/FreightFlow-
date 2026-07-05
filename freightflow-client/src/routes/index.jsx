@@ -5,6 +5,7 @@ import MainLayout from '../core/layouts/MainLayout';
 import ProtectedRoute from './ProtectedRoute';
 import PublicRoutes from './PublicRoutes';
 import PrivateRoutes from './PrivateRoutes';
+import LandingPage from '../modules/landing/LandingPage';
 
 const NotFoundPlaceholder = () => (
   <div style={{ padding: '2rem', textAlign: 'center' }}>
@@ -15,10 +16,16 @@ const NotFoundPlaceholder = () => (
 
 const router = createBrowserRouter([
   {
+    path: '/',
+    element: <LandingPage />,
+  },
+  {
+    path: '/login',
     element: <AuthLayout />,
     children: PublicRoutes,
   },
   {
+    path: '/app',
     element: <ProtectedRoute><MainLayout /></ProtectedRoute>,
     children: PrivateRoutes,
   },

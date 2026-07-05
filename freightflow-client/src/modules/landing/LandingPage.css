@@ -1,0 +1,47 @@
+.landing-page {
+  /* Override global background and color for the landing page context if needed */
+  background-color: #F8FAFC; 
+  color: #111827;
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+  overflow-x: hidden;
+  --lp-primary: #C61F26;
+  --lp-primary-dark: #9A181E;
+  --lp-secondary: #374151;
+  --lp-bg: #F8FAFC;
+  --lp-surface: #FFFFFF;
+  --lp-border: #E5E7EB;
+  --lp-text: #111827;
+  --lp-text-light: #6B7280;
+}
+
+.landing-section {
+  padding: 100px 24px;
+  max-width: 1280px;
+  margin: 0 auto;
+  width: 100%;
+}
+
+.landing-section-title {
+  text-align: center;
+  font-size: 2.5rem;
+  font-weight: 700;
+  color: var(--lp-text);
+  margin-bottom: 1rem;
+}
+
+.landing-section-subtitle {
+  text-align: center;
+  font-size: 1.125rem;
+  color: var(--lp-text-light);
+  max-width: 600px;
+  margin: 0 auto 4rem auto;
+}
+
+@media (max-width: 768px) {
+  .landing-section {
+    padding: 60px 16px;
+  }
+  .landing-section-title {
+    font-size: 2rem;
+  }
+}

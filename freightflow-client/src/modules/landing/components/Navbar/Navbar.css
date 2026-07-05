@@ -1,0 +1,160 @@
+.lp-navbar {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 1000;
+  transition: all 0.3s ease;
+  padding: 1rem 0;
+  background-color: transparent;
+}
+
+.lp-navbar.scrolled {
+  background-color: rgba(255, 255, 255, 0.95);
+  backdrop-filter: blur(10px);
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+  padding: 0.75rem 0;
+}
+
+.lp-navbar-container {
+  max-width: 1280px;
+  margin: 0 auto;
+  padding: 0 24px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.lp-navbar-logo .logo-text {
+  font-size: 1.5rem;
+  font-weight: 800;
+  color: #fff;
+  letter-spacing: -0.025em;
+  transition: color 0.3s ease;
+}
+
+.lp-navbar.scrolled .logo-text {
+  color: var(--lp-primary);
+}
+
+.lp-navbar-menu {
+  display: flex;
+  gap: 2rem;
+}
+
+.lp-navbar-menu a {
+  color: rgba(255, 255, 255, 0.9);
+  text-decoration: none;
+  font-weight: 500;
+  font-size: 0.95rem;
+  transition: color 0.2s ease;
+}
+
+.lp-navbar.scrolled .lp-navbar-menu a {
+  color: var(--lp-secondary);
+}
+
+.lp-navbar-menu a:hover {
+  color: #fff;
+}
+
+.lp-navbar.scrolled .lp-navbar-menu a:hover {
+  color: var(--lp-primary);
+}
+
+.lp-navbar-actions {
+  display: flex;
+  gap: 1rem;
+  align-items: center;
+}
+
+.lp-btn-primary {
+  background-color: var(--lp-primary);
+  color: #fff;
+  border: none;
+  padding: 0.6rem 1.2rem;
+  border-radius: 8px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background-color 0.2s ease, transform 0.2s ease;
+}
+
+.lp-btn-primary:hover {
+  background-color: var(--lp-primary-dark);
+  transform: translateY(-1px);
+}
+
+.lp-btn-ghost {
+  background: transparent;
+  border: none;
+  color: rgba(255, 255, 255, 0.9);
+  font-weight: 600;
+  cursor: pointer;
+  padding: 0.6rem 1rem;
+  transition: color 0.2s ease;
+}
+
+.lp-navbar.scrolled .lp-btn-ghost {
+  color: var(--lp-secondary);
+}
+
+.lp-navbar.scrolled .lp-btn-ghost:hover {
+  color: var(--lp-primary);
+}
+
+.lp-btn-outline {
+  background: transparent;
+  border: 1px solid var(--lp-primary);
+  color: var(--lp-primary);
+  padding: 0.6rem 1.2rem;
+  border-radius: 8px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.lp-mobile-menu-btn {
+  background: transparent;
+  border: none;
+  color: #fff;
+  cursor: pointer;
+}
+
+.lp-navbar.scrolled .lp-mobile-menu-btn {
+  color: var(--lp-text);
+}
+
+.lp-mobile-menu {
+  background-color: var(--lp-surface);
+  position: absolute;
+  top: 100%;
+  left: 0;
+  right: 0;
+  padding: 1rem 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+  overflow: hidden;
+}
+
+.lp-mobile-menu a {
+  color: var(--lp-secondary);
+  text-decoration: none;
+  font-weight: 500;
+  padding: 0.5rem 0;
+  border-bottom: 1px solid var(--lp-border);
+}
+
+.lp-mobile-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  margin-top: 0.5rem;
+}
+
+/* Utils */
+.d-none { display: none; }
+@media (min-width: 768px) {
+  .d-md-none { display: none; }
+  .md\:flex { display: flex; }
+}

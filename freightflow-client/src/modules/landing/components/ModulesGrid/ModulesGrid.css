@@ -1,0 +1,61 @@
+.lp-modules-grid {
+  background-color: var(--lp-surface);
+}
+
+.lp-mgrid-container {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+  gap: 1.5rem;
+  max-width: 1000px;
+  margin: 0 auto;
+}
+
+.lp-mgrid-item {
+  background: var(--lp-bg);
+  border: 1px solid var(--lp-border);
+  border-radius: 12px;
+  padding: 2rem 1rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  gap: 1rem;
+  transition: all 0.3s ease;
+  cursor: pointer;
+}
+
+.lp-mgrid-item:hover {
+  background: var(--lp-surface);
+  border-color: var(--lp-primary);
+  box-shadow: 0 10px 25px -5px rgba(198, 31, 38, 0.1);
+  transform: translateY(-5px);
+}
+
+.lp-mgrid-icon {
+  color: var(--lp-text-light);
+  transition: color 0.3s ease, transform 0.3s ease;
+}
+
+.lp-mgrid-item:hover .lp-mgrid-icon {
+  color: var(--lp-primary);
+  transform: scale(1.1);
+}
+
+.lp-mgrid-item h4 {
+  margin: 0;
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--lp-text);
+  transition: color 0.3s ease;
+}
+
+.lp-mgrid-item:hover h4 {
+  color: var(--lp-primary);
+}
+
+@media (max-width: 768px) {
+  .lp-mgrid-container {
+    grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+  }
+}

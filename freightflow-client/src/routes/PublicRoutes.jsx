@@ -13,7 +13,7 @@ const LoginPlaceholder = () => (
 
 const PublicRoutes = [
   {
-    path: 'login',
+    path: '',
     element: <LoginPlaceholder />,
   }
 ];
