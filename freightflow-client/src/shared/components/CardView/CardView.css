@@ -1,0 +1,79 @@
+.card-view-wrapper {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-lg);
+}
+
+.card-view-container.loading {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 200px;
+  background: var(--surface);
+  border-radius: var(--radius-md);
+  border: 1px dashed var(--border);
+}
+
+.card-view-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: var(--spacing-md);
+}
+
+.data-card {
+  transition: all var(--transition);
+}
+
+.data-card.clickable {
+  cursor: pointer;
+}
+
+.data-card.clickable:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-md);
+  border-color: var(--primary-light);
+}
+
+.data-card-header {
+  padding-bottom: var(--spacing-sm);
+}
+
+.data-card-default-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+}
+
+.data-card-default-header h3 {
+  margin: 0;
+  font-size: var(--font-size-md);
+  color: var(--text-primary);
+}
+
+.data-card-action-btn {
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  color: var(--text-secondary);
+  padding: 4px;
+  border-radius: var(--radius-sm);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background var(--transition), color var(--transition);
+}
+
+.data-card-action-btn:hover {
+  background: var(--background);
+  color: var(--text-primary);
+}
+
+.data-card-desc {
+  color: var(--text-secondary);
+  font-size: var(--font-size-sm);
+  margin: 0;
+}
+
+.card-view-pagination {
+  margin-top: var(--spacing-md);
+}
