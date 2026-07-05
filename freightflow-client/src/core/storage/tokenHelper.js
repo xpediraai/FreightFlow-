@@ -1,19 +1,26 @@
-import { localStorageHelper } from './localStorage';
+import Cookies from 'js-cookie';
 
 const TOKEN_KEY = 'freightflow_auth_token';
 const REFRESH_TOKEN_KEY = 'freightflow_refresh_token';
 
+// Configure default cookie options (secure in production)
+const cookieOptions = {
+  expires: 7, // 7 days
+  secure: process.env.NODE_ENV === 'production',
+  sameSite: 'strict'
+};
+
 export const tokenHelper = {
-  getToken: () => localStorageHelper.get(TOKEN_KEY),
-  setToken: (token) => localStorageHelper.set(TOKEN_KEY, token),
-  removeToken: () => localStorageHelper.remove(TOKEN_KEY),
+  getToken: () => Cookies.get(TOKEN_KEY),
+  setToken: (token) => Cookies.set(TOKEN_KEY, token, cookieOptions),
+  removeToken: () => Cookies.remove(TOKEN_KEY),
   
-  getRefreshToken: () => localStorageHelper.get(REFRESH_TOKEN_KEY),
-  setRefreshToken: (token) => localStorageHelper.set(REFRESH_TOKEN_KEY, token),
-  removeRefreshToken: () => localStorageHelper.remove(REFRESH_TOKEN_KEY),
+  getRefreshToken: () => Cookies.get(REFRESH_TOKEN_KEY),
+  setRefreshToken: (token) => Cookies.set(REFRESH_TOKEN_KEY, token, cookieOptions),
+  removeRefreshToken: () => Cookies.remove(REFRESH_TOKEN_KEY),
   
   clearAll: () => {
-    localStorageHelper.remove(TOKEN_KEY);
-    localStorageHelper.remove(REFRESH_TOKEN_KEY);
+    Cookies.remove(TOKEN_KEY);
+    Cookies.remove(REFRESH_TOKEN_KEY);
   }
 };

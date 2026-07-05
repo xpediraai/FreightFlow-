@@ -1,20 +1,12 @@
 import React from 'react';
 import { Navigate } from 'react-router-dom';
 import { tokenHelper } from '../core/storage/tokenHelper';
-
-// Placeholder for Login
-const LoginPlaceholder = () => (
-  <div style={{ textAlign: 'center' }}>
-    <h1 className="text-primary mb-md">FreightFlow ERP</h1>
-    <p>Please login to continue</p>
-    {/* Real login form would go here */}
-  </div>
-);
+import Login from '../modules/auth/pages/Login/Login';
 
 const PublicRoutes = [
   {
-    path: '',
-    element: <LoginPlaceholder />,
+    path: '', // Note: we changed this to '' earlier since parent in index.js is /login
+    element: <Login />,
   }
 ];
 

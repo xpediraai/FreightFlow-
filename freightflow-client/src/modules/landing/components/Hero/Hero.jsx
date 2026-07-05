@@ -1,10 +1,13 @@
 import React from 'react';
 import { motion } from 'framer-motion';
 import { Plane, Key, Play } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 import bgVideo from '../../../../assets/landing-page-bg-video.mp4';
 import './Hero.css';
 
 const Hero = () => {
+  const navigate = useNavigate();
+
   return (
     <section className="lp-hero">
       <div className="lp-hero-bg">
@@ -59,7 +62,10 @@ const Hero = () => {
               <Plane size={20} className="mr-2" />
               Request a Quote
             </button>
-            <button className="lp-btn-outline-transparent btn-large btn-flex">
+            <button 
+              className="lp-btn-outline-transparent btn-large btn-flex"
+              onClick={() => navigate('/login')}
+            >
               <Key size={20} className="mr-2 text-yellow" />
               ERP Portal
             </button>

@@ -1,16 +1,18 @@
 import React from 'react';
 import { Navigate, Outlet } from 'react-router-dom';
 import { tokenHelper } from '../core/storage/tokenHelper';
+import { useAuth } from '../contexts/AuthContext';
 
 const ProtectedRoute = ({ children }) => {
+  const { isAuthenticated, isInitializing } = useAuth();
   const token = tokenHelper.getToken();
 
-  if (!token) {
-    // If we wanted to strictly enforce login in this boilerplate:
-    // return <Navigate to="/login" replace />;
-    
-    // For the sake of the starter working without backend auth setup yet:
-    console.warn("No token found, but allowing access for development starter kit.");
+  if (isInitializing) {
+    return <div>Loading...</div>; // Could use Loader component here
+  }
+
+  if (!token || !isAuthenticated) {
+    return <Navigate to="/login" replace />;
   }
 
   return children ? children : <Outlet />;
