@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Mail, Lock, Eye, EyeOff } from 'lucide-react';
 import { useAuth } from '../../../../contexts/AuthContext';
@@ -15,8 +15,20 @@ const Login = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   
-  const { login } = useAuth();
+  const { login, isAuthenticated, currentUser } = useAuth();
   const navigate = useNavigate();
+
+  useEffect(() => {
+    if (isAuthenticated && currentUser) {
+      if (currentUser.role === 'SUPER_ADMIN') {
+        navigate('/app');
+      } else if (currentUser.role === 'COMPANY_OWNER') {
+        navigate('/company/dashboard');
+      } else {
+        navigate('/app');
+      }
+    }
+  }, [isAuthenticated, currentUser, navigate]);
 
   const validate = () => {
     if (!email) {
@@ -43,15 +55,8 @@ const Login = () => {
     try {
       const response = await authService.login(email, password);
       login(response.user, response.accessToken, response.refreshToken);
-      
-      // Role based redirection
-      if (response.user.role === 'SUPER_ADMIN') {
-        navigate('/app'); // using /app as the generic protected area for now
-      } else if (response.user.role === 'COMPANY_OWNER') {
-        navigate('/company/dashboard');
-      } else {
-        navigate('/app');
-      }
+      // Navigation is now handled by the useEffect watching isAuthenticated
+
     } catch (error) {
       // The Axios response interceptor will catch actual 401s, 
       // but for our mock we handle the error object here too.
