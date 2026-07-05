@@ -26,6 +26,10 @@ const Users = sequelize.define("Users", {
         type: DataTypes.STRING,
         allowNull: false,
     },
+    role: {
+        type: DataTypes.ENUM("SUPER_ADMIN", "COMPANY_OWNER"),
+        defaultValue: "COMPANY_OWNER",
+    },
     status: {
         type: DataTypes.ENUM("Active", "Inactive", "Blocked", "Deleted"),
         defaultValue: "Active",

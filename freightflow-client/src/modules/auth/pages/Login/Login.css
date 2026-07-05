@@ -1,0 +1,183 @@
+.login-layout {
+  display: flex;
+  min-height: 100vh;
+  background-color: var(--color-background);
+}
+
+.login-branding {
+  flex: 1;
+  position: relative;
+  display: none;
+  overflow: hidden;
+}
+
+@media (min-width: 1024px) {
+  .login-branding {
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+  }
+}
+
+.login-branding-bg {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 0;
+}
+
+.login-bg-video {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.login-bg-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(135deg, rgba(198, 31, 38, 0.8) 0%, rgba(15, 23, 42, 0.9) 100%);
+  pointer-events: none;
+}
+
+.login-branding-content {
+  position: relative;
+  z-index: 1;
+  padding: 4rem;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  color: white;
+}
+
+.branding-logo .logo-text {
+  font-size: 1.75rem;
+  font-weight: 800;
+  margin: 0;
+  letter-spacing: -0.03em;
+}
+
+.branding-text {
+  max-width: 480px;
+}
+
+.branding-text h1 {
+  font-size: 4rem;
+  font-weight: 800;
+  line-height: 1.1;
+  margin-bottom: 1.5rem;
+  letter-spacing: -0.03em;
+}
+
+.branding-text p {
+  font-size: 1.25rem;
+  opacity: 0.9;
+  line-height: 1.6;
+}
+
+.login-form-container {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 2rem;
+  background-color: var(--color-surface);
+}
+
+.login-card {
+  width: 100%;
+  max-width: 440px;
+  display: flex;
+  flex-direction: column;
+  gap: 2rem;
+}
+
+.login-header h3 {
+  font-size: 2rem;
+  font-weight: 700;
+  color: var(--color-text);
+  margin-bottom: 0.5rem;
+  letter-spacing: -0.02em;
+}
+
+.login-header p {
+  color: var(--color-text-secondary);
+  font-size: 1.1rem;
+}
+
+.login-form {
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+}
+
+.password-input-wrapper {
+  position: relative;
+}
+
+.btn-toggle-password {
+  position: absolute;
+  right: 12px;
+  top: 36px; /* Approx height of label + spacing */
+  background: transparent;
+  border: none;
+  color: var(--color-text-tertiary);
+  cursor: pointer;
+  padding: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: color 0.2s ease;
+}
+
+.btn-toggle-password:hover {
+  color: var(--color-primary);
+}
+
+.login-options {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: 0.5rem;
+  margin-bottom: 0.5rem;
+}
+
+.remember-me {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  color: var(--color-text-secondary);
+  font-size: 0.9rem;
+  cursor: pointer;
+}
+
+.forgot-password {
+  color: var(--color-primary);
+  font-size: 0.9rem;
+  font-weight: 500;
+  text-decoration: none;
+}
+
+.forgot-password:hover {
+  text-decoration: underline;
+}
+
+.btn-login-submit {
+  margin-top: 1rem;
+  height: 52px; /* Taller button for better UX */
+}
+
+.login-footer {
+  text-align: center;
+  margin-top: 2rem;
+}
+
+.login-footer p {
+  color: var(--color-text-tertiary);
+  font-size: 0.85rem;
+}

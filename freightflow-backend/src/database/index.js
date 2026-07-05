@@ -17,8 +17,39 @@ db.sequelize = sequelize;
 // Import Models
 db.Users = require("../modules/Auth/Users/users.model");
 db.RefreshTokens = require("../modules/Auth/RefreshTokens/refresh_tokens.model");
-db.Company = require("../modules/Masters/CompanyMasters/company.model");
-db.UserCompanies = require("../modules/Masters/CompanyMasters/user_companies.model");
+db.Company = require("../modules/Masters/Foundation/CompanyMasters/company.model");
+db.UserCompanies = require("../modules/Masters/Foundation/CompanyMasters/user_companies.model");
+
+// Master Models
+db.Country = require("../modules/Masters/Foundation/CountryMasters/country.model");
+db.State = require("../modules/Masters/Foundation/StateMasters/state.model");
+db.City = require("../modules/Masters/Foundation/CityMasters/city.model");
+db.Currency = require("../modules/Masters/Foundation/CurrencyMasters/currency.model");
+db.Port = require("../modules/Masters/Logistics/PortMasters/port.model");
+db.ShippingLine = require("../modules/Masters/Logistics/ShippingLineMasters/shippingLine.model");
+db.ContainerType = require("../modules/Masters/Common/ContainerTypeMasters/containerType.model");
+db.TransportMode = require("../modules/Masters/Common/TransportModeMasters/transportMode.model");
+db.Commodity = require("../modules/Masters/Common/CommodityMasters/commodity.model");
+db.Customer = require("../modules/Masters/Business/CustomerMasters/Models/customer.model");
+db.CustomerContact = require("../modules/Masters/Business/CustomerMasters/Models/customerContact.model");
+db.CustomerAddress = require("../modules/Masters/Business/CustomerMasters/Models/customerAddress.model");
+db.CustomerBank = require("../modules/Masters/Business/CustomerMasters/Models/customerBank.model");
+db.CustomerDocument = require("../modules/Masters/Business/CustomerMasters/Models/customerDocument.model");
+db.Vendor = require("../modules/Masters/Business/VendorMasters/Models/vendor.model");
+db.VendorContact = require("../modules/Masters/Business/VendorMasters/Models/vendorContact.model");
+db.VendorAddress = require("../modules/Masters/Business/VendorMasters/Models/vendorAddress.model");
+db.VendorBank = require("../modules/Masters/Business/VendorMasters/Models/vendorBank.model");
+db.Warehouse = require("../modules/Masters/Logistics/WarehouseMasters/warehouse.model");
+db.Vehicle = require("../modules/Masters/Logistics/VehicleMasters/vehicle.model");
+db.Driver = require("../modules/Masters/Logistics/DriverMasters/driver.model");
+db.Department = require("../modules/Masters/Organization/DepartmentMasters/department.model");
+db.Designation = require("../modules/Masters/Organization/DesignationMasters/designation.model");
+db.Employee = require("../modules/Masters/Organization/EmployeeMasters/employee.model");
+db.UOM = require("../modules/Masters/Common/UOMMasters/uom.model");
+db.PackageType = require("../modules/Masters/Common/PackageTypeMasters/packageType.model");
+db.Incoterm = require("../modules/Masters/Common/IncotermMasters/incoterm.model");
+db.Charge = require("../modules/Masters/Common/ChargeMasters/charge.model");
+db.PaymentTerm = require("../modules/Masters/Foundation/PaymentTermMasters/paymentTerm.model");
 
 // Define Associations
 db.Users.hasMany(db.RefreshTokens, { foreignKey: "user_id" });
@@ -26,5 +57,74 @@ db.RefreshTokens.belongsTo(db.Users, { foreignKey: "user_id" });
 
 db.Users.belongsToMany(db.Company, { through: db.UserCompanies, foreignKey: "user_id" });
 db.Company.belongsToMany(db.Users, { through: db.UserCompanies, foreignKey: "company_id" });
+
+// Master Associations
+db.State.belongsTo(db.Country, { foreignKey: 'country_id', as: 'country' });
+db.Country.hasMany(db.State, { foreignKey: 'country_id', as: 'states' });
+
+db.City.belongsTo(db.Country, { foreignKey: 'country_id', as: 'country' });
+db.Country.hasMany(db.City, { foreignKey: 'country_id', as: 'cities' });
+
+db.City.belongsTo(db.State, { foreignKey: 'state_id', as: 'state' });
+db.State.hasMany(db.City, { foreignKey: 'state_id', as: 'cities' });
+
+db.Port.belongsTo(db.Country, { foreignKey: 'country_id', as: 'country' });
+db.Country.hasMany(db.Port, { foreignKey: 'country_id', as: 'ports' });
+
+db.Port.belongsTo(db.State, { foreignKey: 'state_id', as: 'state' });
+db.State.hasMany(db.Port, { foreignKey: 'state_id', as: 'ports' });
+
+db.Port.belongsTo(db.City, { foreignKey: 'city_id', as: 'city' });
+db.City.hasMany(db.Port, { foreignKey: 'city_id', as: 'ports' });
+
+db.ShippingLine.belongsTo(db.Country, { foreignKey: 'country_id', as: 'country' });
+db.Country.hasMany(db.ShippingLine, { foreignKey: 'country_id', as: 'shipping_lines' });
+
+// Warehouse Associations
+db.Warehouse.belongsTo(db.Country, { foreignKey: 'country_id', as: 'country' });
+db.Warehouse.belongsTo(db.State, { foreignKey: 'state_id', as: 'state' });
+db.Warehouse.belongsTo(db.City, { foreignKey: 'city_id', as: 'city' });
+
+// Vehicle & Driver Associations
+db.Vehicle.belongsTo(db.Vendor, { foreignKey: 'vendor_id', as: 'vendor' });
+db.Driver.belongsTo(db.Vendor, { foreignKey: 'vendor_id', as: 'vendor' });
+db.Driver.belongsTo(db.Country, { foreignKey: 'country_id', as: 'country' });
+db.Driver.belongsTo(db.State, { foreignKey: 'state_id', as: 'state' });
+db.Driver.belongsTo(db.City, { foreignKey: 'city_id', as: 'city' });
+
+// Customer Associations
+db.Customer.hasMany(db.CustomerContact, { as: 'contacts', foreignKey: 'customer_id' });
+db.CustomerContact.belongsTo(db.Customer, { foreignKey: 'customer_id' });
+
+db.Customer.hasMany(db.CustomerAddress, { as: 'addresses', foreignKey: 'customer_id' });
+db.CustomerAddress.belongsTo(db.Customer, { foreignKey: 'customer_id' });
+
+db.Customer.hasMany(db.CustomerBank, { as: 'banks', foreignKey: 'customer_id' });
+db.CustomerBank.belongsTo(db.Customer, { foreignKey: 'customer_id' });
+
+db.Customer.hasMany(db.CustomerDocument, { as: 'documents', foreignKey: 'customer_id' });
+db.CustomerDocument.belongsTo(db.Customer, { foreignKey: 'customer_id' });
+
+// Vendor Associations
+db.Vendor.hasMany(db.VendorContact, { as: 'contacts', foreignKey: 'vendor_id' });
+db.VendorContact.belongsTo(db.Vendor, { foreignKey: 'vendor_id' });
+
+db.Vendor.hasMany(db.VendorAddress, { as: 'addresses', foreignKey: 'vendor_id' });
+db.VendorAddress.belongsTo(db.Vendor, { foreignKey: 'vendor_id' });
+
+db.Vendor.hasMany(db.VendorBank, { as: 'banks', foreignKey: 'vendor_id' });
+db.VendorBank.belongsTo(db.Vendor, { foreignKey: 'vendor_id' });
+
+// Department & Designation Associations
+db.Department.hasMany(db.Designation, { foreignKey: 'department_id', as: 'designations' });
+db.Designation.belongsTo(db.Department, { foreignKey: 'department_id', as: 'department' });
+
+// Employee Associations
+db.Employee.belongsTo(db.Department, { foreignKey: 'department_id', as: 'department' });
+db.Employee.belongsTo(db.Designation, { foreignKey: 'designation_id', as: 'designation' });
+db.Employee.belongsTo(db.Country, { foreignKey: 'country_id', as: 'country' });
+db.Employee.belongsTo(db.State, { foreignKey: 'state_id', as: 'state' });
+db.Employee.belongsTo(db.City, { foreignKey: 'city_id', as: 'city' });
+db.Employee.belongsTo(db.Employee, { foreignKey: 'reporting_manager', as: 'manager' });
 
 module.exports = db;

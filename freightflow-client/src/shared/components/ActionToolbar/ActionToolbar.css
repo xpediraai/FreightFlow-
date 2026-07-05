@@ -1,0 +1,28 @@
+.action-toolbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: var(--spacing-md);
+  margin-bottom: var(--spacing-md);
+  padding: var(--spacing-md);
+  background: var(--surface);
+  border-radius: var(--radius-md);
+  border: 1px solid var(--border);
+}
+
+.action-toolbar-search {
+  flex: 1;
+  min-width: 250px;
+  max-width: 400px;
+}
+.action-toolbar-search .form-group {
+  margin-bottom: 0;
+}
+
+.action-toolbar-actions {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-sm);
+  flex-wrap: wrap;
+}

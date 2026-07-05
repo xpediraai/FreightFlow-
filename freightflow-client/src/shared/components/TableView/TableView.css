@@ -1,0 +1,27 @@
+.table-view-wrapper {
+  background: var(--surface);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-sm);
+  border: 1px solid var(--border);
+  display: flex;
+  flex-direction: column;
+}
+
+.table-view-container.loading {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 200px;
+  background: var(--surface);
+  border-radius: var(--radius-md);
+  border: 1px solid var(--border);
+}
+
+.table.table-hover tbody tr.clickable-row {
+  cursor: pointer;
+}
+
+/* A lighter hover for clickable rows using a semi-transparent primary */
+.table.table-hover tbody tr.clickable-row:hover td {
+  background-color: rgba(211, 47, 47, 0.05); /* very light primary */
+}

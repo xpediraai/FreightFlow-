@@ -1,0 +1,36 @@
+@import './variables.css';
+@import './reset.css';
+@import './utilities.css';
+@import './animations.css';
+@import './layout.css';
+@import './forms.css';
+@import './table.css';
+
+/* Global Styles */
+html, body, #root {
+  height: 100%;
+  width: 100%;
+}
+
+a {
+  color: var(--primary);
+  text-decoration: none;
+  transition: color var(--transition);
+}
+
+a:hover {
+  color: var(--primary-dark);
+}
+
+h1, h2, h3, h4, h5, h6 {
+  color: var(--text-primary);
+  font-weight: var(--font-weight-bold);
+  line-height: var(--line-height-tight);
+}
+
+h1 { font-size: var(--font-size-xxl); }
+h2 { font-size: var(--font-size-xl); }
+h3 { font-size: var(--font-size-lg); }
+h4 { font-size: var(--font-size-md); }
+h5 { font-size: var(--font-size-sm); }
+h6 { font-size: var(--font-size-xs); }

@@ -1,0 +1,100 @@
+/* Common form element styles */
+.form-group {
+  margin-bottom: var(--spacing-md);
+  display: flex;
+  flex-direction: column;
+}
+
+.form-label {
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-medium);
+  margin-bottom: var(--spacing-xs);
+  color: var(--text-primary);
+  transition: color var(--transition-fast);
+}
+
+.form-label.required::after {
+  content: " *";
+  color: var(--danger);
+}
+
+.form-control {
+  font-family: var(--font-family);
+  font-size: var(--font-size-md);
+  padding: var(--spacing-sm) var(--spacing-md);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  background-color: var(--surface);
+  color: var(--text-primary);
+  transition: border-color var(--transition-normal), box-shadow var(--transition-normal), background-color var(--transition-normal);
+  width: 100%;
+}
+
+.form-control:hover:not(:disabled) {
+  border-color: #BDBDBD;
+}
+
+.form-control:focus {
+  outline: none;
+  border-color: var(--primary);
+  box-shadow: 0 0 0 3px rgba(211, 47, 47, 0.15);
+  background-color: #fff;
+}
+
+.form-group:focus-within .form-label,
+.form-group:focus-within .dense-form label {
+  color: var(--primary);
+}
+
+.form-control:disabled {
+  background-color: var(--background);
+  color: var(--text-disabled);
+  cursor: not-allowed;
+}
+
+.form-control.is-invalid {
+  border-color: var(--danger);
+  animation: fadeIn var(--transition-fast) cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.form-error {
+  font-size: var(--font-size-xs);
+  color: var(--danger);
+  margin-top: var(--spacing-xs);
+  animation: slideDown var(--transition-normal) cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* Master Form Grid Layouts */
+.form-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 1rem 1.5rem;
+  margin-bottom: 1.5rem;
+}
+
+.dense-form .form-group {
+  margin-bottom: 0;
+}
+
+.dense-form label {
+  font-size: 0.8rem;
+  color: var(--text-secondary);
+  margin-bottom: 0.25rem;
+  display: block;
+}
+
+.form-control-sm {
+  padding: 0.4rem 0.6rem;
+  font-size: 0.85rem;
+  height: auto;
+}
+
+@media (max-width: 1200px) {
+  .form-grid { grid-template-columns: repeat(3, 1fr); }
+}
+@media (max-width: 768px) {
+  .form-grid { grid-template-columns: repeat(2, 1fr); }
+}
+@media (max-width: 480px) {
+  .form-grid { grid-template-columns: 1fr; }
+}

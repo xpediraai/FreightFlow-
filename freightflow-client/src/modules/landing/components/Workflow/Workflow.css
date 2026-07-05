@@ -1,0 +1,90 @@
+.lp-workflow-container {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  position: relative;
+  max-width: 1000px;
+  margin: 0 auto;
+  padding: 2rem 0;
+}
+
+.lp-workflow-step {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  position: relative;
+  z-index: 2;
+  flex: 1;
+}
+
+.lp-workflow-icon-box {
+  width: 60px;
+  height: 60px;
+  background-color: var(--lp-surface);
+  border: 2px solid var(--lp-primary);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--lp-primary);
+  margin-bottom: 1rem;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+  background-color: #fff;
+}
+
+.lp-workflow-label {
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: var(--lp-text);
+  margin: 0;
+  text-align: center;
+}
+
+.lp-workflow-connector {
+  position: absolute;
+  top: 30px; /* half of icon box height */
+  left: 50%;
+  width: 100%;
+  height: 2px;
+  background-color: var(--lp-border);
+  z-index: -1;
+}
+
+.lp-workflow-line {
+  height: 100%;
+  width: 100%;
+  background-color: var(--lp-primary);
+  transform-origin: left;
+}
+
+@media (max-width: 768px) {
+  .lp-workflow-container {
+    flex-direction: column;
+    align-items: flex-start;
+    padding-left: 50%;
+    transform: translateX(-30px);
+  }
+  
+  .lp-workflow-step {
+    flex-direction: row;
+    margin-bottom: 2rem;
+    width: 100%;
+  }
+  
+  .lp-workflow-label {
+    margin-left: 1rem;
+    text-align: left;
+  }
+  
+  .lp-workflow-connector {
+    top: 50%;
+    left: 30px;
+    width: 2px;
+    height: calc(100% + 2rem);
+  }
+  
+  .lp-workflow-line {
+    transform-origin: top;
+    transform: scaleY(1); /* Need to adjust animation for vertical in JS, but static works for mobile fallback */
+  }
+}

@@ -1,0 +1,95 @@
+.lp-cta {
+  padding: 4rem 24px;
+}
+
+.lp-cta-container {
+  max-width: 1280px;
+  margin: 0 auto;
+  background-color: var(--lp-primary);
+  border-radius: 24px;
+  padding: 5rem 2rem;
+  text-align: center;
+  position: relative;
+  overflow: hidden;
+  box-shadow: 0 25px 50px -12px rgba(198, 31, 38, 0.25);
+}
+
+.lp-cta-content {
+  position: relative;
+  z-index: 2;
+  max-width: 800px;
+  margin: 0 auto;
+}
+
+.lp-cta-content h2 {
+  font-size: 3rem;
+  font-weight: 800;
+  color: #fff;
+  margin-bottom: 1.5rem;
+  letter-spacing: -0.02em;
+}
+
+.lp-cta-content p {
+  font-size: 1.25rem;
+  color: rgba(255, 255, 255, 0.9);
+  margin-bottom: 3rem;
+  line-height: 1.6;
+}
+
+.lp-cta-actions {
+  display: flex;
+  justify-content: center;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+
+.lp-btn-white {
+  background: #fff;
+  color: var(--lp-primary);
+  border: none;
+  padding: 0.8rem 2rem;
+  border-radius: 8px;
+  font-weight: 700;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.lp-btn-white:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+}
+
+.ml-2 {
+  margin-left: 0.5rem;
+}
+
+.lp-cta-blob {
+  position: absolute;
+  border-radius: 50%;
+  filter: blur(80px);
+  z-index: 1;
+}
+
+.blob-1 {
+  width: 400px;
+  height: 400px;
+  background: rgba(255, 255, 255, 0.15);
+  top: -100px;
+  left: -100px;
+}
+
+.blob-2 {
+  width: 300px;
+  height: 300px;
+  background: rgba(0, 0, 0, 0.1);
+  bottom: -50px;
+  right: -50px;
+}
+
+@media (max-width: 768px) {
+  .lp-cta-content h2 {
+    font-size: 2.25rem;
+  }
+}

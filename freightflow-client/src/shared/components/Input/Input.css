@@ -1,0 +1,37 @@
+.input-wrapper {
+  position: relative;
+  display: flex;
+  align-items: center;
+  width: 100%;
+}
+
+.input-prefix {
+  position: absolute;
+  left: var(--spacing-sm);
+  color: var(--text-secondary);
+  display: flex;
+  align-items: center;
+  pointer-events: none;
+}
+
+.input-suffix {
+  position: absolute;
+  right: var(--spacing-sm);
+  color: var(--text-secondary);
+  display: flex;
+  align-items: center;
+}
+
+.input-control.has-prefix {
+  padding-left: calc(var(--spacing-lg) + 18px);
+}
+
+.input-control.has-suffix {
+  padding-right: calc(var(--spacing-lg) + 18px);
+}
+
+.form-helper {
+  font-size: var(--font-size-xs);
+  color: var(--text-secondary);
+  margin-top: var(--spacing-xs);
+}

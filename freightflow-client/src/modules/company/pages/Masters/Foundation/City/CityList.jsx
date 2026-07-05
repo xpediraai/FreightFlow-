@@ -1,0 +1,154 @@
+import React, { useState, useEffect } from 'react';
+import TableView from '../../../../../../shared/components/TableView';
+import Badge from '../../../../../../shared/components/Badge';
+import MasterDataCard from '../../../../../../shared/components/Master/MasterDataCard';
+import { Eye, Edit2, Trash2, MapPin } from 'lucide-react';
+import { foundationService } from '../../../../../masters/services/foundation.service';
+
+const CityList = ({ onEdit, searchQuery = '', viewMode = 'table', refreshTrigger = 0 }) => {
+  const [cities, setCities] = useState([]);
+  const [page, setPage] = useState(1);
+  const [limit, setLimit] = useState(20);
+  const [totalPages, setTotalPages] = useState(1);
+  const [totalRecords, setTotalRecords] = useState(0);
+  const [isLoading, setIsLoading] = useState(true);
+
+  useEffect(() => {
+    fetchCities();
+  }, [refreshTrigger, page, limit, searchQuery]);
+
+  const fetchCities = async () => {
+    setIsLoading(true);
+    try {
+      const data = await foundationService.getCities({ page, limit, search: searchQuery });
+      let cityData = [];
+      if (data?.data?.data && Array.isArray(data.data.data)) {
+        cityData = data.data.data;
+      } else if (data?.data && Array.isArray(data.data)) {
+        cityData = data.data;
+      } else if (Array.isArray(data)) {
+        cityData = data;
+      }
+      setCities(cityData);
+      if (data?.data?.totalPages) setTotalPages(data.data.totalPages);
+      if (data?.data?.total) setTotalRecords(data.data.total);
+    } catch (error) {
+      console.error('Failed to fetch cities:', error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  
+
+  const columns = [
+    {
+      header: 'City Code',
+      key: 'city_code',
+      render: (row) => <span className="font-medium">{row.city_code}</span>
+    },
+    {
+      header: 'City Name',
+      key: 'city_name',
+      render: (row) => row.city_name
+    },
+    {
+      header: 'State / Country',
+      key: 'state_country',
+      render: (row) => (
+        <div>
+          <div>{row.State?.state_name || '-'}</div>
+          <div className="text-secondary-light text-xs">{row.Country?.country_name || '-'}</div>
+        </div>
+      )
+    },
+    {
+      header: 'GST / Pincode',
+      key: 'gst_pincode',
+      render: (row) => (
+        <div>
+          <div>{row.gst || '-'}</div>
+          <div className="text-secondary-light text-xs">{row.pincode || '-'}</div>
+        </div>
+      )
+    },
+    {
+      header: 'Status',
+      key: 'status',
+      render: (row) => (
+        <Badge variant={row.status === 'Active' ? 'success' : 'danger'}>
+          {row.status || 'Active'}
+        </Badge>
+      )
+    },
+    {
+      header: 'Actions',
+      key: 'actions',
+      render: (row) => (
+        <div className="flex gap-xs" onClick={(e) => e.stopPropagation()}>
+          <button 
+            className="action-btn edit-btn"
+            onClick={() => onEdit && onEdit(row)}
+            title="Edit City"
+          >
+            <Edit2 size={16} />
+          </button>
+          <button 
+            className="action-btn delete-btn"
+            title={row.status === 'Active' ? 'Deactivate' : 'Activate'}
+          >
+            <Trash2 size={16} />
+          </button>
+        </div>
+      )
+    }
+  ];
+
+  if (viewMode === 'card') {
+    return (
+      <div className="grid" style={{ gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: '1.5rem' }}>
+        {cities.map(city => (
+          <div key={city.id}>
+            <MasterDataCard
+              title={city.city_name}
+              code={city.city_code}
+              status={city.status}
+              locationText={`${city.State?.state_name || '-'} → ${city.Country?.country_name || '-'}`}
+              locationIcon={MapPin}
+              onEdit={() => onEdit && onEdit(city)}
+              gridData={[
+                { label: 'Pincode', value: city.pincode },
+                { label: 'GST', value: city.gst }
+              ]}
+            />
+          </div>
+        ))}
+        {cities.length === 0 && !isLoading && (
+          <div className="text-center p-xl text-tertiary w-full" style={{ gridColumn: '1 / -1' }}>
+            No cities found.
+          </div>
+        )}
+      </div>
+    );
+  }
+
+  return (
+    <TableView
+        columns={columns}
+        data={cities}
+        isLoading={isLoading}
+        emptyStateMsg="No cities found. Create one to get started."
+        paginationProps={{
+          currentPage: page,
+          totalPages: totalPages,
+          onPageChange: setPage,
+          totalItems: totalRecords,
+          itemsPerPage: limit,
+          onLimitChange: (newLimit) => { setLimit(newLimit); setPage(1); }
+        }}
+        onRowClick={(row) => onEdit && onEdit(row)}
+      />
+);
+};
+
+export default CityList;

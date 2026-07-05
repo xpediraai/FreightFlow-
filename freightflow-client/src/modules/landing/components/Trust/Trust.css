@@ -1,0 +1,76 @@
+.lp-trust {
+  padding: 40px 24px;
+  background-color: var(--lp-surface);
+  border-bottom: 1px solid var(--lp-border);
+}
+
+.lp-trust-container {
+  max-width: 1280px;
+  margin: 0 auto;
+  text-align: center;
+}
+
+.lp-trust-label {
+  font-size: 0.875rem;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: var(--lp-text-light);
+  font-weight: 600;
+  margin-bottom: 24px;
+}
+
+.lp-trust-logos {
+  overflow: hidden;
+  position: relative;
+  width: 100%;
+}
+
+/* Simple gradient masks for the edges */
+.lp-trust-logos::before,
+.lp-trust-logos::after {
+  content: "";
+  position: absolute;
+  top: 0;
+  width: 150px;
+  height: 100%;
+  z-index: 2;
+}
+
+.lp-trust-logos::before {
+  left: 0;
+  background: linear-gradient(to right, var(--lp-surface), transparent);
+}
+
+.lp-trust-logos::after {
+  right: 0;
+  background: linear-gradient(to left, var(--lp-surface), transparent);
+}
+
+.lp-trust-track {
+  display: flex;
+  align-items: center;
+  gap: 4rem;
+  width: max-content;
+  animation: scrollLogos 30s linear infinite;
+}
+
+.lp-trust-logo-item {
+  font-size: 1.5rem;
+  font-weight: 800;
+  color: #9CA3AF;
+  letter-spacing: -0.02em;
+  filter: grayscale(100%);
+  opacity: 0.6;
+  transition: opacity 0.3s ease, filter 0.3s ease, color 0.3s ease;
+}
+
+.lp-trust-logo-item:hover {
+  filter: grayscale(0%);
+  opacity: 1;
+  color: var(--lp-secondary);
+}
+
+@keyframes scrollLogos {
+  0% { transform: translateX(0); }
+  100% { transform: translateX(calc(-50% - 2rem)); } /* move half the total width */
+}
