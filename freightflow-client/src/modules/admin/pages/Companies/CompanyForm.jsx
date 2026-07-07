@@ -92,7 +92,7 @@ const CompanyForm = ({ onCancel, onSuccess, initialData }) => {
         await adminService.updateCompany(initialData.id, updatePayload);
       } else {
         const ownerResponse = await adminService.createCompanyOwner({
-          username: formData.owner_name,
+          full_name: formData.owner_name,
           email: formData.owner_email,
           password: formData.owner_password,
           role: 'COMPANY_OWNER'
