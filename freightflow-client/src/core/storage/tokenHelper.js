@@ -3,11 +3,11 @@ import Cookies from 'js-cookie';
 const TOKEN_KEY = 'freightflow_auth_token';
 const REFRESH_TOKEN_KEY = 'freightflow_refresh_token';
 
-// Configure default cookie options (secure in production)
+// Configure default cookie options (secure if on HTTPS)
 const cookieOptions = {
   expires: 7, // 7 days
-  secure: process.env.NODE_ENV === 'production',
-  sameSite: 'strict'
+  secure: typeof window !== 'undefined' && window.location.protocol === 'https:',
+  sameSite: 'lax'
 };
 
 export const tokenHelper = {
