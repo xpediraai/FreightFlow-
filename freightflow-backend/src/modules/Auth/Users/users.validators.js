@@ -11,7 +11,8 @@ const registerSchema = Joi.object({
         .min(6)
         .pattern(/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d).*$/)
         .message("Password must be at least 6 characters long and contain an uppercase letter, a lowercase letter, and a number.")
-        .required()
+        .required(),
+    role: Joi.string().optional()
 });
 
 const loginSchema = Joi.object({

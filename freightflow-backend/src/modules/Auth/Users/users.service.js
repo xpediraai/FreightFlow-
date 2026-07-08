@@ -33,7 +33,8 @@ const register = async (userData, reqInfo) => {
             full_name: userData.full_name,
             email: userData.email,
             password: hashedPassword,
-            status: "Active"
+            status: "Active",
+            role: userData.role || "User"
         });
 
         // Omit password from response

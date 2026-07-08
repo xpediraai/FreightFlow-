@@ -7,7 +7,7 @@ export const responseInterceptor = (response) => {
 
 export const responseErrorInterceptor = (error) => {
   const status = error.response ? error.response.status : null;
-  const message = error.response?.data?.message || 'Something went wrong';
+  const message = error.response?.data?.messageToShow || error.response?.data?.errorMessage || error.response?.data?.message || 'Something went wrong';
 
   if (status === 401) {
     // Handle unauthorized - usually clear token and redirect to login
@@ -24,5 +24,6 @@ export const responseErrorInterceptor = (error) => {
     toast.error(message);
   }
 
+  error.message = message;
   return Promise.reject(error);
 };
