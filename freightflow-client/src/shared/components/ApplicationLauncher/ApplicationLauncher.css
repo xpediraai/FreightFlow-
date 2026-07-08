@@ -24,7 +24,7 @@
   display: flex;
   flex-direction: column;
   width: 100%;
-  max-width: 600px;
+  max-width: 900px;
   max-height: 80vh;
   overflow: hidden;
 }
@@ -86,7 +86,7 @@
 
 .launcher-grid-centered {
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
+  grid-template-columns: repeat(6, 1fr);
   gap: 1.5rem 1rem;
   padding: 0.5rem 2rem 2rem 2rem;
   overflow-y: auto;
@@ -109,9 +109,9 @@
 }
 
 .launcher-app-icon-wrapper {
-  width: 64px;
-  height: 64px;
-  border-radius: 16px; /* Squircle */
+  width: 52px;
+  height: 52px;
+  border-radius: 14px; /* Squircle */
   display: flex;
   align-items: center;
   justify-content: center;
@@ -144,9 +144,9 @@
     padding: 1.5rem 1.5rem 0.5rem 1.5rem;
   }
   .launcher-app-icon-wrapper {
-    width: 68px;
-    height: 68px;
-    border-radius: 16px;
+    width: 48px;
+    height: 48px;
+    border-radius: 12px;
   }
 }
 

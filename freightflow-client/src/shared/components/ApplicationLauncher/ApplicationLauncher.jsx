@@ -68,6 +68,22 @@ const ApplicationLauncher = ({ isOpen, onClose }) => {
     }
   }
 
+  // Flatten submenus to show all items directly
+  if (path.length > 0) {
+    const getAllLeafNodes = (items) => {
+      let leaves = [];
+      items.forEach(item => {
+        if (item.children) {
+          leaves = leaves.concat(getAllLeafNodes(item.children));
+        } else {
+          leaves.push(item);
+        }
+      });
+      return leaves;
+    };
+    currentItems = getAllLeafNodes(currentItems);
+  }
+
   const handleItemClick = (item) => {
     if (item.children) {
       setPath([...path, item.name]);
@@ -132,7 +148,7 @@ const ApplicationLauncher = ({ isOpen, onClose }) => {
                       className="launcher-app-icon-wrapper" 
                       style={{ backgroundColor: item.color || '#333' }}
                     >
-                      <Icon size={28} color="#ffffff" />
+                      <Icon size={24} color="#ffffff" />
                     </div>
                     <span className="launcher-app-label">{item.name}</span>
                   </motion.button>
