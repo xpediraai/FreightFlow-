@@ -98,7 +98,7 @@ const CompanyForm = ({ onCancel, onSuccess, initialData }) => {
           role: 'COMPANY_OWNER'
         });
 
-        const newOwnerId = ownerResponse?.data?.id || ownerResponse?.data?.user?.user_id || ownerResponse?.data?.user_id;
+        const newOwnerId = ownerResponse?.user?.id || ownerResponse?.user?.user_id || ownerResponse?.id || ownerResponse?.data?.user?.id;
 
         const { owner_name, owner_email, owner_password, ...companyPayload } = formData;
         companyPayload.owner_id = newOwnerId;
