@@ -24,8 +24,14 @@ const refreshTokenSchema = Joi.object({
     refresh_token: Joi.string().required()
 });
 
+const switchCompanySchema = Joi.object({
+    refresh_token: Joi.string().required(),
+    company_id: Joi.string().uuid().required()
+});
+
 module.exports = {
     registerSchema,
     loginSchema,
-    refreshTokenSchema
+    refreshTokenSchema,
+    switchCompanySchema
 };

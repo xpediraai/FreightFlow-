@@ -1,11 +1,16 @@
 import React, { useState } from 'react';
-import { Building2, UserCircle, Mail, MapPin, Save, X } from 'lucide-react';
+import { Building2, UserCircle, Mail, MapPin, Save, X, Eye, EyeOff } from 'lucide-react';
 import Button from '../../../../shared/components/Button';
 import { adminService } from '../../services/admin.service';
 import StatusToggle from '../../../../shared/components/Input/StatusToggle';
+import { useAuth } from '../../../../contexts/AuthContext';
 
 const CompanyForm = ({ onCancel, onSuccess, initialData }) => {
+  const { currentUser } = useAuth();
+  const isCompanyOwner = currentUser?.role === 'COMPANY_OWNER' || currentUser?.role !== 'SUPER_ADMIN'; // Usually, anyone who isn't a super admin is just creating a company for themselves
   const isEditMode = !!initialData;
+  const showOwnerFields = !isEditMode && !isCompanyOwner;
+
   const [formData, setFormData] = useState(initialData || {
     company_name: '',
     company_code: '',
@@ -26,7 +31,7 @@ const CompanyForm = ({ onCancel, onSuccess, initialData }) => {
     usd_branch: '',
     einvoice_username: '',
     einvoice_password: '',
-    // Owner details (only for create)
+    // Owner details (only for create when super admin)
     owner_name: '',
     owner_email: '',
     owner_password: '',
@@ -36,12 +41,14 @@ const CompanyForm = ({ onCancel, onSuccess, initialData }) => {
   const [globalError, setGlobalError] = useState('');
   const [errors, setErrors] = useState({});
   const [touched, setTouched] = useState({});
+  const [showEinvoicePassword, setShowEinvoicePassword] = useState(false);
+  const [showOwnerPassword, setShowOwnerPassword] = useState(false);
 
   const validateField = (name, value) => {
     let error = '';
     if (name === 'company_name' && !value.trim()) error = 'Company Name is required';
     if (name === 'company_code' && !value.trim()) error = 'Company Code is required';
-    if (!isEditMode) {
+    if (showOwnerFields) {
       if (name === 'owner_name' && !value.trim()) error = 'Owner Full Name is required';
       if (name === 'owner_email') {
         if (!value.trim()) error = 'Owner Email is required';
@@ -73,6 +80,9 @@ const CompanyForm = ({ onCancel, onSuccess, initialData }) => {
     // Validate all required fields
     const newErrors = {};
     Object.keys(formData).forEach(key => {
+      // Don't validate owner fields if we aren't showing them
+      if (!showOwnerFields && key.startsWith('owner_')) return;
+      
       const err = validateField(key, formData[key]);
       if (err) newErrors[key] = err;
     });
@@ -91,17 +101,22 @@ const CompanyForm = ({ onCancel, onSuccess, initialData }) => {
         const { owner_name, owner_email, owner_password, owner_id, ...updatePayload } = formData;
         await adminService.updateCompany(initialData.id, updatePayload);
       } else {
-        const ownerResponse = await adminService.createCompanyOwner({
-          full_name: formData.owner_name,
-          email: formData.owner_email,
-          password: formData.owner_password,
-          role: 'COMPANY_OWNER'
-        });
-
-        const newOwnerId = ownerResponse?.user?.id || ownerResponse?.user?.user_id || ownerResponse?.id || ownerResponse?.data?.user?.id;
-
         const { owner_name, owner_email, owner_password, ...companyPayload } = formData;
-        companyPayload.owner_id = newOwnerId;
+
+        if (showOwnerFields) {
+          const ownerResponse = await adminService.createCompanyOwner({
+            full_name: formData.owner_name,
+            email: formData.owner_email,
+            password: formData.owner_password,
+            role: 'COMPANY_OWNER'
+          });
+
+          const newOwnerId = ownerResponse?.user?.id || ownerResponse?.user?.user_id || ownerResponse?.id || ownerResponse?.data?.user?.id;
+          companyPayload.owner_id = newOwnerId;
+        } else {
+          // If we are already a company owner, just map it to our own ID
+          companyPayload.owner_id = currentUser?.id || currentUser?.user_id;
+        }
 
         await adminService.createCompany(companyPayload);
       }
@@ -215,15 +230,35 @@ const CompanyForm = ({ onCancel, onSuccess, initialData }) => {
         <div className="form-grid">
           <div className="form-group">
             <label>E-Invoice Username</label>
-            <input disabled={isLoading} type="text" name="einvoice_username" value={formData.einvoice_username} onChange={handleChange} className="form-control form-control-sm" onBlur={handleBlur} />
+            <input disabled={isLoading} type="text" name="einvoice_username" value={formData.einvoice_username} onChange={handleChange} className="form-control form-control-sm" onBlur={handleBlur} autoComplete="off" />
           </div>
           <div className="form-group">
             <label>E-Invoice Password</label>
-            <input disabled={isLoading} type="password" name="einvoice_password" value={formData.einvoice_password} onChange={handleChange} className="form-control form-control-sm" onBlur={handleBlur} />
+            <div style={{ position: 'relative' }}>
+              <input 
+                disabled={isLoading} 
+                type={showEinvoicePassword ? "text" : "password"} 
+                name="einvoice_password" 
+                value={formData.einvoice_password} 
+                onChange={handleChange} 
+                className="form-control form-control-sm" 
+                onBlur={handleBlur} 
+                autoComplete="new-password" 
+                style={{ paddingRight: '2rem' }}
+              />
+              <button 
+                type="button" 
+                onClick={() => setShowEinvoicePassword(!showEinvoicePassword)}
+                style={{ position: 'absolute', right: '8px', top: '50%', transform: 'translateY(-50%)', background: 'none', border: 'none', cursor: 'pointer', color: 'var(--color-text-secondary)', display: 'flex', alignItems: 'center' }}
+                tabIndex="-1"
+              >
+                {showEinvoicePassword ? <EyeOff size={16} /> : <Eye size={16} />}
+              </button>
+            </div>
           </div>
         </div>
 
-        {!isEditMode && (
+        {showOwnerFields && (
           <>
             <h4 className="section-title">Owner Details</h4>
             <div className="form-grid">
@@ -239,7 +274,28 @@ const CompanyForm = ({ onCancel, onSuccess, initialData }) => {
               </div>
               <div className="form-group">
                 <label>Password <span className="text-danger">*</span></label>
-                <input disabled={isLoading} type="password" name="owner_password" value={formData.owner_password} onChange={handleChange} required className="form-control form-control-sm" placeholder="********" onBlur={handleBlur} />
+                <div style={{ position: 'relative' }}>
+                  <input 
+                    disabled={isLoading} 
+                    type={showOwnerPassword ? "text" : "password"} 
+                    name="owner_password" 
+                    value={formData.owner_password} 
+                    onChange={handleChange} 
+                    required 
+                    className="form-control form-control-sm" 
+                    placeholder="********" 
+                    onBlur={handleBlur} 
+                    style={{ paddingRight: '2rem' }}
+                  />
+                  <button 
+                    type="button" 
+                    onClick={() => setShowOwnerPassword(!showOwnerPassword)}
+                    style={{ position: 'absolute', right: '8px', top: '50%', transform: 'translateY(-50%)', background: 'none', border: 'none', cursor: 'pointer', color: 'var(--color-text-secondary)', display: 'flex', alignItems: 'center' }}
+                    tabIndex="-1"
+                  >
+                    {showOwnerPassword ? <EyeOff size={16} /> : <Eye size={16} />}
+                  </button>
+                </div>
                 {errors.owner_password && <div className="text-danger" style={{ fontSize: '0.75rem', marginTop: '0.25rem' }}>{errors.owner_password}</div>}
               </div>
             </div>

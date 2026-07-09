@@ -1,20 +1,21 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Menu, Building2, ChevronDown, Mail, LogOut, Grip } from 'lucide-react';
+import { Menu, Building2, ChevronDown, Mail, LogOut, Grip, Loader2 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useAuth } from '../../contexts/AuthContext';
 import { useNavigate } from 'react-router-dom';
-import { adminService } from '../../modules/admin/services/admin.service';
+import { authService } from '../../modules/auth/services/auth.service';
 
 const Topbar = ({ onToggleSidebar, onOpenLauncher, navMode = 'both', isSidebarOpen = true }) => {
-  const { currentUser, logout } = useAuth();
+  const { currentUser, logout, switchCompany } = useAuth();
   const navigate = useNavigate();
   const [companies, setCompanies] = useState([]);
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
-  const [selectedCompany, setSelectedCompany] = useState(currentUser?.company_name);
+  const [isSwitching, setIsSwitching] = useState(false);
+  const [selectedCompany, setSelectedCompany] = useState(currentUser?.company_name || 'Select Company');
   const dropdownRef = useRef(null);
 
   useEffect(() => {
-    adminService.getCompanies().then(res => {
+    authService.getUserCompanies().then(res => {
       let companyData = [];
       if (res?.data?.data && Array.isArray(res.data.data)) {
         companyData = res.data.data;
@@ -25,12 +26,18 @@ const Topbar = ({ onToggleSidebar, onOpenLauncher, navMode = 'both', isSidebarOp
       }
       setCompanies(companyData);
 
-      // Auto-select if there is exactly one company
-      if (companyData.length === 1) {
+      // Auto-select if there is exactly one company and we don't have one selected
+      if (companyData.length === 1 && !currentUser?.company_name) {
         setSelectedCompany(companyData[0].company_name);
+        // Note: we don't switch context if there's only one, as the login context should already match it
+      } else if (currentUser?.company_id) {
+        const matchingCompany = companyData.find(c => c.id === currentUser.company_id);
+        if (matchingCompany) {
+          setSelectedCompany(matchingCompany.company_name);
+        }
       }
     }).catch(console.error);
-  }, []);
+  }, [currentUser?.company_id]);
 
   useEffect(() => {
     const handleClickOutside = (event) => {
@@ -45,6 +52,20 @@ const Topbar = ({ onToggleSidebar, onOpenLauncher, navMode = 'both', isSidebarOp
   const handleLogout = () => {
     logout();
     navigate('/');
+  };
+
+  const handleCompanySelect = async (company) => {
+    if (company.id === currentUser?.company_id) {
+      setIsDropdownOpen(false);
+      return;
+    }
+    
+    setIsSwitching(true);
+    setSelectedCompany(company.company_name);
+    setIsDropdownOpen(false);
+    
+    await switchCompany(company.id);
+    setIsSwitching(false);
   };
 
   return (
@@ -73,18 +94,18 @@ const Topbar = ({ onToggleSidebar, onOpenLauncher, navMode = 'both', isSidebarOp
 
       <div className="flex items-center gap-md ml-auto" ref={dropdownRef}>
 
-        {/* User Name */}
-
-
         {/* Company Selector */}
         <div style={{ position: 'relative' }}>
           <button
             className="btn btn-outline btn-sm flex items-center gap-sm"
             onClick={() => setIsDropdownOpen(!isDropdownOpen)}
+            disabled={isSwitching}
           >
             <Building2 size={16} className="text-primary" />
-            <span className="font-semibold text-secondary" style={{ fontSize: '13px' }}>{selectedCompany}</span>
-            <ChevronDown size={16} className="text-secondary-light" />
+            <span className="font-semibold text-secondary" style={{ fontSize: '13px' }}>
+              {isSwitching ? 'Switching...' : selectedCompany}
+            </span>
+            {isSwitching ? <Loader2 size={16} className="text-secondary animate-spin" /> : <ChevronDown size={16} className="text-secondary-light" />}
           </button>
 
           {isDropdownOpen && (
@@ -101,13 +122,10 @@ const Topbar = ({ onToggleSidebar, onOpenLauncher, navMode = 'both', isSidebarOp
                 <div
                   key={company.id}
                   style={{ padding: '10px 16px', cursor: 'pointer', fontSize: '13px', borderBottom: '1px solid var(--color-light)' }}
-                  className="hover:bg-surface text-secondary font-medium transition-colors"
-                  onClick={() => {
-                    setSelectedCompany(company.company_name);
-                    setIsDropdownOpen(false);
-                  }}
+                  className={`hover:bg-surface text-secondary font-medium transition-colors ${company.id === currentUser?.company_id ? 'bg-primary-light text-primary' : ''}`}
+                  onClick={() => handleCompanySelect(company)}
                 >
-                  {company.company_name}
+                  {company.company_name} {company.is_default ? '(Default)' : ''}
                 </div>
               ))}
               {companies.length === 0 && (

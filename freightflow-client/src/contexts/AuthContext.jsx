@@ -60,12 +60,43 @@ export const AuthProvider = ({ children }) => {
     toast.info('You have been logged out');
   }, []);
 
+  const switchCompanyContext = useCallback(async (newCompanyId) => {
+    try {
+      const { authService } = await import('../modules/auth/services/auth.service.js');
+      const refreshToken = tokenHelper.getRefreshToken();
+      if (!refreshToken) {
+        throw new Error('No refresh token available');
+      }
+
+      const res = await authService.switchCompany(refreshToken, newCompanyId);
+      
+      const newAccessToken = res.accessToken;
+      const newRefreshToken = res.refreshToken;
+
+      tokenHelper.setToken(newAccessToken);
+      tokenHelper.setRefreshToken(newRefreshToken);
+
+      const updatedUser = { ...currentUser, company_id: newCompanyId };
+      setCurrentUser(updatedUser);
+      localStorageHelper.set('freightflow_user', updatedUser);
+
+      toast.success('Company context switched successfully');
+      
+      // Force reload to flush all cached data in UI components
+      window.location.reload();
+    } catch (error) {
+      console.error('Failed to switch company:', error);
+      toast.error('Failed to switch company. Please try again.');
+    }
+  }, [currentUser]);
+
   const value = {
     currentUser,
     isAuthenticated,
     isInitializing,
     login,
-    logout
+    logout,
+    switchCompany: switchCompanyContext
   };
 
   return (

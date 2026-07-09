@@ -19,5 +19,15 @@ export const authService = {
    */
   me: async () => {
     return await axiosInstance.get('/auth/me');
+  },
+
+  getUserCompanies: async () => {
+    const response = await axiosInstance.get('/auth/me/companies');
+    return response.data || response;
+  },
+
+  switchCompany: async (refresh_token, company_id) => {
+    const response = await axiosInstance.post('/auth/switch-company', { refresh_token, company_id });
+    return response.data || response;
   }
 };

@@ -163,8 +163,132 @@ const rotateToken = async (rawRefreshToken) => {
     }
 };
 
+const getUserCompanies = async (userId) => {
+    try {
+        const userCompanies = await UserCompanies.findAll({
+            where: { user_id: userId }
+        });
+
+        const Company = require("../../Masters/Foundation/CompanyMasters/company.model");
+        
+        // Use a Map to deduplicate by company_id in case there are multiple mapping records
+        const companyMap = new Map();
+        
+        for (const uc of userCompanies) {
+            if (!companyMap.has(uc.company_id)) {
+                const c = await Company.findByPk(uc.company_id);
+                if (c) {
+                    companyMap.set(uc.company_id, {
+                        id: c.id,
+                        company_name: c.company_name,
+                        is_default: uc.is_default,
+                        created_at: uc.createdAt || uc.created_at || new Date(0)
+                    });
+                }
+            } else if (uc.is_default) {
+                // If we found a duplicate mapping that says it's default, ensure the map reflects it
+                const existing = companyMap.get(uc.company_id);
+                existing.is_default = true;
+                companyMap.set(uc.company_id, existing);
+            }
+        }
+
+        const companies = Array.from(companyMap.values());
+        
+        // If there are multiple companies marked as default (due to creation logic), 
+        // only keep the oldest one as the true default, or none if we want to be strict.
+        // Let's just make sure only ONE is marked as default for the UI
+        const defaultCount = companies.filter(c => c.is_default).length;
+        if (defaultCount > 1) {
+            // Sort by created_at ascending, so the first one created is the true default
+            companies.sort((a, b) => a.created_at - b.created_at);
+            let foundDefault = false;
+            for (const c of companies) {
+                if (c.is_default && !foundDefault) {
+                    foundDefault = true; // Keep this one as default
+                } else if (c.is_default) {
+                    c.is_default = false; // Strip default from the rest
+                }
+            }
+        }
+
+        // Clean up internal fields before returning
+        return companies.map(c => ({
+            id: c.id,
+            company_name: c.company_name,
+            is_default: c.is_default
+        }));
+    } catch (error) {
+        throw error;
+    }
+};
+
+const switchCompanyToken = async (rawRefreshToken, newCompanyId) => {
+    try {
+        const tokenHash = crypto.createHash('sha256').update(rawRefreshToken).digest('hex');
+        const rTokenRecord = await RefreshTokens.findOne({ where: { token_hash: tokenHash } });
+
+        if (!rTokenRecord) {
+            throw new Error("Invalid refresh token");
+        }
+
+        if (new Date() > rTokenRecord.expires_at) {
+            await rTokenRecord.destroy();
+            throw new Error("Refresh token expired");
+        }
+
+        const user = await Users.findByPk(rTokenRecord.user_id);
+        if (!user || user.status !== "Active") {
+            throw new Error("User inactive or not found");
+        }
+
+        // Verify user belongs to requested company
+        const userCompany = await UserCompanies.findOne({
+            where: { user_id: user.id, company_id: newCompanyId }
+        });
+
+        if (!userCompany) {
+            throw new Error("User is not authorized for this company");
+        }
+
+        // Delete the old token
+        await rTokenRecord.destroy();
+
+        // Generate New Tokens with new company context
+        const tokenPayload = {
+            user_id: user.id,
+            email: user.email,
+            role: user.role,
+            company_id: newCompanyId
+        };
+
+        const newAccessToken = jwt.sign(tokenPayload, JWT_SECRET, { expiresIn: ACCESS_TOKEN_EXPIRES });
+        const newRawRefreshToken = crypto.randomBytes(40).toString("hex");
+        const newTokenHash = crypto.createHash('sha256').update(newRawRefreshToken).digest('hex');
+        
+        const expiresAt = new Date();
+        expiresAt.setDate(expiresAt.getDate() + REFRESH_TOKEN_EXPIRES_DAYS);
+
+        await RefreshTokens.create({
+            user_id: user.id,
+            token_hash: newTokenHash,
+            expires_at: expiresAt
+        });
+
+        return {
+            accessToken: newAccessToken,
+            refreshToken: newRawRefreshToken,
+            company_id: newCompanyId
+        };
+    } catch (error) {
+        throw error;
+    }
+};
+
 module.exports = {
     register,
     login,
-    rotateToken
+    rotateToken,
+    getUserCompanies,
+    switchCompanyToken
 };

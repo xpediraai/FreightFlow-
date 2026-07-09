@@ -2,7 +2,7 @@
  * @file users.controller.js
  * @description HTTP layer for Auth APIs.
  */
-const { registerSchema, loginSchema, refreshTokenSchema } = require("./users.validators");
+const { registerSchema, loginSchema, refreshTokenSchema, switchCompanySchema } = require("./users.validators");
 const usersService = require("./users.service");
 const { successResponse, errorResponse } = require("../../../utils/response");
 
@@ -94,8 +94,53 @@ const rotateToken = async (req, res) => {
     }
 };
 
+const getUserCompanies = async (req, res) => {
+    try {
+        const userId = req.user.user_id;
+        const data = await usersService.getUserCompanies(userId);
+        
+        return res.status(200).json(successResponse(
+            "USER_COMPANIES_FETCHED",
+            "User companies fetched successfully.",
+            "User companies fetched.",
+            data
+        ));
+    } catch (err) {
+        return res.status(500).json(errorResponse("INTERNAL_SERVER_ERROR", err.message, "Failed to fetch user companies."));
+    }
+};
+
+const switchCompany = async (req, res) => {
+    try {
+        const { error, value } = switchCompanySchema.validate(req.body);
+        if (error) {
+            return res.status(400).json(errorResponse(
+                "VALIDATION_ERROR",
+                error.details[0].message,
+                error.details[0].message
+            ));
+        }
+
+        const data = await usersService.switchCompanyToken(value.refresh_token, value.company_id);
+
+        return res.status(200).json(successResponse(
+            "COMPANY_SWITCHED",
+            "Company context switched successfully.",
+            "Company context switched.",
+            data
+        ));
+    } catch (err) {
+        if (err.message === "User is not authorized for this company") {
+            return res.status(403).json(errorResponse("FORBIDDEN", err.message, "You are not authorized for this company."));
+        }
+        return res.status(403).json(errorResponse("FORBIDDEN", err.message, "Invalid or expired refresh token. Please login again."));
+    }
+};
+
 module.exports = {
     register,
     login,
-    rotateToken
+    rotateToken,
+    getUserCompanies,
+    switchCompany
 };
