@@ -10,6 +10,8 @@ const Countries = () => {
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [selectedCountry, setSelectedCountry] = useState(null);
   const [searchTerm, setSearchTerm] = useState('');
+  const [totalRecords, setTotalRecords] = useState(0);
+  const [statusFilter, setStatusFilter] = useState('ALL STATUS');
   const [viewMode, setViewMode] = useState(localStorage.getItem('preferredViewMode') || 'table');
   const [refreshTrigger, setRefreshTrigger] = useState(0);
 
@@ -47,7 +49,10 @@ const Countries = () => {
           <MasterToolbar entityName="Country" 
           searchTerm={searchTerm}
           onSearch={setSearchTerm}
-        />
+            totalRecords={totalRecords}
+            statusFilter={statusFilter}
+            onStatusChange={setStatusFilter}
+          />
 
         <ExpandableForm isOpen={isFormOpen}>
           <CountryForm 
@@ -62,7 +67,9 @@ const Countries = () => {
           searchQuery={searchTerm}
           viewMode={viewMode}
           refreshTrigger={refreshTrigger}
-        />
+            onTotalCountChange={setTotalRecords}
+            statusFilter={statusFilter}
+          />
         </div>
       </div>
     </Page>

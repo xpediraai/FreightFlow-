@@ -10,6 +10,8 @@ const ShippingLines = () => {
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [selectedLine, setSelectedLine] = useState(null);
   const [searchTerm, setSearchTerm] = useState('');
+  const [totalRecords, setTotalRecords] = useState(0);
+  const [statusFilter, setStatusFilter] = useState('ALL STATUS');
   const [viewMode, setViewMode] = useState(localStorage.getItem('preferredViewMode') || 'table');
   const [refreshTrigger, setRefreshTrigger] = useState(0);
 
@@ -47,7 +49,10 @@ const ShippingLines = () => {
           <MasterToolbar entityName="Shipping Lines" 
           searchTerm={searchTerm}
           onSearch={setSearchTerm}
-        />
+            totalRecords={totalRecords}
+            statusFilter={statusFilter}
+            onStatusChange={setStatusFilter}
+          />
 
         <ExpandableForm isOpen={isFormOpen}>
           <ShippingLineForm 
@@ -62,7 +67,9 @@ const ShippingLines = () => {
           searchQuery={searchTerm}
           viewMode={viewMode}
           refreshTrigger={refreshTrigger}
-        />
+            onTotalCountChange={setTotalRecords}
+            statusFilter={statusFilter}
+          />
         </div>
       </div>
     </Page>

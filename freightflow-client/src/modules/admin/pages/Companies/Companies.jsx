@@ -11,6 +11,8 @@ const Companies = () => {
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [selectedCompany, setSelectedCompany] = useState(null);
   const [searchTerm, setSearchTerm] = useState('');
+  const [totalRecords, setTotalRecords] = useState(0);
+  const [statusFilter, setStatusFilter] = useState('ALL STATUS');
   const [viewMode, setViewMode] = useState('table');
   const [refreshTrigger, setRefreshTrigger] = useState(0);
 
@@ -49,6 +51,9 @@ const Companies = () => {
           <MasterToolbar entityName="Companies"
             searchTerm={searchTerm}
             onSearch={setSearchTerm}
+            totalRecords={totalRecords}
+            statusFilter={statusFilter}
+            onStatusChange={setStatusFilter}
           />
 
           <ExpandableForm isOpen={isFormOpen}>
@@ -64,6 +69,8 @@ const Companies = () => {
             searchQuery={searchTerm}
             viewMode={viewMode}
             refreshTrigger={refreshTrigger}
+            onTotalCountChange={setTotalRecords}
+            statusFilter={statusFilter}
           />
         </div>
       </div>

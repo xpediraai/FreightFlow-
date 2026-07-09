@@ -4,7 +4,7 @@ import Badge from '../../../../../../shared/components/Badge';
 import { Edit2, Trash2 } from 'lucide-react';
 import { commonService } from '../../../../../masters/services/common.service';
 
-const IncotermList = ({ onEdit, searchQuery = '', viewMode = 'table', refreshTrigger = 0 }) => {
+const IncotermList = ({ onEdit, searchQuery = '', viewMode = 'table', refreshTrigger = 0 , onTotalCountChange, statusFilter = 'ALL STATUS'}) => {
   const [incoterms, setIncoterms] = useState([]);
   const [page, setPage] = useState(1);
   const [limit, setLimit] = useState(20);
@@ -14,12 +14,11 @@ const IncotermList = ({ onEdit, searchQuery = '', viewMode = 'table', refreshTri
 
   useEffect(() => {
     fetchIncoterms();
-  }, [refreshTrigger, page, limit, searchQuery]);
-
+  }, [refreshTrigger]);
   const fetchIncoterms = async () => {
     setIsLoading(true);
     try {
-      const data = await commonService.getIncoterms({ page, limit, search: searchQuery });
+      const data = await commonService.getIncoterms({ page: 1, limit: 10000 });
       let termData = [];
       if (data?.data?.data && Array.isArray(data.data.data)) {
         termData = data.data.data;
@@ -39,6 +38,25 @@ const IncotermList = ({ onEdit, searchQuery = '', viewMode = 'table', refreshTri
   };
 
   
+
+  
+  const filteredList = incoterms.filter(item => {
+    if (statusFilter === 'ALL STATUS') return true;
+    const isMatch = statusFilter === 'ACTIVE' ? item.status === 'Active' : (item.status === 'Inactive' || item.status !== 'Active');
+    return isMatch;
+  });
+
+  
+  const calculatedTotalRecords = filteredList.length;
+  const calculatedTotalPages = Math.ceil(calculatedTotalRecords / limit) || 1;
+  const paginatedList = filteredList.slice((page - 1) * limit, page * limit);
+
+  
+  useEffect(() => {
+    if (onTotalCountChange) {
+      onTotalCountChange(calculatedTotalRecords);
+    }
+  }, [calculatedTotalRecords, onTotalCountChange]);
 
   const columns = [
     {
@@ -96,7 +114,7 @@ const IncotermList = ({ onEdit, searchQuery = '', viewMode = 'table', refreshTri
   if (viewMode === 'card') {
     return (
       <div className="grid" style={{ gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: '1.5rem' }}>
-        {incoterms.map(term => (
+        {paginatedList.map(term => (
           <div key={term.id}>
             <MasterDataCard
               title={term.incoterm_name}
@@ -109,7 +127,7 @@ const IncotermList = ({ onEdit, searchQuery = '', viewMode = 'table', refreshTri
             />
           </div>
         ))}
-        {incoterms.length === 0 && !isLoading && (
+        {paginatedList.length === 0 && !isLoading && (
           <div className="text-center p-xl text-tertiary w-full" style={{ gridColumn: '1 / -1' }}>
             No records found.
           </div>
@@ -121,14 +139,14 @@ const IncotermList = ({ onEdit, searchQuery = '', viewMode = 'table', refreshTri
   return (
     <TableView
         columns={columns}
-        data={incoterms}
+        data={paginatedList}
         isLoading={isLoading}
         emptyStateMsg="No incoterms found. Create one to get started."
         paginationProps={{
           currentPage: page,
-          totalPages: totalPages,
+          totalPages: calculatedTotalPages,
           onPageChange: setPage,
-          totalItems: totalRecords,
+          totalItems: calculatedTotalRecords,
           itemsPerPage: limit,
           onLimitChange: (newLimit) => { setLimit(newLimit); setPage(1); }
         }}

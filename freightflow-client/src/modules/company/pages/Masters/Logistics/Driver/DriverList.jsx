@@ -4,7 +4,7 @@ import Badge from '../../../../../../shared/components/Badge';
 import { Edit2, Trash2 } from 'lucide-react';
 import { logisticsService } from '../../../../../masters/services/logistics.service';
 
-const DriverList = ({ onEdit, searchQuery = '', viewMode = 'table', refreshTrigger = 0 }) => {
+const DriverList = ({ onEdit, searchQuery = '', viewMode = 'table', refreshTrigger = 0, onTotalCountChange, statusFilter = 'ALL STATUS' }) => {
   const [drivers, setDrivers] = useState([]);
   const [page, setPage] = useState(1);
   const [limit, setLimit] = useState(20);
@@ -14,12 +14,11 @@ const DriverList = ({ onEdit, searchQuery = '', viewMode = 'table', refreshTrigg
 
   useEffect(() => {
     fetchDrivers();
-  }, [refreshTrigger, page, limit, searchQuery]);
-
+  }, [refreshTrigger]);
   const fetchDrivers = async () => {
     setIsLoading(true);
     try {
-      const data = await logisticsService.getDrivers({ page, limit, search: searchQuery });
+      const data = await logisticsService.getDrivers({ page: 1, limit: 10000 });
       let driverData = [];
       if (data?.data?.data && Array.isArray(data.data.data)) {
         driverData = data.data.data;
@@ -38,8 +37,27 @@ const DriverList = ({ onEdit, searchQuery = '', viewMode = 'table', refreshTrigg
     }
   };
 
-  
 
+
+
+  const filteredList = drivers.filter(item => {
+    if (statusFilter === 'ALL STATUS') return true;
+    const isMatch = statusFilter === 'ACTIVE' ? item.status === 'Active' : (item.status === 'Inactive' || item.status !== 'Active');
+    return isMatch;
+  });
+
+
+  const calculatedTotalRecords = filteredList.length;
+  const calculatedTotalPages = Math.ceil(calculatedTotalRecords / limit) || 1;
+  const paginatedList = filteredList.slice((page - 1) * limit, page * limit);
+
+  co
+
+  useEffect(() => {
+    if (onTotalCountChange) {
+      onTotalCountChange(calculatedTotalRecords);
+    }
+  }, [calculatedTotalRecords, onTotalCountChange]);
   const columns = [
     {
       header: 'Driver Code',
@@ -75,14 +93,14 @@ const DriverList = ({ onEdit, searchQuery = '', viewMode = 'table', refreshTrigg
       key: 'actions',
       render: (row) => (
         <div className="flex gap-xs" onClick={(e) => e.stopPropagation()}>
-          <button 
+          <button
             className="action-btn edit-btn"
             onClick={() => onEdit && onEdit(row)}
             title="Edit Driver"
           >
             <Edit2 size={16} />
           </button>
-          <button 
+          <button
             className="action-btn delete-btn"
             title={row.status === 'Active' ? 'Deactivate' : 'Activate'}
           >
@@ -96,7 +114,7 @@ const DriverList = ({ onEdit, searchQuery = '', viewMode = 'table', refreshTrigg
   if (viewMode === 'card') {
     return (
       <div className="grid" style={{ gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: '1.5rem' }}>
-        {drivers.map(driver => (
+        {paginatedList.map(driver => (
           <div key={driver.id}>
             <MasterDataCard
               title={driver.driver_name}
@@ -110,7 +128,7 @@ const DriverList = ({ onEdit, searchQuery = '', viewMode = 'table', refreshTrigg
             />
           </div>
         ))}
-        {drivers.length === 0 && !isLoading && (
+        {paginatedList.length === 0 && !isLoading && (
           <div className="text-center p-xl text-tertiary w-full" style={{ gridColumn: '1 / -1' }}>
             No records found.
           </div>
@@ -121,21 +139,21 @@ const DriverList = ({ onEdit, searchQuery = '', viewMode = 'table', refreshTrigg
 
   return (
     <TableView
-        columns={columns}
-        data={drivers}
-        isLoading={isLoading}
-        emptyStateMsg="No drivers found. Create one to get started."
-        paginationProps={{
-          currentPage: page,
-          totalPages: totalPages,
-          onPageChange: setPage,
-          totalItems: totalRecords,
-          itemsPerPage: limit,
-          onLimitChange: (newLimit) => { setLimit(newLimit); setPage(1); }
-        }}
-        onRowClick={(row) => onEdit && onEdit(row)}
-      />
-);
+      columns={columns}
+      data={paginatedList}
+      isLoading={isLoading}
+      emptyStateMsg="No drivers found. Create one to get started."
+      paginationProps={{
+        currentPage: page,
+        totalPages: calculatedTotalPages,
+        onPageChange: setPage,
+        totalItems: calculatedTotalRecords,
+        itemsPerPage: limit,
+        onLimitChange: (newLimit) => { setLimit(newLimit); setPage(1); }
+      }}
+      onRowClick={(row) => onEdit && onEdit(row)}
+    />
+  );
 };
 
 export default DriverList;

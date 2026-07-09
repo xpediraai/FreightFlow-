@@ -4,7 +4,7 @@ import Badge from '../../../../../../shared/components/Badge';
 import { Edit2, Trash2 } from 'lucide-react';
 import { logisticsService } from '../../../../../masters/services/logistics.service';
 
-const WarehouseList = ({ onEdit, searchQuery = '', viewMode = 'table', refreshTrigger = 0 }) => {
+const WarehouseList = ({ onEdit, searchQuery = '', viewMode = 'table', refreshTrigger = 0 , onTotalCountChange, statusFilter = 'ALL STATUS'}) => {
   const [warehouses, setWarehouses] = useState([]);
   const [page, setPage] = useState(1);
   const [limit, setLimit] = useState(20);
@@ -14,12 +14,11 @@ const WarehouseList = ({ onEdit, searchQuery = '', viewMode = 'table', refreshTr
 
   useEffect(() => {
     fetchWarehouses();
-  }, [refreshTrigger, page, limit, searchQuery]);
-
+  }, [refreshTrigger]);
   const fetchWarehouses = async () => {
     setIsLoading(true);
     try {
-      const data = await logisticsService.getWarehouses({ page, limit, search: searchQuery });
+      const data = await logisticsService.getWarehouses({ page: 1, limit: 10000 });
       let whData = [];
       if (data?.data?.data && Array.isArray(data.data.data)) {
         whData = data.data.data;
@@ -39,6 +38,25 @@ const WarehouseList = ({ onEdit, searchQuery = '', viewMode = 'table', refreshTr
   };
 
   
+
+  
+  const filteredList = warehouses.filter(item => {
+    if (statusFilter === 'ALL STATUS') return true;
+    const isMatch = statusFilter === 'ACTIVE' ? item.status === 'Active' : (item.status === 'Inactive' || item.status !== 'Active');
+    return isMatch;
+  });
+
+  
+  const calculatedTotalRecords = filteredList.length;
+  const calculatedTotalPages = Math.ceil(calculatedTotalRecords / limit) || 1;
+  const paginatedList = filteredList.slice((page - 1) * limit, page * limit);
+
+  
+  useEffect(() => {
+    if (onTotalCountChange) {
+      onTotalCountChange(calculatedTotalRecords);
+    }
+  }, [calculatedTotalRecords, onTotalCountChange]);
 
   const columns = [
     {
@@ -101,7 +119,7 @@ const WarehouseList = ({ onEdit, searchQuery = '', viewMode = 'table', refreshTr
   if (viewMode === 'card') {
     return (
       <div className="grid" style={{ gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: '1.5rem' }}>
-        {warehouses.map(wh => (
+        {paginatedList.map(wh => (
           <div key={wh.id}>
             <MasterDataCard
               title={wh.warehouse_name}
@@ -116,7 +134,7 @@ const WarehouseList = ({ onEdit, searchQuery = '', viewMode = 'table', refreshTr
             />
           </div>
         ))}
-        {warehouses.length === 0 && !isLoading && (
+        {paginatedList.length === 0 && !isLoading && (
           <div className="text-center p-xl text-tertiary w-full" style={{ gridColumn: '1 / -1' }}>
             No records found.
           </div>
@@ -128,14 +146,14 @@ const WarehouseList = ({ onEdit, searchQuery = '', viewMode = 'table', refreshTr
   return (
     <TableView
         columns={columns}
-        data={warehouses}
+        data={paginatedList}
         isLoading={isLoading}
         emptyStateMsg="No warehouses found. Create one to get started."
         paginationProps={{
           currentPage: page,
-          totalPages: totalPages,
+          totalPages: calculatedTotalPages,
           onPageChange: setPage,
-          totalItems: totalRecords,
+          totalItems: calculatedTotalRecords,
           itemsPerPage: limit,
           onLimitChange: (newLimit) => { setLimit(newLimit); setPage(1); }
         }}

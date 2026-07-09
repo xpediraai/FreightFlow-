@@ -4,7 +4,7 @@ import Badge from '../../../../../../shared/components/Badge';
 import { Edit2, Trash2 } from 'lucide-react';
 import { logisticsService } from '../../../../../masters/services/logistics.service';
 
-const PortList = ({ onEdit, searchQuery = '', viewMode = 'table', refreshTrigger = 0 }) => {
+const PortList = ({ onEdit, searchQuery = '', viewMode = 'table', refreshTrigger = 0 , onTotalCountChange, statusFilter = 'ALL STATUS'}) => {
   const [ports, setPorts] = useState([]);
   const [page, setPage] = useState(1);
   const [limit, setLimit] = useState(20);
@@ -14,12 +14,11 @@ const PortList = ({ onEdit, searchQuery = '', viewMode = 'table', refreshTrigger
 
   useEffect(() => {
     fetchPorts();
-  }, [refreshTrigger, page, limit, searchQuery]);
-
+  }, [refreshTrigger]);
   const fetchPorts = async () => {
     setIsLoading(true);
     try {
-      const data = await logisticsService.getPorts({ page, limit, search: searchQuery });
+      const data = await logisticsService.getPorts({ page: 1, limit: 10000 });
       let portData = [];
       if (data?.data?.data && Array.isArray(data.data.data)) {
         portData = data.data.data;
@@ -39,6 +38,25 @@ const PortList = ({ onEdit, searchQuery = '', viewMode = 'table', refreshTrigger
   };
 
   
+
+  
+  const filteredList = ports.filter(item => {
+    if (statusFilter === 'ALL STATUS') return true;
+    const isMatch = statusFilter === 'ACTIVE' ? item.status === 'Active' : (item.status === 'Inactive' || item.status !== 'Active');
+    return isMatch;
+  });
+
+  
+  const calculatedTotalRecords = filteredList.length;
+  const calculatedTotalPages = Math.ceil(calculatedTotalRecords / limit) || 1;
+  const paginatedList = filteredList.slice((page - 1) * limit, page * limit);
+
+  
+  useEffect(() => {
+    if (onTotalCountChange) {
+      onTotalCountChange(calculatedTotalRecords);
+    }
+  }, [calculatedTotalRecords, onTotalCountChange]);
 
   const columns = [
     {
@@ -91,7 +109,7 @@ const PortList = ({ onEdit, searchQuery = '', viewMode = 'table', refreshTrigger
   if (viewMode === 'card') {
     return (
       <div className="grid" style={{ gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: '1.5rem' }}>
-        {ports.map(port => (
+        {paginatedList.map(port => (
           <div key={port.id}>
             <MasterDataCard
               title={port.port_name}
@@ -104,7 +122,7 @@ const PortList = ({ onEdit, searchQuery = '', viewMode = 'table', refreshTrigger
             />
           </div>
         ))}
-        {ports.length === 0 && !isLoading && (
+        {paginatedList.length === 0 && !isLoading && (
           <div className="text-center p-xl text-tertiary w-full" style={{ gridColumn: '1 / -1' }}>
             No records found.
           </div>
@@ -116,14 +134,14 @@ const PortList = ({ onEdit, searchQuery = '', viewMode = 'table', refreshTrigger
   return (
     <TableView
         columns={columns}
-        data={ports}
+        data={paginatedList}
         isLoading={isLoading}
         emptyStateMsg="No ports found. Create one to get started."
         paginationProps={{
           currentPage: page,
-          totalPages: totalPages,
+          totalPages: calculatedTotalPages,
           onPageChange: setPage,
-          totalItems: totalRecords,
+          totalItems: calculatedTotalRecords,
           itemsPerPage: limit,
           onLimitChange: (newLimit) => { setLimit(newLimit); setPage(1); }
         }}

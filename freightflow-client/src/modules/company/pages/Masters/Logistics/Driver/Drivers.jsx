@@ -10,6 +10,8 @@ const Drivers = () => {
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [selectedDriver, setSelectedDriver] = useState(null);
   const [searchTerm, setSearchTerm] = useState('');
+  const [totalRecords, setTotalRecords] = useState(0);
+  const [statusFilter, setStatusFilter] = useState('ALL STATUS');
   const [viewMode, setViewMode] = useState(localStorage.getItem('preferredViewMode') || 'table');
   const [refreshTrigger, setRefreshTrigger] = useState(0);
 
@@ -47,7 +49,10 @@ const Drivers = () => {
           <MasterToolbar entityName="Driver" 
           searchTerm={searchTerm}
           onSearch={setSearchTerm}
-        />
+            totalRecords={totalRecords}
+            statusFilter={statusFilter}
+            onStatusChange={setStatusFilter}
+          />
 
         <ExpandableForm isOpen={isFormOpen}>
           <DriverForm 
@@ -62,7 +67,9 @@ const Drivers = () => {
           searchQuery={searchTerm}
           viewMode={viewMode}
           refreshTrigger={refreshTrigger}
-        />
+            onTotalCountChange={setTotalRecords}
+            statusFilter={statusFilter}
+          />
         </div>
       </div>
     </Page>

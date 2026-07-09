@@ -4,7 +4,7 @@ import Badge from '../../../../../../shared/components/Badge';
 import { Edit2, Trash2 } from 'lucide-react';
 import { organizationService } from '../../../../../masters/services/organization.service';
 
-const DepartmentList = ({ onEdit, searchQuery = '', viewMode = 'table', refreshTrigger = 0 }) => {
+const DepartmentList = ({ onEdit, searchQuery = '', viewMode = 'table', refreshTrigger = 0 , onTotalCountChange, statusFilter = 'ALL STATUS'}) => {
   const [departments, setDepartments] = useState([]);
   const [page, setPage] = useState(1);
   const [limit, setLimit] = useState(20);
@@ -14,12 +14,11 @@ const DepartmentList = ({ onEdit, searchQuery = '', viewMode = 'table', refreshT
 
   useEffect(() => {
     fetchDepartments();
-  }, [refreshTrigger, page, limit, searchQuery]);
-
+  }, [refreshTrigger]);
   const fetchDepartments = async () => {
     setIsLoading(true);
     try {
-      const data = await organizationService.getDepartments({ page, limit, search: searchQuery });
+      const data = await organizationService.getDepartments({ page: 1, limit: 10000 });
       let deptData = [];
       if (data?.data?.data && Array.isArray(data.data.data)) {
         deptData = data.data.data;
@@ -39,6 +38,25 @@ const DepartmentList = ({ onEdit, searchQuery = '', viewMode = 'table', refreshT
   };
 
   
+
+  
+  const filteredList = departments.filter(item => {
+    if (statusFilter === 'ALL STATUS') return true;
+    const isMatch = statusFilter === 'ACTIVE' ? item.status === 'Active' : (item.status === 'Inactive' || item.status !== 'Active');
+    return isMatch;
+  });
+
+  
+  const calculatedTotalRecords = filteredList.length;
+  const calculatedTotalPages = Math.ceil(calculatedTotalRecords / limit) || 1;
+  const paginatedList = filteredList.slice((page - 1) * limit, page * limit);
+
+  
+  useEffect(() => {
+    if (onTotalCountChange) {
+      onTotalCountChange(calculatedTotalRecords);
+    }
+  }, [calculatedTotalRecords, onTotalCountChange]);
 
   const columns = [
     {
@@ -91,7 +109,7 @@ const DepartmentList = ({ onEdit, searchQuery = '', viewMode = 'table', refreshT
   if (viewMode === 'card') {
     return (
       <div className="grid" style={{ gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: '1.5rem' }}>
-        {departments.map(dept => (
+        {paginatedList.map(dept => (
           <div key={dept.id}>
             <MasterDataCard
               title={dept.department_name}
@@ -102,7 +120,7 @@ const DepartmentList = ({ onEdit, searchQuery = '', viewMode = 'table', refreshT
             />
           </div>
         ))}
-        {departments.length === 0 && !isLoading && (
+        {paginatedList.length === 0 && !isLoading && (
           <div className="text-center p-xl text-tertiary w-full" style={{ gridColumn: '1 / -1' }}>
             No records found.
           </div>
@@ -114,14 +132,14 @@ const DepartmentList = ({ onEdit, searchQuery = '', viewMode = 'table', refreshT
   return (
     <TableView
         columns={columns}
-        data={departments}
+        data={paginatedList}
         isLoading={isLoading}
         emptyStateMsg="No departments found. Create one to get started."
         paginationProps={{
           currentPage: page,
-          totalPages: totalPages,
+          totalPages: calculatedTotalPages,
           onPageChange: setPage,
-          totalItems: totalRecords,
+          totalItems: calculatedTotalRecords,
           itemsPerPage: limit,
           onLimitChange: (newLimit) => { setLimit(newLimit); setPage(1); }
         }}

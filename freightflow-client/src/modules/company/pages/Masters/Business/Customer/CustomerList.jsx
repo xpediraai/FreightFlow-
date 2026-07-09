@@ -5,7 +5,7 @@ import MasterDataCard from '../../../../../../shared/components/Master/MasterDat
 import { Edit2, Trash2, MapPin } from 'lucide-react';
 import { businessService } from '../../../../../masters/services/business.service';
 
-const CustomerList = ({ onEdit, searchQuery = '', viewMode = 'table', refreshTrigger = 0 }) => {
+const CustomerList = ({ onEdit, searchQuery = '', viewMode = 'table', refreshTrigger = 0, onTotalCountChange, statusFilter = 'ALL STATUS' }) => {
   const [customers, setCustomers] = useState([]);
   const [page, setPage] = useState(1);
   const [limit, setLimit] = useState(20);
@@ -15,12 +15,11 @@ const CustomerList = ({ onEdit, searchQuery = '', viewMode = 'table', refreshTri
 
   useEffect(() => {
     fetchCustomers();
-  }, [refreshTrigger, page, limit, searchQuery]);
-
+  }, [refreshTrigger]);
   const fetchCustomers = async () => {
     setIsLoading(true);
     try {
-      const data = await businessService.getCustomers({ page, limit, search: searchQuery });
+      const data = await businessService.getCustomers({ page: 1, limit: 10000 });
       let customerData = [];
       if (data?.data?.data && Array.isArray(data.data.data)) {
         customerData = data.data.data;
@@ -39,8 +38,26 @@ const CustomerList = ({ onEdit, searchQuery = '', viewMode = 'table', refreshTri
     }
   };
 
-  
 
+
+
+  const filteredList = customers.filter(item => {
+    if (statusFilter === 'ALL STATUS') return true;
+    const isMatch = statusFilter === 'ACTIVE' ? item.status === 'Active' : (item.status === 'Inactive' || item.status !== 'Active');
+    return isMatch;
+  });
+
+
+  const calculatedTotalRecords = filteredList.length;
+  const calculatedTotalPages = Math.ceil(calculatedTotalRecords / limit) || 1;
+  const paginatedList = filteredList.slice((page - 1) * limit, page * limit);
+
+
+  useEffect(() => {
+    if (onTotalCountChange) {
+      onTotalCountChange(calculatedTotalRecords);
+    }
+  }, [calculatedTotalRecords, onTotalCountChange]);
   const columns = [
     {
       header: 'Code',
@@ -76,14 +93,14 @@ const CustomerList = ({ onEdit, searchQuery = '', viewMode = 'table', refreshTri
       key: 'actions',
       render: (row) => (
         <div className="flex gap-xs" onClick={(e) => e.stopPropagation()}>
-          <button 
+          <button
             className="action-btn edit-btn"
             onClick={() => onEdit && onEdit(row)}
             title="Edit Customer"
           >
             <Edit2 size={16} />
           </button>
-          <button 
+          <button
             className="action-btn delete-btn"
             title={row.status === 'Active' ? 'Deactivate' : 'Activate'}
           >
@@ -97,7 +114,7 @@ const CustomerList = ({ onEdit, searchQuery = '', viewMode = 'table', refreshTri
   if (viewMode === 'card') {
     return (
       <div className="grid" style={{ gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: '1.5rem' }}>
-        {customers.map(c => (
+        {paginatedList.map(c => (
           <div key={c.id}>
             <MasterDataCard
               title={c.customer_name}
@@ -115,7 +132,7 @@ const CustomerList = ({ onEdit, searchQuery = '', viewMode = 'table', refreshTri
             />
           </div>
         ))}
-        {customers.length === 0 && !isLoading && (
+        {paginatedList.length === 0 && !isLoading && (
           <div className="text-center p-xl text-tertiary w-full" style={{ gridColumn: '1 / -1' }}>
             No customers found.
           </div>
@@ -126,21 +143,21 @@ const CustomerList = ({ onEdit, searchQuery = '', viewMode = 'table', refreshTri
 
   return (
     <TableView
-        columns={columns}
-        data={customers}
-        isLoading={isLoading}
-        emptyStateMsg="No customers found. Create one to get started."
-        paginationProps={{
-          currentPage: page,
-          totalPages: totalPages,
-          onPageChange: setPage,
-          totalItems: totalRecords,
-          itemsPerPage: limit,
-          onLimitChange: (newLimit) => { setLimit(newLimit); setPage(1); }
-        }}
-        onRowClick={(row) => onEdit && onEdit(row)}
-      />
-);
+      columns={columns}
+      data={paginatedList}
+      isLoading={isLoading}
+      emptyStateMsg="No customers found. Create one to get started."
+      paginationProps={{
+        currentPage: page,
+        totalPages: calculatedTotalPages,
+        onPageChange: setPage,
+        totalItems: calculatedTotalRecords,
+        itemsPerPage: limit,
+        onLimitChange: (newLimit) => { setLimit(newLimit); setPage(1); }
+      }}
+      onRowClick={(row) => onEdit && onEdit(row)}
+    />
+  );
 };
 
 export default CustomerList;

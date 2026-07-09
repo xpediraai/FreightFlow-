@@ -4,7 +4,7 @@ import Badge from '../../../../../../shared/components/Badge';
 import { Edit2, Trash2 } from 'lucide-react';
 import { logisticsService } from '../../../../../masters/services/logistics.service';
 
-const ShippingLineList = ({ onEdit, searchQuery = '', viewMode = 'table', refreshTrigger = 0 }) => {
+const ShippingLineList = ({ onEdit, searchQuery = '', viewMode = 'table', refreshTrigger = 0 , onTotalCountChange, statusFilter = 'ALL STATUS'}) => {
   const [lines, setLines] = useState([]);
   const [page, setPage] = useState(1);
   const [limit, setLimit] = useState(20);
@@ -14,8 +14,7 @@ const ShippingLineList = ({ onEdit, searchQuery = '', viewMode = 'table', refres
 
   useEffect(() => {
     fetchLines();
-  }, [refreshTrigger, page, limit, searchQuery]);
-
+  }, [refreshTrigger]);
   const fetchLines = async () => {
     setIsLoading(true);
     try {
@@ -39,6 +38,25 @@ const ShippingLineList = ({ onEdit, searchQuery = '', viewMode = 'table', refres
   };
 
   
+
+  
+  const filteredList = lines.filter(item => {
+    if (statusFilter === 'ALL STATUS') return true;
+    const isMatch = statusFilter === 'ACTIVE' ? item.status === 'Active' : (item.status === 'Inactive' || item.status !== 'Active');
+    return isMatch;
+  });
+
+  
+  const calculatedTotalRecords = filteredList.length;
+  const calculatedTotalPages = Math.ceil(calculatedTotalRecords / limit) || 1;
+  const paginatedList = filteredList.slice((page - 1) * limit, page * limit);
+
+  
+  useEffect(() => {
+    if (onTotalCountChange) {
+      onTotalCountChange(calculatedTotalRecords);
+    }
+  }, [calculatedTotalRecords, onTotalCountChange]);
 
   const columns = [
     {
@@ -96,7 +114,7 @@ const ShippingLineList = ({ onEdit, searchQuery = '', viewMode = 'table', refres
   if (viewMode === 'card') {
     return (
       <div className="grid" style={{ gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: '1.5rem' }}>
-        {lines.map(line => (
+        {paginatedList.map(line => (
           <div key={line.id}>
             <MasterDataCard
               title={line.shipping_line_name}
@@ -111,7 +129,7 @@ const ShippingLineList = ({ onEdit, searchQuery = '', viewMode = 'table', refres
             />
           </div>
         ))}
-        {lines.length === 0 && !isLoading && (
+        {paginatedList.length === 0 && !isLoading && (
           <div className="text-center p-xl text-tertiary w-full" style={{ gridColumn: '1 / -1' }}>
             No records found.
           </div>
@@ -123,14 +141,14 @@ const ShippingLineList = ({ onEdit, searchQuery = '', viewMode = 'table', refres
   return (
     <TableView
         columns={columns}
-        data={lines}
+        data={paginatedList}
         isLoading={isLoading}
         emptyStateMsg="No shipping lines found. Create one to get started."
         paginationProps={{
           currentPage: page,
-          totalPages: totalPages,
+          totalPages: calculatedTotalPages,
           onPageChange: setPage,
-          totalItems: totalRecords,
+          totalItems: calculatedTotalRecords,
           itemsPerPage: limit,
           onLimitChange: (newLimit) => { setLimit(newLimit); setPage(1); }
         }}

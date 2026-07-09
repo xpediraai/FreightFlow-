@@ -5,7 +5,7 @@ import MasterDataCard from '../../../../../../shared/components/Master/MasterDat
 import { Edit2, Trash2, MapPin } from 'lucide-react';
 import { businessService } from '../../../../../masters/services/business.service';
 
-const VendorList = ({ onEdit, searchQuery = '', viewMode = 'table', refreshTrigger = 0 }) => {
+const VendorList = ({ onEdit, searchQuery = '', viewMode = 'table', refreshTrigger = 0 , onTotalCountChange, statusFilter = 'ALL STATUS'}) => {
   const [vendors, setVendors] = useState([]);
   const [page, setPage] = useState(1);
   const [limit, setLimit] = useState(20);
@@ -15,7 +15,14 @@ const VendorList = ({ onEdit, searchQuery = '', viewMode = 'table', refreshTrigg
 
   useEffect(() => {
     fetchVendors();
-  }, [refreshTrigger, page, limit, searchQuery]);
+  }, [refreshTrigger]);
+
+  
+  useEffect(() => {
+    if (onTotalCountChange) {
+      onTotalCountChange(data ? data.length : 0);
+    }
+  }, [data ? data.length : 0, onTotalCountChange]);
 
   const fetchVendors = async () => {
     setIsLoading(true);
@@ -40,6 +47,18 @@ const VendorList = ({ onEdit, searchQuery = '', viewMode = 'table', refreshTrigg
   };
 
   
+
+  
+  const filteredList = vendors.filter(item => {
+    if (statusFilter === 'ALL STATUS') return true;
+    const isMatch = statusFilter === 'ACTIVE' ? item.status === 'Active' : (item.status === 'Inactive' || item.status !== 'Active');
+    return isMatch;
+  });
+
+  
+  const calculatedTotalRecords = filteredList.length;
+  const calculatedTotalPages = Math.ceil(calculatedTotalRecords / limit) || 1;
+  const paginatedList = filteredList.slice((page - 1) * limit, page * limit);
 
   const columns = [
     {
@@ -108,7 +127,7 @@ const VendorList = ({ onEdit, searchQuery = '', viewMode = 'table', refreshTrigg
   if (viewMode === 'card') {
     return (
       <div className="grid" style={{ gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: '1.5rem' }}>
-        {vendors.map(v => (
+        {paginatedList.map(v => (
           <div key={v.id}>
             <MasterDataCard
               title={v.vendor_name}
@@ -126,7 +145,7 @@ const VendorList = ({ onEdit, searchQuery = '', viewMode = 'table', refreshTrigg
             />
           </div>
         ))}
-        {vendors.length === 0 && !isLoading && (
+        {paginatedList.length === 0 && !isLoading && (
           <div className="text-center p-xl text-tertiary w-full" style={{ gridColumn: '1 / -1' }}>
             No vendors found.
           </div>
@@ -138,14 +157,14 @@ const VendorList = ({ onEdit, searchQuery = '', viewMode = 'table', refreshTrigg
   return (
     <TableView
         columns={columns}
-        data={vendors}
+        data={paginatedList}
         isLoading={isLoading}
         emptyStateMsg="No vendors found. Create one to get started."
         paginationProps={{
           currentPage: page,
-          totalPages: totalPages,
+          totalPages: calculatedTotalPages,
           onPageChange: setPage,
-          totalItems: totalRecords,
+          totalItems: calculatedTotalRecords,
           itemsPerPage: limit,
           onLimitChange: (newLimit) => { setLimit(newLimit); setPage(1); }
         }}

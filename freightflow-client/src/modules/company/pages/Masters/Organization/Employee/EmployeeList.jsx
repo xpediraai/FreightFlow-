@@ -4,7 +4,7 @@ import Badge from '../../../../../../shared/components/Badge';
 import { Edit2, Trash2 } from 'lucide-react';
 import { organizationService } from '../../../../../masters/services/organization.service';
 
-const EmployeeList = ({ onEdit, searchQuery = '', viewMode = 'table', refreshTrigger = 0 }) => {
+const EmployeeList = ({ onEdit, searchQuery = '', viewMode = 'table', refreshTrigger = 0 , onTotalCountChange, statusFilter = 'ALL STATUS'}) => {
   const [employees, setEmployees] = useState([]);
   const [page, setPage] = useState(1);
   const [limit, setLimit] = useState(20);
@@ -14,12 +14,11 @@ const EmployeeList = ({ onEdit, searchQuery = '', viewMode = 'table', refreshTri
 
   useEffect(() => {
     fetchEmployees();
-  }, [refreshTrigger, page, limit, searchQuery]);
-
+  }, [refreshTrigger]);
   const fetchEmployees = async () => {
     setIsLoading(true);
     try {
-      const data = await organizationService.getEmployees({ page, limit, search: searchQuery });
+      const data = await organizationService.getEmployees({ page: 1, limit: 10000 });
       let empData = [];
       if (data?.data?.data && Array.isArray(data.data.data)) {
         empData = data.data.data;
@@ -39,6 +38,25 @@ const EmployeeList = ({ onEdit, searchQuery = '', viewMode = 'table', refreshTri
   };
 
   
+
+  
+  const filteredList = employees.filter(item => {
+    if (statusFilter === 'ALL STATUS') return true;
+    const isMatch = statusFilter === 'ACTIVE' ? item.status === 'Active' : (item.status === 'Inactive' || item.status !== 'Active');
+    return isMatch;
+  });
+
+  
+  const calculatedTotalRecords = filteredList.length;
+  const calculatedTotalPages = Math.ceil(calculatedTotalRecords / limit) || 1;
+  const paginatedList = filteredList.slice((page - 1) * limit, page * limit);
+
+  
+  useEffect(() => {
+    if (onTotalCountChange) {
+      onTotalCountChange(calculatedTotalRecords);
+    }
+  }, [calculatedTotalRecords, onTotalCountChange]);
 
   const columns = [
     {
@@ -96,7 +114,7 @@ const EmployeeList = ({ onEdit, searchQuery = '', viewMode = 'table', refreshTri
   if (viewMode === 'card') {
     return (
       <div className="grid" style={{ gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: '1.5rem' }}>
-        {employees.map(emp => (
+        {paginatedList.map(emp => (
           <div key={emp.id}>
             <MasterDataCard
               title={`${emp.first_name || ''} ${emp.last_name || ''}`.trim()}
@@ -107,7 +125,7 @@ const EmployeeList = ({ onEdit, searchQuery = '', viewMode = 'table', refreshTri
             />
           </div>
         ))}
-        {employees.length === 0 && !isLoading && (
+        {paginatedList.length === 0 && !isLoading && (
           <div className="text-center p-xl text-tertiary w-full" style={{ gridColumn: '1 / -1' }}>
             No records found.
           </div>
@@ -119,14 +137,14 @@ const EmployeeList = ({ onEdit, searchQuery = '', viewMode = 'table', refreshTri
   return (
     <TableView
         columns={columns}
-        data={employees}
+        data={paginatedList}
         isLoading={isLoading}
         emptyStateMsg="No employees found. Create one to get started."
         paginationProps={{
           currentPage: page,
-          totalPages: totalPages,
+          totalPages: calculatedTotalPages,
           onPageChange: setPage,
-          totalItems: totalRecords,
+          totalItems: calculatedTotalRecords,
           itemsPerPage: limit,
           onLimitChange: (newLimit) => { setLimit(newLimit); setPage(1); }
         }}

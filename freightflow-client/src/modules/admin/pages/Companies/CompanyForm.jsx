@@ -69,7 +69,7 @@ const CompanyForm = ({ onCancel, onSuccess, initialData }) => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     setGlobalError('');
-    
+
     // Validate all required fields
     const newErrors = {};
     Object.keys(formData).forEach(key => {
@@ -85,7 +85,7 @@ const CompanyForm = ({ onCancel, onSuccess, initialData }) => {
     }
 
     setIsLoading(true);
-    
+
     try {
       if (isEditMode) {
         const { owner_name, owner_email, owner_password, owner_id, ...updatePayload } = formData;
@@ -102,7 +102,7 @@ const CompanyForm = ({ onCancel, onSuccess, initialData }) => {
 
         const { owner_name, owner_email, owner_password, ...companyPayload } = formData;
         companyPayload.owner_id = newOwnerId;
-        
+
         await adminService.createCompany(companyPayload);
       }
       onSuccess && onSuccess();
@@ -134,7 +134,7 @@ const CompanyForm = ({ onCancel, onSuccess, initialData }) => {
           </div>
           <div className="form-group">
             <label>Company Code <span className="text-danger">*</span></label>
-            <input disabled={isLoading} type="text" name="company_code" value={formData.company_code} onChange={handleChange} required className="form-control form-control-sm" disabled={isEditMode} onBlur={handleBlur} />
+            <input disabled={isLoading} type="text" name="company_code" value={formData.company_code} onChange={handleChange} required className="form-control form-control-sm" disable={isEditMode} onBlur={handleBlur} />
             {errors.company_code && <div className="text-danger" style={{ fontSize: '0.75rem', marginTop: '0.25rem' }}>{errors.company_code}</div>}
           </div>
           <div className="form-group">
@@ -230,17 +230,17 @@ const CompanyForm = ({ onCancel, onSuccess, initialData }) => {
               <div className="form-group">
                 <label>Full Name <span className="text-danger">*</span></label>
                 <input disabled={isLoading} type="text" name="owner_name" value={formData.owner_name} onChange={handleChange} required className="form-control form-control-sm" placeholder="John Doe" onBlur={handleBlur} />
-            {errors.owner_name && <div className="text-danger" style={{ fontSize: '0.75rem', marginTop: '0.25rem' }}>{errors.owner_name}</div>}
+                {errors.owner_name && <div className="text-danger" style={{ fontSize: '0.75rem', marginTop: '0.25rem' }}>{errors.owner_name}</div>}
               </div>
               <div className="form-group">
                 <label>Email Address <span className="text-danger">*</span></label>
                 <input disabled={isLoading} type="email" name="owner_email" value={formData.owner_email} onChange={handleChange} required className="form-control form-control-sm" placeholder="john@acme.com" onBlur={handleBlur} />
-            {errors.owner_email && <div className="text-danger" style={{ fontSize: '0.75rem', marginTop: '0.25rem' }}>{errors.owner_email}</div>}
+                {errors.owner_email && <div className="text-danger" style={{ fontSize: '0.75rem', marginTop: '0.25rem' }}>{errors.owner_email}</div>}
               </div>
               <div className="form-group">
                 <label>Password <span className="text-danger">*</span></label>
                 <input disabled={isLoading} type="password" name="owner_password" value={formData.owner_password} onChange={handleChange} required className="form-control form-control-sm" placeholder="********" onBlur={handleBlur} />
-            {errors.owner_password && <div className="text-danger" style={{ fontSize: '0.75rem', marginTop: '0.25rem' }}>{errors.owner_password}</div>}
+                {errors.owner_password && <div className="text-danger" style={{ fontSize: '0.75rem', marginTop: '0.25rem' }}>{errors.owner_password}</div>}
               </div>
             </div>
           </>

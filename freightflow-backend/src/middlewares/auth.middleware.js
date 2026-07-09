@@ -36,8 +36,8 @@ const authenticateToken = (req, res, next) => {
         req.user = decoded;
         next();
     } catch (err) {
-        return res.status(403).json(errorResponse(
-            "FORBIDDEN",
+        return res.status(401).json(errorResponse(
+            "UNAUTHORIZED",
             err.message,
             "Your session has expired or is invalid. Please log in again."
         ));

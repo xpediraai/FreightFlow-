@@ -4,7 +4,7 @@ import Badge from '../../../../../../shared/components/Badge';
 import { Edit2, Trash2 } from 'lucide-react';
 import { businessService } from '../../../../../masters/services/business.service';
 
-const ChargeList = ({ onEdit, searchQuery = '', viewMode = 'table', refreshTrigger = 0 }) => {
+const ChargeList = ({ onEdit, searchQuery = '', viewMode = 'table', refreshTrigger = 0 , onTotalCountChange, statusFilter = 'ALL STATUS'}) => {
   const [charges, setCharges] = useState([]);
   const [page, setPage] = useState(1);
   const [limit, setLimit] = useState(20);
@@ -14,7 +14,14 @@ const ChargeList = ({ onEdit, searchQuery = '', viewMode = 'table', refreshTrigg
 
   useEffect(() => {
     fetchCharges();
-  }, [refreshTrigger, page, limit, searchQuery]);
+  }, [refreshTrigger]);
+
+  
+  useEffect(() => {
+    if (onTotalCountChange) {
+      onTotalCountChange(data ? data.length : 0);
+    }
+  }, [data ? data.length : 0, onTotalCountChange]);
 
   const fetchCharges = async () => {
     setIsLoading(true);
@@ -39,6 +46,18 @@ const ChargeList = ({ onEdit, searchQuery = '', viewMode = 'table', refreshTrigg
   };
 
   
+
+  
+  const filteredList = charges.filter(item => {
+    if (statusFilter === 'ALL STATUS') return true;
+    const isMatch = statusFilter === 'ACTIVE' ? item.status === 'Active' : (item.status === 'Inactive' || item.status !== 'Active');
+    return isMatch;
+  });
+
+  
+  const calculatedTotalRecords = filteredList.length;
+  const calculatedTotalPages = Math.ceil(calculatedTotalRecords / limit) || 1;
+  const paginatedList = filteredList.slice((page - 1) * limit, page * limit);
 
   const columns = [
     {
@@ -105,7 +124,7 @@ const ChargeList = ({ onEdit, searchQuery = '', viewMode = 'table', refreshTrigg
   if (viewMode === 'card') {
     return (
       <div className="grid" style={{ gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: '1.5rem' }}>
-        {charges.map(c => (
+        {paginatedList.map(c => (
           <div key={c.id}>
             <MasterDataCard
               title={c.charge_name}
@@ -119,7 +138,7 @@ const ChargeList = ({ onEdit, searchQuery = '', viewMode = 'table', refreshTrigg
             />
           </div>
         ))}
-        {charges.length === 0 && !isLoading && (
+        {paginatedList.length === 0 && !isLoading && (
           <div className="text-center p-xl text-tertiary w-full" style={{ gridColumn: '1 / -1' }}>
             No records found.
           </div>
@@ -131,14 +150,14 @@ const ChargeList = ({ onEdit, searchQuery = '', viewMode = 'table', refreshTrigg
   return (
     <TableView
         columns={columns}
-        data={charges}
+        data={paginatedList}
         isLoading={isLoading}
         emptyStateMsg="No charges found. Create one to get started."
         paginationProps={{
           currentPage: page,
-          totalPages: totalPages,
+          totalPages: calculatedTotalPages,
           onPageChange: setPage,
-          totalItems: totalRecords,
+          totalItems: calculatedTotalRecords,
           itemsPerPage: limit,
           onLimitChange: (newLimit) => { setLimit(newLimit); setPage(1); }
         }}

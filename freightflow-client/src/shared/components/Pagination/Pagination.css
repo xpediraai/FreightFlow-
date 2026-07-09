@@ -12,6 +12,8 @@
 .pagination-info {
   font-size: var(--font-size-sm);
   color: var(--text-secondary);
+  display: flex;
+  flex-wrap: wrap;
 }
 
 .pagination-controls {

@@ -5,7 +5,7 @@ import MasterDataCard from '../../../../../../shared/components/Master/MasterDat
 import { Eye, Edit2, Trash2, MapPin } from 'lucide-react';
 import { foundationService } from '../../../../../masters/services/foundation.service';
 
-const StateList = ({ onEdit, searchQuery = '', viewMode = 'table', refreshTrigger = 0 }) => {
+const StateList = ({ onEdit, searchQuery = '', viewMode = 'table', refreshTrigger = 0 , onTotalCountChange, statusFilter = 'ALL STATUS'}) => {
   const [states, setStates] = useState([]);
   const [page, setPage] = useState(1);
   const [limit, setLimit] = useState(20);
@@ -15,12 +15,11 @@ const StateList = ({ onEdit, searchQuery = '', viewMode = 'table', refreshTrigge
 
   useEffect(() => {
     fetchStates();
-  }, [refreshTrigger, page, limit, searchQuery]);
-
+  }, [refreshTrigger]);
   const fetchStates = async () => {
     setIsLoading(true);
     try {
-      const data = await foundationService.getStates({ page, limit, search: searchQuery });
+      const data = await foundationService.getStates({ page: 1, limit: 10000 });
       let stateData = [];
       if (data?.data?.data && Array.isArray(data.data.data)) {
         stateData = data.data.data;
@@ -40,6 +39,25 @@ const StateList = ({ onEdit, searchQuery = '', viewMode = 'table', refreshTrigge
   };
 
   
+
+  
+  const filteredList = states.filter(item => {
+    if (statusFilter === 'ALL STATUS') return true;
+    const isMatch = statusFilter === 'ACTIVE' ? item.status === 'Active' : (item.status === 'Inactive' || item.status !== 'Active');
+    return isMatch;
+  });
+
+  
+  const calculatedTotalRecords = filteredList.length;
+  const calculatedTotalPages = Math.ceil(calculatedTotalRecords / limit) || 1;
+  const paginatedList = filteredList.slice((page - 1) * limit, page * limit);
+
+  
+  useEffect(() => {
+    if (onTotalCountChange) {
+      onTotalCountChange(calculatedTotalRecords);
+    }
+  }, [calculatedTotalRecords, onTotalCountChange]);
 
   const columns = [
     {
@@ -97,7 +115,7 @@ const StateList = ({ onEdit, searchQuery = '', viewMode = 'table', refreshTrigge
   if (viewMode === 'card') {
     return (
       <div className="grid" style={{ gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: '1.5rem' }}>
-        {states.map(state => (
+        {paginatedList.map(state => (
           <div key={state.id}>
             <MasterDataCard
               title={state.state_name}
@@ -112,7 +130,7 @@ const StateList = ({ onEdit, searchQuery = '', viewMode = 'table', refreshTrigge
             />
           </div>
         ))}
-        {states.length === 0 && !isLoading && (
+        {paginatedList.length === 0 && !isLoading && (
           <div className="text-center p-xl text-tertiary w-full" style={{ gridColumn: '1 / -1' }}>
             No states found.
           </div>
@@ -124,14 +142,14 @@ const StateList = ({ onEdit, searchQuery = '', viewMode = 'table', refreshTrigge
   return (
     <TableView
         columns={columns}
-        data={states}
+        data={paginatedList}
         isLoading={isLoading}
         emptyStateMsg="No states found. Create one to get started."
         paginationProps={{
           currentPage: page,
-          totalPages: totalPages,
+          totalPages: calculatedTotalPages,
           onPageChange: setPage,
-          totalItems: totalRecords,
+          totalItems: calculatedTotalRecords,
           itemsPerPage: limit,
           onLimitChange: (newLimit) => { setLimit(newLimit); setPage(1); }
         }}

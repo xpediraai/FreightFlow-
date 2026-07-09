@@ -5,7 +5,7 @@ import Button from '../../../../shared/components/Button';
 import Badge from '../../../../shared/components/Badge';
 import { adminService } from '../../services/admin.service';
 
-const CompanyList = ({ onEdit, searchQuery = '', viewMode = 'table', refreshTrigger = 0 }) => {
+const CompanyList = ({ onEdit, searchQuery = '', viewMode = 'table', refreshTrigger = 0, onTotalCountChange, statusFilter = 'ALL STATUS' }) => {
   const [companies, setCompanies] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [viewModalData, setViewModalData] = useState(null);
@@ -28,6 +28,9 @@ const CompanyList = ({ onEdit, searchQuery = '', viewMode = 'table', refreshTrig
   };
 
   const filteredCompanies = companies.filter(company => {
+    const isStatusMatch = statusFilter === 'ALL STATUS' ? true : (statusFilter === 'ACTIVE' ? company.status === 'Active' : (company.status === 'Inactive' || company.status !== 'Active'));
+    if (!isStatusMatch) return false;
+
     if (!searchQuery) return true;
     const query = searchQuery.toLowerCase();
     return (
@@ -37,6 +40,14 @@ const CompanyList = ({ onEdit, searchQuery = '', viewMode = 'table', refreshTrig
       (company.city && company.city.toLowerCase().includes(query))
     );
   });
+  
+  const calculatedTotalRecords = filteredCompanies.length;
+
+  useEffect(() => {
+    if (onTotalCountChange) {
+      onTotalCountChange(calculatedTotalRecords);
+    }
+  }, [calculatedTotalRecords, onTotalCountChange]);
 
   const columns = [
     {
@@ -88,21 +99,21 @@ const CompanyList = ({ onEdit, searchQuery = '', viewMode = 'table', refreshTrig
       key: 'actions',
       render: (row) => (
         <div style={{ display: 'flex', gap: '0.5rem' }} onClick={(e) => e.stopPropagation()}>
-          <button 
+          <button
             className="action-btn view-btn"
             onClick={() => setViewModalData(row)}
             title="View Details"
           >
             <Eye size={16} />
           </button>
-          <button 
+          <button
             className="action-btn edit-btn"
             onClick={() => onEdit && onEdit(row)}
             title="Edit Company"
           >
             <Edit2 size={16} />
           </button>
-          <button 
+          <button
             className="action-btn delete-btn"
             title={row.status === 'Active' ? 'Deactivate' : 'Activate'}
           >
@@ -163,11 +174,11 @@ const CompanyList = ({ onEdit, searchQuery = '', viewMode = 'table', refreshTrig
                 <div className="detail-item"><strong>Contact Number:</strong> {viewModalData.contact_number || '-'}</div>
                 <div className="detail-item"><strong>Address:</strong> {viewModalData.address || '-'}</div>
                 <div className="detail-item"><strong>City:</strong> {viewModalData.city || '-'}</div>
-                
+
                 <div className="detail-item"><strong>PAN Card:</strong> {viewModalData.pan_card_number || '-'}</div>
                 <div className="detail-item"><strong>GST Number:</strong> {viewModalData.gst_number || '-'}</div>
                 <div className="detail-item"><strong>CHA Licence:</strong> {viewModalData.cha_licence_number || '-'}</div>
-                
+
                 <div className="detail-item"><strong>Bank Name:</strong> {viewModalData.bank_name || '-'}</div>
                 <div className="detail-item"><strong>Account Number:</strong> {viewModalData.account_number || '-'}</div>
                 <div className="detail-item"><strong>IFSC Code:</strong> {viewModalData.ifsc_code || '-'}</div>

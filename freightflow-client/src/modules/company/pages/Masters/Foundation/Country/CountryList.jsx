@@ -5,7 +5,7 @@ import MasterDataCard from '../../../../../../shared/components/Master/MasterDat
 import { Eye, Edit2, Trash2 } from 'lucide-react';
 import { foundationService } from '../../../../../masters/services/foundation.service';
 
-const CountryList = ({ onEdit, searchQuery = '', viewMode = 'table', refreshTrigger = 0 }) => {
+const CountryList = ({ onEdit, searchQuery = '', viewMode = 'table', refreshTrigger = 0 , onTotalCountChange, statusFilter = 'ALL STATUS'}) => {
   const [countries, setCountries] = useState([]);
   const [page, setPage] = useState(1);
   const [limit, setLimit] = useState(20);
@@ -15,12 +15,11 @@ const CountryList = ({ onEdit, searchQuery = '', viewMode = 'table', refreshTrig
 
   useEffect(() => {
     fetchCountries();
-  }, [refreshTrigger, page, limit, searchQuery]);
-
+  }, [refreshTrigger]);
   const fetchCountries = async () => {
     setIsLoading(true);
     try {
-      const data = await foundationService.getCountries({ page, limit, search: searchQuery });
+      const data = await foundationService.getCountries({ page: 1, limit: 10000 });
       let countryData = [];
       if (data?.data?.data && Array.isArray(data.data.data)) {
         countryData = data.data.data;
@@ -40,6 +39,25 @@ const CountryList = ({ onEdit, searchQuery = '', viewMode = 'table', refreshTrig
   };
 
   
+
+  
+  const filteredList = countries.filter(item => {
+    if (statusFilter === 'ALL STATUS') return true;
+    const isMatch = statusFilter === 'ACTIVE' ? item.status === 'Active' : (item.status === 'Inactive' || item.status !== 'Active');
+    return isMatch;
+  });
+
+  
+  const calculatedTotalRecords = filteredList.length;
+  const calculatedTotalPages = Math.ceil(calculatedTotalRecords / limit) || 1;
+  const paginatedList = filteredList.slice((page - 1) * limit, page * limit);
+
+  
+  useEffect(() => {
+    if (onTotalCountChange) {
+      onTotalCountChange(calculatedTotalRecords);
+    }
+  }, [calculatedTotalRecords, onTotalCountChange]);
 
   const columns = [
     {
@@ -92,7 +110,7 @@ const CountryList = ({ onEdit, searchQuery = '', viewMode = 'table', refreshTrig
   if (viewMode === 'card') {
     return (
       <div className="grid" style={{ gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: '1.5rem' }}>
-        {countries.map(country => (
+        {paginatedList.map(country => (
           <div key={country.id}>
             <MasterDataCard
               title={country.country_name}
@@ -105,7 +123,7 @@ const CountryList = ({ onEdit, searchQuery = '', viewMode = 'table', refreshTrig
             />
           </div>
         ))}
-        {countries.length === 0 && !isLoading && (
+        {paginatedList.length === 0 && !isLoading && (
           <div className="text-center p-xl text-tertiary w-full" style={{ gridColumn: '1 / -1' }}>
             No countries found.
           </div>
@@ -117,14 +135,14 @@ const CountryList = ({ onEdit, searchQuery = '', viewMode = 'table', refreshTrig
   return (
     <TableView
         columns={columns}
-        data={countries}
+        data={paginatedList}
         isLoading={isLoading}
         emptyStateMsg="No countries found. Create one to get started."
         paginationProps={{
           currentPage: page,
-          totalPages: totalPages,
+          totalPages: calculatedTotalPages,
           onPageChange: setPage,
-          totalItems: totalRecords,
+          totalItems: calculatedTotalRecords,
           itemsPerPage: limit,
           onLimitChange: (newLimit) => { setLimit(newLimit); setPage(1); }
         }}

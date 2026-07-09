@@ -7,6 +7,11 @@
   flex-direction: column;
 }
 
+.table-container {
+  overflow-x: auto;
+  width: 100%;
+}
+
 .table-view-container.loading {
   display: flex;
   align-items: center;

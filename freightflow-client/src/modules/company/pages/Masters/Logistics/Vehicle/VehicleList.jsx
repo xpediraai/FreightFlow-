@@ -4,7 +4,7 @@ import Badge from '../../../../../../shared/components/Badge';
 import { Edit2, Trash2 } from 'lucide-react';
 import { logisticsService } from '../../../../../masters/services/logistics.service';
 
-const VehicleList = ({ onEdit, searchQuery = '', viewMode = 'table', refreshTrigger = 0 }) => {
+const VehicleList = ({ onEdit, searchQuery = '', viewMode = 'table', refreshTrigger = 0 , onTotalCountChange, statusFilter = 'ALL STATUS'}) => {
   const [vehicles, setVehicles] = useState([]);
   const [page, setPage] = useState(1);
   const [limit, setLimit] = useState(20);
@@ -14,12 +14,11 @@ const VehicleList = ({ onEdit, searchQuery = '', viewMode = 'table', refreshTrig
 
   useEffect(() => {
     fetchVehicles();
-  }, [refreshTrigger, page, limit, searchQuery]);
-
+  }, [refreshTrigger]);
   const fetchVehicles = async () => {
     setIsLoading(true);
     try {
-      const data = await logisticsService.getVehicles({ page, limit, search: searchQuery });
+      const data = await logisticsService.getVehicles({ page: 1, limit: 10000 });
       let vehicleData = [];
       if (data?.data?.data && Array.isArray(data.data.data)) {
         vehicleData = data.data.data;
@@ -39,6 +38,25 @@ const VehicleList = ({ onEdit, searchQuery = '', viewMode = 'table', refreshTrig
   };
 
   
+
+  
+  const filteredList = vehicles.filter(item => {
+    if (statusFilter === 'ALL STATUS') return true;
+    const isMatch = statusFilter === 'ACTIVE' ? item.status === 'Active' : (item.status === 'Inactive' || item.status !== 'Active');
+    return isMatch;
+  });
+
+  
+  const calculatedTotalRecords = filteredList.length;
+  const calculatedTotalPages = Math.ceil(calculatedTotalRecords / limit) || 1;
+  const paginatedList = filteredList.slice((page - 1) * limit, page * limit);
+
+  
+  useEffect(() => {
+    if (onTotalCountChange) {
+      onTotalCountChange(calculatedTotalRecords);
+    }
+  }, [calculatedTotalRecords, onTotalCountChange]);
 
   const columns = [
     {
@@ -105,7 +123,7 @@ const VehicleList = ({ onEdit, searchQuery = '', viewMode = 'table', refreshTrig
   if (viewMode === 'card') {
     return (
       <div className="grid" style={{ gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: '1.5rem' }}>
-        {vehicles.map(vehicle => (
+        {paginatedList.map(vehicle => (
           <div key={vehicle.id}>
             <MasterDataCard
               title={vehicle.vehicle_number}
@@ -120,7 +138,7 @@ const VehicleList = ({ onEdit, searchQuery = '', viewMode = 'table', refreshTrig
             />
           </div>
         ))}
-        {vehicles.length === 0 && !isLoading && (
+        {paginatedList.length === 0 && !isLoading && (
           <div className="text-center p-xl text-tertiary w-full" style={{ gridColumn: '1 / -1' }}>
             No records found.
           </div>
@@ -132,14 +150,14 @@ const VehicleList = ({ onEdit, searchQuery = '', viewMode = 'table', refreshTrig
   return (
     <TableView
         columns={columns}
-        data={vehicles}
+        data={paginatedList}
         isLoading={isLoading}
         emptyStateMsg="No vehicles found. Create one to get started."
         paginationProps={{
           currentPage: page,
-          totalPages: totalPages,
+          totalPages: calculatedTotalPages,
           onPageChange: setPage,
-          totalItems: totalRecords,
+          totalItems: calculatedTotalRecords,
           itemsPerPage: limit,
           onLimitChange: (newLimit) => { setLimit(newLimit); setPage(1); }
         }}
