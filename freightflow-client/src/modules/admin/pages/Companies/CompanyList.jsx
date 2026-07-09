@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react';
+import ConfirmDeleteModal from '../../../../shared/components/ConfirmDeleteModal';
 import { Eye, Edit2, Trash2 } from 'lucide-react';
 import TableView from '../../../../shared/components/TableView/TableView';
 import Button from '../../../../shared/components/Button';
@@ -8,6 +9,31 @@ import { adminService } from '../../services/admin.service';
 const CompanyList = ({ onEdit, searchQuery = '', viewMode = 'table', refreshTrigger = 0, onTotalCountChange, statusFilter = 'ALL STATUS' }) => {
   const [companies, setCompanies] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
+
+  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
+  const [itemToDelete, setItemToDelete] = useState(null);
+  const [isDeleting, setIsDeleting] = useState(false);
+
+  const handleDeleteClick = (row) => {
+    setItemToDelete(row);
+    setIsDeleteModalOpen(true);
+  };
+
+  const handleConfirmDelete = async () => {
+    if (!itemToDelete) return;
+    setIsDeleting(true);
+    try {
+      await adminService.deleteCompany(itemToDelete.id);
+      setIsDeleteModalOpen(false);
+      setItemToDelete(null);
+      setCompanies(prev => prev.filter(item => item.id !== itemToDelete.id));
+    } catch (error) {
+      console.error('Failed to delete item:', error);
+    } finally {
+      setIsDeleting(false);
+    }
+  };
+
   const [viewModalData, setViewModalData] = useState(null);
 
   useEffect(() => {
@@ -113,9 +139,10 @@ const CompanyList = ({ onEdit, searchQuery = '', viewMode = 'table', refreshTrig
           >
             <Edit2 size={16} />
           </button>
-          <button
+          <button 
             className="action-btn delete-btn"
-            title={row.status === 'Active' ? 'Deactivate' : 'Activate'}
+            title="Delete"
+            onClick={() => handleDeleteClick(row)}
           >
             <Trash2 size={16} />
           </button>
@@ -126,6 +153,7 @@ const CompanyList = ({ onEdit, searchQuery = '', viewMode = 'table', refreshTrig
 
   if (viewMode === 'card') {
     return (
+    <>
       <div className="company-grid-view">
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))', gap: '1.5rem' }}>
           {filteredCompanies.map(company => (
@@ -146,7 +174,15 @@ const CompanyList = ({ onEdit, searchQuery = '', viewMode = 'table', refreshTrig
           )}
         </div>
       </div>
-    );
+      <ConfirmDeleteModal
+        isOpen={isDeleteModalOpen}
+        onClose={() => setIsDeleteModalOpen(false)}
+        onConfirm={handleConfirmDelete}
+        itemName={itemToDelete ? itemToDelete.company_name || itemToDelete.name || itemToDelete.code : ''}
+        isDeleting={isDeleting}
+      />
+    </>
+  );
   }
 
   return (
@@ -254,7 +290,15 @@ const CompanyList = ({ onEdit, searchQuery = '', viewMode = 'table', refreshTrig
           cursor: pointer;
         }
       `}</style>
-    </>
+    
+      <ConfirmDeleteModal
+        isOpen={isDeleteModalOpen}
+        onClose={() => setIsDeleteModalOpen(false)}
+        onConfirm={handleConfirmDelete}
+        itemName={itemToDelete ? itemToDelete.company_name || itemToDelete.name || itemToDelete.code : ''}
+        isDeleting={isDeleting}
+      />
+</>
   );
 };
 

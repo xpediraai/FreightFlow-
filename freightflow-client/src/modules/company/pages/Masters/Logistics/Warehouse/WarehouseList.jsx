@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import ConfirmDeleteModal from '../../../../../../shared/components/ConfirmDeleteModal';
 import TableView from '../../../../../../shared/components/TableView';
 import Badge from '../../../../../../shared/components/Badge';
 import { Edit2, Trash2 } from 'lucide-react';
@@ -11,6 +12,31 @@ const WarehouseList = ({ onEdit, searchQuery = '', viewMode = 'table', refreshTr
   const [totalPages, setTotalPages] = useState(1);
   const [totalRecords, setTotalRecords] = useState(0);
   const [isLoading, setIsLoading] = useState(true);
+
+  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
+  const [itemToDelete, setItemToDelete] = useState(null);
+  const [isDeleting, setIsDeleting] = useState(false);
+
+  const handleDeleteClick = (row) => {
+    setItemToDelete(row);
+    setIsDeleteModalOpen(true);
+  };
+
+  const handleConfirmDelete = async () => {
+    if (!itemToDelete) return;
+    setIsDeleting(true);
+    try {
+      await logisticsService.deleteWarehouse(itemToDelete.id);
+      setIsDeleteModalOpen(false);
+      setItemToDelete(null);
+      setWarehouses(prev => prev.filter(item => item.id !== itemToDelete.id));
+    } catch (error) {
+      console.error('Failed to delete item:', error);
+    } finally {
+      setIsDeleting(false);
+    }
+  };
+
 
   useEffect(() => {
     fetchWarehouses();
@@ -107,7 +133,8 @@ const WarehouseList = ({ onEdit, searchQuery = '', viewMode = 'table', refreshTr
           </button>
           <button 
             className="action-btn delete-btn"
-            title={row.status === 'Active' ? 'Deactivate' : 'Activate'}
+            title="Delete"
+            onClick={() => handleDeleteClick(row)}
           >
             <Trash2 size={16} />
           </button>
@@ -118,6 +145,7 @@ const WarehouseList = ({ onEdit, searchQuery = '', viewMode = 'table', refreshTr
 
   if (viewMode === 'card') {
     return (
+    <>
       <div className="grid" style={{ gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: '1.5rem' }}>
         {paginatedList.map(wh => (
           <div key={wh.id}>
@@ -140,10 +168,19 @@ const WarehouseList = ({ onEdit, searchQuery = '', viewMode = 'table', refreshTr
           </div>
         )}
       </div>
-    );
+      <ConfirmDeleteModal
+        isOpen={isDeleteModalOpen}
+        onClose={() => setIsDeleteModalOpen(false)}
+        onConfirm={handleConfirmDelete}
+        itemName={itemToDelete ? itemToDelete.warehouse_name || itemToDelete.name || itemToDelete.code : ''}
+        isDeleting={isDeleting}
+      />
+    </>
+  );
   }
 
   return (
+    <>
     <TableView
         columns={columns}
         data={paginatedList}
@@ -159,7 +196,16 @@ const WarehouseList = ({ onEdit, searchQuery = '', viewMode = 'table', refreshTr
         }}
         onRowClick={(row) => onEdit && onEdit(row)}
       />
-);
+
+      <ConfirmDeleteModal
+        isOpen={isDeleteModalOpen}
+        onClose={() => setIsDeleteModalOpen(false)}
+        onConfirm={handleConfirmDelete}
+        itemName={itemToDelete ? itemToDelete.warehouse_name || itemToDelete.name || itemToDelete.code : ''}
+        isDeleting={isDeleting}
+      />
+    </>
+  );
 };
 
 export default WarehouseList;

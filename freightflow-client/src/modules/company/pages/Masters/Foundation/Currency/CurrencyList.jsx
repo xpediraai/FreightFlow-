@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import ConfirmDeleteModal from '../../../../../../shared/components/ConfirmDeleteModal';
 import TableView from '../../../../../../shared/components/TableView';
 import Badge from '../../../../../../shared/components/Badge';
 import MasterDataCard from '../../../../../../shared/components/Master/MasterDataCard';
@@ -12,6 +13,31 @@ const CurrencyList = ({ onEdit, searchQuery = '', viewMode = 'table', refreshTri
   const [totalPages, setTotalPages] = useState(1);
   const [totalRecords, setTotalRecords] = useState(0);
   const [isLoading, setIsLoading] = useState(true);
+
+  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
+  const [itemToDelete, setItemToDelete] = useState(null);
+  const [isDeleting, setIsDeleting] = useState(false);
+
+  const handleDeleteClick = (row) => {
+    setItemToDelete(row);
+    setIsDeleteModalOpen(true);
+  };
+
+  const handleConfirmDelete = async () => {
+    if (!itemToDelete) return;
+    setIsDeleting(true);
+    try {
+      await foundationService.deleteCurrency(itemToDelete.id);
+      setIsDeleteModalOpen(false);
+      setItemToDelete(null);
+      setCurrencies(prev => prev.filter(item => item.id !== itemToDelete.id));
+    } catch (error) {
+      console.error('Failed to delete item:', error);
+    } finally {
+      setIsDeleting(false);
+    }
+  };
+
 
   useEffect(() => {
     fetchCurrencies();
@@ -112,7 +138,8 @@ const CurrencyList = ({ onEdit, searchQuery = '', viewMode = 'table', refreshTri
           </button>
           <button 
             className="action-btn delete-btn"
-            title={row.status === 'Active' ? 'Deactivate' : 'Activate'}
+            title="Delete"
+            onClick={() => handleDeleteClick(row)}
           >
             <Trash2 size={16} />
           </button>
@@ -123,6 +150,7 @@ const CurrencyList = ({ onEdit, searchQuery = '', viewMode = 'table', refreshTri
 
   if (viewMode === 'card') {
     return (
+    <>
       <div className="grid" style={{ gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: '1.5rem' }}>
         {paginatedList.map(currency => (
           <div key={currency.id}>
@@ -144,10 +172,19 @@ const CurrencyList = ({ onEdit, searchQuery = '', viewMode = 'table', refreshTri
           </div>
         )}
       </div>
-    );
+      <ConfirmDeleteModal
+        isOpen={isDeleteModalOpen}
+        onClose={() => setIsDeleteModalOpen(false)}
+        onConfirm={handleConfirmDelete}
+        itemName={itemToDelete ? itemToDelete.currency_name || itemToDelete.name || itemToDelete.code : ''}
+        isDeleting={isDeleting}
+      />
+    </>
+  );
   }
 
   return (
+    <>
     <TableView
         columns={columns}
         data={paginatedList}
@@ -163,7 +200,16 @@ const CurrencyList = ({ onEdit, searchQuery = '', viewMode = 'table', refreshTri
         }}
         onRowClick={(row) => onEdit && onEdit(row)}
       />
-);
+
+      <ConfirmDeleteModal
+        isOpen={isDeleteModalOpen}
+        onClose={() => setIsDeleteModalOpen(false)}
+        onConfirm={handleConfirmDelete}
+        itemName={itemToDelete ? itemToDelete.currency_name || itemToDelete.name || itemToDelete.code : ''}
+        isDeleting={isDeleting}
+      />
+    </>
+  );
 };
 
 export default CurrencyList;

@@ -8,9 +8,9 @@ const sequelize = require("../../../../config/database");
 const path = require("path");
 const { writeLogToFile } = require("../../../../services/loggerService");
 
-const createLogPath = path.join(__dirname, "../../../../../../logs/Country/Create.txt");
-const updateLogPath = path.join(__dirname, "../../../../../../logs/Country/Update.txt");
-const deleteLogPath = path.join(__dirname, "../../../../../../logs/Country/Delete.txt");
+const createLogPath = path.join(__dirname, "../../../../../logs/Country/Create.txt");
+const updateLogPath = path.join(__dirname, "../../../../../logs/Country/Update.txt");
+const deleteLogPath = path.join(__dirname, "../../../../../logs/Country/Delete.txt");
 
 const createCountry = async (companyId, countryData, userId, reqInfo) => {
     const transaction = await sequelize.transaction();
