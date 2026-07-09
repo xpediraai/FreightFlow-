@@ -77,13 +77,13 @@ export const responseErrorInterceptor = async (error) => {
   }
 
   if (status === 403 && !originalRequest?.url?.includes('/refresh-token')) {
-    toast.error('You do not have permission to perform this action.');
+    toast.error('You do not have permission to perform this action.', { toastId: '403-error' });
   } else if (status >= 500) {
-    toast.error('Server error. Please try again later.');
+    toast.error('Server error. Please try again later.', { toastId: '500-error' });
   } else if (error.message === 'Network Error') {
-    toast.error('Network Error. Please check your connection.');
+    toast.error('Network Error. Please check your connection.', { toastId: 'network-error' });
   } else if (status !== 404 && status !== 422 && status !== 401) {
-    toast.error(message);
+    toast.error(message, { toastId: message });
   }
 
   error.message = message;
