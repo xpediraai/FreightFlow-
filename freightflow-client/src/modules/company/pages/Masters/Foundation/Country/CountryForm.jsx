@@ -132,16 +132,14 @@ const CountryForm = ({ onCancel, onSuccess, initialData }) => {
               className="form-control form-control-sm" 
             />
           </div>
-          {isEditMode && (
-            <div className="form-group">
-              <label>Status</label>
-              <StatusToggle 
+          <div className="form-group">
+            <label>Status</label>
+            <StatusToggle 
               value={formData.status} 
               onChange={(val) => handleChange({ target: { name: 'status', value: val } })}
               disabled={isLoading}
             />
-            </div>
-          )}
+          </div>
         </div>
 
         <div className="form-actions mt-lg flex justify-end gap-sm pt-md border-t-light">

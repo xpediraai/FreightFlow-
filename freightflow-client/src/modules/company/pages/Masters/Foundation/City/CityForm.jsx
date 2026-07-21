@@ -146,12 +146,110 @@ const CityForm = ({ onCancel, onSuccess, initialData }) => {
         <div className="form-grid">
           <div className="form-group">
             <label>Country <span className="text-danger">*</span></label>
+            <select
+              disabled={isLoading}
+              name="country_id"
+              value={formData.country_id}
+              onChange={handleChange}
+              onBlur={handleBlur}
+              className="form-control form-control-sm"
+            >
+              <option value="">Select Country</option>
+              {countries
+                .filter(country => country.status === 'Active' || country.id === formData.country_id)
+                .map(country => (
+                  <option key={country.id} value={country.id}>
+                    {country.country_name} ({country.country_code})
+                  </option>
+              ))}
+            </select>
+            {errors.country_id && <div className="text-danger text-xs mt-xs">{errors.country_id}</div>}
+          </div>
+
+          <div className="form-group">
+            <label>State <span className="text-danger">*</span></label>
+            <select
+              disabled={isLoading || !formData.country_id}
+              name="state_id"
+              value={formData.state_id}
+              onChange={handleChange}
+              onBlur={handleBlur}
+              className="form-control form-control-sm"
+            >
+              <option value="">Select State</option>
+              {filteredStates
+                .filter(state => state.status === 'Active' || state.id === formData.state_id)
+                .map(state => (
+                  <option key={state.id} value={state.id}>
+                    {state.state_name} ({state.state_code})
+                  </option>
+              ))}
+            </select>
+            {errors.state_id && <div className="text-danger text-xs mt-xs">{errors.state_id}</div>}
+          </div>
+
+          <div className="form-group">
+            <label>City Code <span className="text-danger">*</span></label>
+            <input 
+              disabled={isLoading || isEditMode} 
+              type="text" 
+              name="city_code" 
+              value={formData.city_code} 
+              onChange={handleChange} 
+              onBlur={handleBlur}
+              className="form-control form-control-sm" 
+            />
+            {errors.city_code && <div className="text-danger text-xs mt-xs">{errors.city_code}</div>}
+          </div>
+
+          <div className="form-group">
+            <label>City Name <span className="text-danger">*</span></label>
+            <input 
+              disabled={isLoading} 
+              type="text" 
+              name="city_name" 
+              value={formData.city_name} 
+              onChange={handleChange} 
+              onBlur={handleBlur}
+              className="form-control form-control-sm" 
+            />
+            {errors.city_name && <div className="text-danger text-xs mt-xs">{errors.city_name}</div>}
+          </div>
+
+          <div className="form-group">
+            <label>GST Code</label>
+            <input 
+              disabled={isLoading} 
+              type="text" 
+              name="gst" 
+              value={formData.gst} 
+              onChange={handleChange} 
+              onBlur={handleBlur}
+              className="form-control form-control-sm" 
+            />
+          </div>
+
+          <div className="form-group">
+            <label>Pincode</label>
+            <input 
+              disabled={isLoading} 
+              type="text" 
+              name="pincode" 
+              value={formData.pincode} 
+              onChange={handleChange} 
+              onBlur={handleBlur}
+              className="form-control form-control-sm" 
+            />
+          </div>
+
+          <div className="form-group">
+            <label>Status</label>
             <StatusToggle 
               value={formData.status} 
               onChange={(val) => handleChange({ target: { name: 'status', value: val } })}
               disabled={isLoading}
             />
-            </div>
+          </div>
         </div>
 
         <div className="form-actions mt-lg flex justify-end gap-sm pt-md border-t-light">

@@ -235,8 +235,10 @@ const VendorForm = ({ onCancel, onSuccess, initialData }) => {
                 <label>Country</label>
                 <select disabled={isLoading} name="country_id" value={formData.country_id || ''} onChange={handleChange} className="form-control form-control-sm">
                   <option value="">Select Country...</option>
-                  {countries.map(c => (
-                    <option key={c.id} value={c.id}>{c.country_name}</option>
+                  {countries
+                    .filter(c => c.status === 'Active' || c.id === formData.country_id)
+                    .map(c => (
+                      <option key={c.id} value={c.id}>{c.country_name}</option>
                   ))}
                 </select>
               </div>

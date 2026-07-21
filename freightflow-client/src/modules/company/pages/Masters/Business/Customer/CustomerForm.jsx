@@ -202,8 +202,10 @@ const CustomerForm = ({ onCancel, onSuccess, initialData }) => {
               <label>Country</label>
               <select className="form-control form-control-sm" value={addr.country_id || ''} onChange={(e) => handleArrayChange('addresses', index, 'country_id', e.target.value || null)}>
                 <option value="">Select Country...</option>
-                {countries.map(c => (
-                  <option key={c.id} value={c.id}>{c.country_name}</option>
+                {countries
+                  .filter(c => c.status === 'Active' || c.id === addr.country_id)
+                  .map(c => (
+                    <option key={c.id} value={c.id}>{c.country_name}</option>
                 ))}
               </select>
             </div>
