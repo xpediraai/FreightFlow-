@@ -42,12 +42,7 @@ const ChargeList = ({ onEdit, searchQuery = '', viewMode = 'table', refreshTrigg
     fetchCharges();
   }, [refreshTrigger]);
 
-  
-  useEffect(() => {
-    if (onTotalCountChange) {
-      onTotalCountChange(data ? data.length : 0);
-    }
-  }, [data ? data.length : 0, onTotalCountChange]);
+
 
   const fetchCharges = async () => {
     setIsLoading(true);
@@ -84,6 +79,12 @@ const ChargeList = ({ onEdit, searchQuery = '', viewMode = 'table', refreshTrigg
   const calculatedTotalRecords = filteredList.length;
   const calculatedTotalPages = Math.ceil(calculatedTotalRecords / limit) || 1;
   const paginatedList = filteredList.slice((page - 1) * limit, page * limit);
+
+  useEffect(() => {
+    if (onTotalCountChange) {
+      onTotalCountChange(calculatedTotalRecords);
+    }
+  }, [calculatedTotalRecords, onTotalCountChange]);
 
   const columns = [
     {

@@ -2,10 +2,18 @@ import React, { useState, useEffect } from 'react';
 import { X } from 'lucide-react';
 import Button from '../../../../../../shared/components/Button';
 import { logisticsService } from '../../../../../masters/services/logistics.service';
+import { foundationService } from '../../../../../masters/services/foundation.service';
+import { businessService } from '../../../../../masters/services/business.service';
 import StatusToggle from '../../../../../../shared/components/Input/StatusToggle';
 
 const DriverForm = ({ onCancel, onSuccess, initialData }) => {
   const isEditMode = !!initialData;
+  const [countries, setCountries] = useState([]);
+  const [allStates, setAllStates] = useState([]);
+  const [filteredStates, setFilteredStates] = useState([]);
+  const [allCities, setAllCities] = useState([]);
+  const [filteredCities, setFilteredCities] = useState([]);
+  const [vendors, setVendors] = useState([]);
 
   const formatDateForInput = (dateString) => {
     if (!dateString) return '';
@@ -39,6 +47,7 @@ const DriverForm = ({ onCancel, onSuccess, initialData }) => {
   const [touched, setTouched] = useState({});
 
   useEffect(() => {
+    fetchParentsAndReferences();
     if (initialData) {
       setFormData({
         driver_code: initialData.driver_code || '',
@@ -61,6 +70,47 @@ const DriverForm = ({ onCancel, onSuccess, initialData }) => {
     }
   }, [initialData]);
 
+  useEffect(() => {
+    if (formData.country_id) {
+      setFilteredStates(allStates.filter(s => s.country_id === formData.country_id));
+    } else {
+      setFilteredStates([]);
+    }
+  }, [formData.country_id, allStates]);
+
+  useEffect(() => {
+    if (formData.state_id) {
+      setFilteredCities(allCities.filter(c => c.state_id === formData.state_id));
+    } else {
+      setFilteredCities([]);
+    }
+  }, [formData.state_id, allCities]);
+
+  const fetchParentsAndReferences = async () => {
+    try {
+      const [countriesRes, statesRes, citiesRes, vendorsRes] = await Promise.all([
+        foundationService.getCountries({ page: 1, limit: 10000 }),
+        foundationService.getStates({ page: 1, limit: 10000 }),
+        foundationService.getCities({ page: 1, limit: 10000 }),
+        businessService.getVendors({ page: 1, limit: 10000 })
+      ]);
+      
+      const extractArray = (data) => {
+        if (data?.data?.data && Array.isArray(data.data.data)) return data.data.data;
+        if (data?.data && Array.isArray(data.data)) return data.data;
+        if (Array.isArray(data)) return data;
+        return [];
+      };
+
+      setCountries(extractArray(countriesRes));
+      setAllStates(extractArray(statesRes));
+      setAllCities(extractArray(citiesRes));
+      setVendors(extractArray(vendorsRes));
+    } catch (err) {
+      console.error('Failed to fetch references for driver form', err);
+    }
+  };
+
   const validateField = (name, value) => {
     let error = '';
     if (name === 'driver_code' && !String(value).trim()) error = 'Driver Code is required';
@@ -70,7 +120,14 @@ const DriverForm = ({ onCancel, onSuccess, initialData }) => {
 
   const handleChange = (e) => {
     const { name, value } = e.target;
-    setFormData(prev => ({ ...prev, [name]: value }));
+    const updates = { [name]: value };
+    if (name === 'country_id') {
+      updates.state_id = '';
+      updates.city_id = '';
+    } else if (name === 'state_id') {
+      updates.city_id = '';
+    }
+    setFormData(prev => ({ ...prev, ...updates }));
     if (touched[name]) {
       setErrors(prev => ({ ...prev, [name]: validateField(name, value) }));
     }
@@ -264,67 +321,97 @@ const DriverForm = ({ onCancel, onSuccess, initialData }) => {
             />
           </div>
           <div className="form-group">
-            <label>Country ID (UUID)</label>
-            <input 
-              disabled={isLoading} 
-              type="text" 
-              name="country_id" 
-              value={formData.country_id} 
-              onChange={handleChange} 
+            <label>Country</label>
+            <select
+              disabled={isLoading}
+              name="country_id"
+              value={formData.country_id}
+              onChange={handleChange}
               onBlur={handleBlur}
               className="form-control form-control-sm"
-              placeholder="Enter Country UUID"
-            />
+            >
+              <option value="">Select Country</option>
+              {countries
+                .filter(c => c.status === 'Active' || c.id === formData.country_id)
+                .map(c => (
+                  <option key={c.id} value={c.id}>
+                    {c.country_name} ({c.country_code})
+                  </option>
+              ))}
+            </select>
           </div>
+
           <div className="form-group">
-            <label>State ID (UUID)</label>
-            <input 
-              disabled={isLoading} 
-              type="text" 
-              name="state_id" 
-              value={formData.state_id} 
-              onChange={handleChange} 
+            <label>State</label>
+            <select
+              disabled={isLoading || !formData.country_id}
+              name="state_id"
+              value={formData.state_id}
+              onChange={handleChange}
               onBlur={handleBlur}
               className="form-control form-control-sm"
-              placeholder="Enter State UUID"
-            />
+            >
+              <option value="">Select State</option>
+              {filteredStates
+                .filter(s => s.status === 'Active' || s.id === formData.state_id)
+                .map(s => (
+                  <option key={s.id} value={s.id}>
+                    {s.state_name} ({s.state_code})
+                  </option>
+              ))}
+            </select>
           </div>
+
           <div className="form-group">
-            <label>City ID (UUID)</label>
-            <input 
-              disabled={isLoading} 
-              type="text" 
-              name="city_id" 
-              value={formData.city_id} 
-              onChange={handleChange} 
+            <label>City</label>
+            <select
+              disabled={isLoading || !formData.state_id}
+              name="city_id"
+              value={formData.city_id}
+              onChange={handleChange}
               onBlur={handleBlur}
               className="form-control form-control-sm"
-              placeholder="Enter City UUID"
-            />
+            >
+              <option value="">Select City</option>
+              {filteredCities
+                .filter(c => c.status === 'Active' || c.id === formData.city_id)
+                .map(c => (
+                  <option key={c.id} value={c.id}>
+                    {c.city_name}
+                  </option>
+              ))}
+            </select>
           </div>
+
           <div className="form-group">
-            <label>Vendor ID (UUID)</label>
-            <input 
-              disabled={isLoading} 
-              type="text" 
-              name="vendor_id" 
-              value={formData.vendor_id} 
-              onChange={handleChange} 
+            <label>Vendor</label>
+            <select
+              disabled={isLoading}
+              name="vendor_id"
+              value={formData.vendor_id}
+              onChange={handleChange}
               onBlur={handleBlur}
               className="form-control form-control-sm"
-              placeholder="Enter Vendor UUID"
-            />
+            >
+              <option value="">Select Vendor</option>
+              {vendors
+                .filter(v => v.status === 'Active' || v.id === formData.vendor_id)
+                .map(v => (
+                  <option key={v.id} value={v.id}>
+                    {v.vendor_name} ({v.vendor_code})
+                  </option>
+              ))}
+            </select>
           </div>
-          {isEditMode && (
-            <div className="form-group">
-              <label>Status</label>
-              <StatusToggle 
+
+          <div className="form-group">
+            <label>Status</label>
+            <StatusToggle 
               value={formData.status} 
               onChange={(val) => handleChange({ target: { name: 'status', value: val } })}
               disabled={isLoading}
             />
-            </div>
-          )}
+          </div>
         </div>
 
         <div className="form-actions mt-lg flex justify-end gap-sm pt-md border-t-light">

@@ -11,8 +11,12 @@ export const businessService = {
 		headers: { 'Content-Type': 'multipart/form-data' }
 	}),
 
-	// --- Vendor (Placeholder) ---
+	// --- Vendor ---
 	getVendors: (params) => api.get('/vendor', { params }),
+	getVendorById: (id) => api.get(`/vendor/${id}`),
+	createVendor: (data) => api.post('/vendor', data),
+	updateVendor: (id, data) => api.put(`/vendor/${id}`, data),
+	deleteVendor: (id) => api.delete(`/vendor/${id}`),
 	
 	// --- Commodity (Placeholder) ---
 	getCommodities: (params) => api.get('/commodity', { params }),

@@ -79,10 +79,16 @@ const ContainerTypeForm = ({ onCancel, onSuccess, initialData }) => {
     setIsLoading(true);
     
     try {
+      const payload = {
+        ...formData,
+        capacity_cbm: formData.capacity_cbm === '' ? null : Number(formData.capacity_cbm),
+        max_weight: formData.max_weight === '' ? null : Number(formData.max_weight)
+      };
+
       if (isEditMode) {
-        await commonService.updateContainerType(initialData.id, formData);
+        await commonService.updateContainerType(initialData.id, payload);
       } else {
-        await commonService.createContainerType(formData);
+        await commonService.createContainerType(payload);
       }
       onSuccess && onSuccess();
     } catch (err) {
@@ -143,13 +149,73 @@ const ContainerTypeForm = ({ onCancel, onSuccess, initialData }) => {
             {errors.iso_code && <div className="text-danger text-xs mt-xs">{errors.iso_code}</div>}
           </div>
           <div className="form-group">
-            <label>Size <span className="text-danger">*</span></label>
+            <label>Size (FT) <span className="text-danger">*</span></label>
+            <select
+              disabled={isLoading}
+              name="size"
+              value={formData.size}
+              onChange={handleChange}
+              onBlur={handleBlur}
+              className="form-control form-control-sm"
+            >
+              <option value="20">20</option>
+              <option value="40">40</option>
+              <option value="45">45</option>
+            </select>
+          </div>
+          <div className="form-group">
+            <label>Category <span className="text-danger">*</span></label>
+            <select
+              disabled={isLoading}
+              name="category"
+              value={formData.category}
+              onChange={handleChange}
+              onBlur={handleBlur}
+              className="form-control form-control-sm"
+            >
+              <option value="Dry">Dry</option>
+              <option value="Reefer">Reefer</option>
+              <option value="Open Top">Open Top</option>
+              <option value="Flat Rack">Flat Rack</option>
+              <option value="Tank">Tank</option>
+            </select>
+          </div>
+          <div className="form-group">
+            <label>Capacity (CBM)</label>
+            <input 
+              disabled={isLoading} 
+              type="number" 
+              name="capacity_cbm" 
+              value={formData.capacity_cbm} 
+              onChange={handleChange} 
+              onBlur={handleBlur}
+              className="form-control form-control-sm" 
+              min="0"
+              step="any"
+            />
+          </div>
+          <div className="form-group">
+            <label>Max Weight (KG)</label>
+            <input 
+              disabled={isLoading} 
+              type="number" 
+              name="max_weight" 
+              value={formData.max_weight} 
+              onChange={handleChange} 
+              onBlur={handleBlur}
+              className="form-control form-control-sm" 
+              min="0"
+              step="any"
+            />
+          </div>
+          <div className="form-group">
+            <label>Status</label>
             <StatusToggle 
               value={formData.status} 
               onChange={(val) => handleChange({ target: { name: 'status', value: val } })}
               disabled={isLoading}
             />
-            </div>
+          </div>
         </div>
 
         <div className="form-actions mt-lg flex justify-end gap-sm pt-md border-t-light">

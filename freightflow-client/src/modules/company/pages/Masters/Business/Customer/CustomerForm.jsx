@@ -20,6 +20,8 @@ const CustomerForm = ({ onCancel, onSuccess, initialData }) => {
   
   const [currencies, setCurrencies] = useState([]);
   const [countries, setCountries] = useState([]);
+  const [states, setStates] = useState([]);
+  const [cities, setCities] = useState([]);
   
   // State matching backend Joi validator
   const [formData, setFormData] = useState({
@@ -46,9 +48,11 @@ const CustomerForm = ({ onCancel, onSuccess, initialData }) => {
   useEffect(() => {
     const fetchDropdowns = async () => {
       try {
-        const [currRes, countRes] = await Promise.all([
+        const [currRes, countRes, stateRes, cityRes] = await Promise.all([
           foundationService.getCurrencies(),
-          foundationService.getCountries()
+          foundationService.getCountries(),
+          foundationService.getStates(),
+          foundationService.getCities()
         ]);
         
         const extractData = (res) => {
@@ -61,6 +65,8 @@ const CustomerForm = ({ onCancel, onSuccess, initialData }) => {
 
         setCurrencies(extractData(currRes).filter(c => c.status === 'Active'));
         setCountries(extractData(countRes).filter(c => c.status === 'Active'));
+        setStates(extractData(stateRes));
+        setCities(extractData(cityRes));
       } catch (err) {
         console.error('Failed to fetch dropdowns:', err);
       }
@@ -139,6 +145,15 @@ const CustomerForm = ({ onCancel, onSuccess, initialData }) => {
     try {
       const payload = { ...formData };
       if (!payload.credit_limit) payload.credit_limit = null; // Fix number parsing
+      if (!payload.currency_id) payload.currency_id = null;
+
+      // Clean up empty UUIDs inside array items to be null
+      payload.addresses = (payload.addresses || []).map(addr => ({
+        ...addr,
+        country_id: addr.country_id || null,
+        state_id: addr.state_id || null,
+        city_id: addr.city_id || null
+      }));
 
       if (isEditMode) {
         await businessService.updateCustomer(initialData.id, payload);
@@ -158,23 +173,74 @@ const CustomerForm = ({ onCancel, onSuccess, initialData }) => {
     <div className="form-grid pt-md">
       <div className="form-group">
         <label>Customer Name <span className="text-danger">*</span></label>
-        <input disabled={isLoading} type="text" name="customer_name" value={formData.customer_name} onChange={handleMainChange} className="form-control form-control-sm" />
+        <input disabled={isLoading} required type="text" name="customer_name" value={formData.customer_name} onChange={handleMainChange} className="form-control form-control-sm" />
       </div>
       <div className="form-group">
         <label>Customer Type</label>
+        <select disabled={isLoading} name="customer_type" value={formData.customer_type || ''} onChange={handleMainChange} className="form-control form-control-sm">
+          <option value="">Select Type...</option>
+          <option value="Exporter">Exporter</option>
+          <option value="Importer">Importer</option>
+          <option value="Agent">Agent</option>
+          <option value="Other">Other</option>
+        </select>
+      </div>
+      <div className="form-group">
+        <label>Customer Category</label>
+        <input disabled={isLoading} type="text" name="customer_category" value={formData.customer_category || ''} onChange={handleMainChange} className="form-control form-control-sm" placeholder="e.g. Premium, Regular" />
+      </div>
+      <div className="form-group">
+        <label>GST Number</label>
+        <input disabled={isLoading} type="text" name="gst_number" value={formData.gst_number || ''} onChange={handleMainChange} className="form-control form-control-sm uppercase" />
+      </div>
+      <div className="form-group">
+        <label>PAN Number</label>
+        <input disabled={isLoading} type="text" name="pan_number" value={formData.pan_number || ''} onChange={handleMainChange} className="form-control form-control-sm uppercase" />
+      </div>
+      <div className="form-group">
+        <label>IEC Code</label>
+        <input disabled={isLoading} type="text" name="iec_code" value={formData.iec_code || ''} onChange={handleMainChange} className="form-control form-control-sm uppercase" />
+      </div>
+      <div className="form-group">
+        <label>CIN Number</label>
+        <input disabled={isLoading} type="text" name="cin_number" value={formData.cin_number || ''} onChange={handleMainChange} className="form-control form-control-sm uppercase" />
+      </div>
+      <div className="form-group">
+        <label>TAN Number</label>
+        <input disabled={isLoading} type="text" name="tan_number" value={formData.tan_number || ''} onChange={handleMainChange} className="form-control form-control-sm uppercase" />
+      </div>
+      <div className="form-group">
+        <label>Credit Limit</label>
+        <input disabled={isLoading} type="number" step="0.01" name="credit_limit" value={formData.credit_limit || ''} onChange={handleMainChange} className="form-control form-control-sm" />
+      </div>
+      <div className="form-group">
+        <label>Payment Terms</label>
+        <input disabled={isLoading} type="text" name="payment_terms" value={formData.payment_terms || ''} onChange={handleMainChange} className="form-control form-control-sm" placeholder="e.g. Net 30, COD" />
+      </div>
+      <div className="form-group">
+        <label>Currency</label>
+        <select disabled={isLoading} name="currency_id" value={formData.currency_id || ''} onChange={handleMainChange} className="form-control form-control-sm">
+          <option value="">Select Currency...</option>
+          {currencies.map(c => (
+            <option key={c.id} value={c.id}>{c.currency_code} ({c.currency_name})</option>
+          ))}
+        </select>
+      </div>
+      <div className="form-group">
+        <label>Status</label>
         <StatusToggle 
-              value={formData.status} 
-              onChange={(val) => handleChange({ target: { name: 'status', value: val } })}
-              disabled={isLoading}
-            />
-        </div>
+          value={formData.status} 
+          onChange={(val) => handleMainChange({ target: { name: 'status', value: val } })}
+          disabled={isLoading}
+        />
+      </div>
     </div>
   );
 
   const renderAddress = () => (
     <div className="pt-md">
       <div className="flex justify-end mb-sm">
-        <Button type="button" size="sm" variant="outline" leftIcon={Plus} onClick={() => addArrayItem('addresses', { address_type: 'Billing', address_line_1: '', address_line_2: '', pincode: '', country_id: '', state_id: '', city_id: '' })}>Add Address</Button>
+        <Button type="button" size="sm" variant="outline" leftIcon={Plus} onClick={() => addArrayItem('addresses', { address_type: 'Billing', address_line_1: '', address_line_2: '', pincode: '', country_id: null, state_id: null, city_id: null })}>Add Address</Button>
       </div>
       {formData.addresses.length === 0 && <div className="text-center p-md text-tertiary">No addresses added yet.</div>}
       {formData.addresses.map((addr, index) => (
@@ -200,12 +266,62 @@ const CustomerForm = ({ onCancel, onSuccess, initialData }) => {
             </div>
             <div className="form-group">
               <label>Country</label>
-              <select className="form-control form-control-sm" value={addr.country_id || ''} onChange={(e) => handleArrayChange('addresses', index, 'country_id', e.target.value || null)}>
+              <select 
+                className="form-control form-control-sm" 
+                value={addr.country_id || ''} 
+                onChange={(e) => {
+                  const val = e.target.value || null;
+                  handleArrayChange('addresses', index, 'country_id', val);
+                  handleArrayChange('addresses', index, 'state_id', null);
+                  handleArrayChange('addresses', index, 'city_id', null);
+                }}
+              >
                 <option value="">Select Country...</option>
                 {countries
                   .filter(c => c.status === 'Active' || c.id === addr.country_id)
                   .map(c => (
                     <option key={c.id} value={c.id}>{c.country_name}</option>
+                ))}
+              </select>
+            </div>
+            <div className="form-group">
+              <label>State</label>
+              <select 
+                className="form-control form-control-sm" 
+                value={addr.state_id || ''} 
+                onChange={(e) => {
+                  const val = e.target.value || null;
+                  handleArrayChange('addresses', index, 'state_id', val);
+                  handleArrayChange('addresses', index, 'city_id', null);
+                }}
+                disabled={!addr.country_id}
+              >
+                <option value="">Select State...</option>
+                {states
+                  .filter(s => s.country_id === addr.country_id)
+                  .filter(s => s.status === 'Active' || s.id === addr.state_id)
+                  .map(s => (
+                    <option key={s.id} value={s.id}>{s.state_name}</option>
+                ))}
+              </select>
+            </div>
+            <div className="form-group">
+              <label>City</label>
+              <select 
+                className="form-control form-control-sm" 
+                value={addr.city_id || ''} 
+                onChange={(e) => {
+                  const val = e.target.value || null;
+                  handleArrayChange('addresses', index, 'city_id', val);
+                }}
+                disabled={!addr.state_id}
+              >
+                <option value="">Select City...</option>
+                {cities
+                  .filter(c => c.state_id === addr.state_id)
+                  .filter(c => c.status === 'Active' || c.id === addr.city_id)
+                  .map(c => (
+                    <option key={c.id} value={c.id}>{c.city_name}</option>
                 ))}
               </select>
             </div>
@@ -313,13 +429,20 @@ const CustomerForm = ({ onCancel, onSuccess, initialData }) => {
       {globalError && <div className="alert alert-danger mb-md p-sm">{globalError}</div>}
 
       {/* Tabs Header */}
-      <div className="flex border-b-light mb-md gap-lg" style={{ overflowX: 'auto', whiteSpace: 'nowrap' }}>
+      <div className="border-b-light flex gap-md mb-lg relative" style={{ overflowX: 'auto', whiteSpace: 'nowrap' }}>
         {TABS.map(tab => (
           <button
             key={tab.id}
             type="button"
-            className={`pb-sm px-xs bg-transparent border-none cursor-pointer font-medium text-md transition-colors ${activeTab === tab.id ? 'text-primary' : 'text-secondary-light hover:text-primary'}`}
+            className={`font-medium transition-colors relative ${activeTab === tab.id ? 'text-primary' : 'text-secondary-light hover:text-primary'}`}
             style={{ 
+              marginBottom: '-1px', 
+              background: 'transparent', 
+              border: 'none', 
+              cursor: 'pointer', 
+              outline: 'none', 
+              padding: '0 8px 8px 8px',
+              fontSize: '0.875rem',
               borderBottom: activeTab === tab.id ? '2px solid var(--color-primary)' : '2px solid transparent'
             }}
             onClick={() => setActiveTab(tab.id)}

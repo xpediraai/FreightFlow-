@@ -15,6 +15,8 @@ const VendorForm = ({ onCancel, onSuccess, initialData }) => {
   // Dropdowns
   const [countries, setCountries] = useState([]);
   const [currencies, setCurrencies] = useState([]);
+  const [states, setStates] = useState([]);
+  const [cities, setCities] = useState([]);
 
   const [formData, setFormData] = useState({
     vendor_code: '',
@@ -48,13 +50,17 @@ const VendorForm = ({ onCancel, onSuccess, initialData }) => {
           return [];
         };
 
-        const [countryRes, currRes] = await Promise.all([
+        const [countryRes, currRes, stateRes, cityRes] = await Promise.all([
           foundationService.getCountries(),
-          foundationService.getCurrencies()
+          foundationService.getCurrencies(),
+          foundationService.getStates(),
+          foundationService.getCities()
         ]);
         
         setCountries(extractData(countryRes).filter(c => c.status === 'Active'));
         setCurrencies(extractData(currRes).filter(c => c.status === 'Active'));
+        setStates(extractData(stateRes));
+        setCities(extractData(cityRes));
       } catch (err) {
         console.error('Failed to fetch dropdowns:', err);
       }
@@ -133,6 +139,14 @@ const VendorForm = ({ onCancel, onSuccess, initialData }) => {
       if (!payload.city_id) payload.city_id = null;
       if (!payload.currency_id) payload.currency_id = null;
 
+      // Clean up empty UUIDs inside array items to be null
+      payload.addresses = (payload.addresses || []).map(addr => ({
+        ...addr,
+        country_id: addr.country_id || null,
+        state_id: addr.state_id || null,
+        city_id: addr.city_id || null
+      }));
+
       if (isEditMode) {
         await businessService.updateVendor(initialData.id, payload);
       } else {
@@ -163,13 +177,21 @@ const VendorForm = ({ onCancel, onSuccess, initialData }) => {
 
       {error && <div className="alert alert-danger mb-md p-sm">{error}</div>}
 
-      <div className="border-b-light flex gap-md mb-lg relative">
+      <div className="border-b-light flex gap-md mb-lg relative" style={{ overflowX: 'auto', whiteSpace: 'nowrap' }}>
         {tabs.map(t => (
           <button
             key={t.id}
             type="button"
-            className={`pb-sm font-medium transition-colors relative ${activeTab === t.id ? 'text-primary' : 'text-secondary-light hover:text-text'}`}
-            style={{ marginBottom: '-1px' }}
+            className={`font-medium transition-colors relative ${activeTab === t.id ? 'text-primary' : 'text-secondary-light hover:text-text'}`}
+            style={{ 
+              marginBottom: '-1px', 
+              background: 'transparent', 
+              border: 'none', 
+              cursor: 'pointer', 
+              outline: 'none', 
+              padding: '0 8px 8px 8px',
+              fontSize: '0.875rem'
+            }}
             onClick={() => setActiveTab(t.id)}
           >
             {t.label}
@@ -207,12 +229,45 @@ const VendorForm = ({ onCancel, onSuccess, initialData }) => {
             </div>
             <div className="form-group">
               <label>Vendor Type</label>
+              <select disabled={isLoading} name="vendor_type" value={formData.vendor_type} onChange={handleChange} className="form-control form-control-sm">
+                <option value="Shipping Line">Shipping Line</option>
+                <option value="Transporter">Transporter</option>
+                <option value="CHA">CHA</option>
+                <option value="CFS">CFS</option>
+                <option value="Warehouse">Warehouse</option>
+                <option value="Surveyor">Surveyor</option>
+                <option value="Other">Other</option>
+              </select>
+            </div>
+            <div className="form-group">
+              <label>GST Number</label>
+              <input disabled={isLoading} type="text" name="gst_number" value={formData.gst_number || ''} onChange={handleChange} className="form-control form-control-sm uppercase" />
+            </div>
+            <div className="form-group">
+              <label>PAN Number</label>
+              <input disabled={isLoading} type="text" name="pan_number" value={formData.pan_number || ''} onChange={handleChange} className="form-control form-control-sm uppercase" />
+            </div>
+            <div className="form-group">
+              <label>Currency</label>
+              <select disabled={isLoading} name="currency_id" value={formData.currency_id || ''} onChange={handleChange} className="form-control form-control-sm">
+                <option value="">Select Currency...</option>
+                {currencies.map(c => (
+                  <option key={c.id} value={c.id}>{c.currency_code} ({c.currency_name})</option>
+                ))}
+              </select>
+            </div>
+            <div className="form-group">
+              <label>Payment Terms</label>
+              <input disabled={isLoading} type="text" name="payment_terms" value={formData.payment_terms || ''} onChange={handleChange} className="form-control form-control-sm" placeholder="e.g. Net 30, COD" />
+            </div>
+            <div className="form-group">
+              <label>Status</label>
               <StatusToggle 
-              value={formData.status} 
-              onChange={(val) => handleChange({ target: { name: 'status', value: val } })}
-              disabled={isLoading}
-            />
-              </div>
+                value={formData.status} 
+                onChange={(val) => handleChange({ target: { name: 'status', value: val } })}
+                disabled={isLoading}
+              />
+            </div>
           </motion.div>
         )}
 
@@ -233,7 +288,17 @@ const VendorForm = ({ onCancel, onSuccess, initialData }) => {
               </div>
               <div className="form-group">
                 <label>Country</label>
-                <select disabled={isLoading} name="country_id" value={formData.country_id || ''} onChange={handleChange} className="form-control form-control-sm">
+                <select 
+                  disabled={isLoading} 
+                  name="country_id" 
+                  value={formData.country_id || ''} 
+                  onChange={(e) => {
+                    handleChange({ target: { name: 'country_id', value: e.target.value || '' } });
+                    handleChange({ target: { name: 'state_id', value: '' } });
+                    handleChange({ target: { name: 'city_id', value: '' } });
+                  }} 
+                  className="form-control form-control-sm"
+                >
                   <option value="">Select Country...</option>
                   {countries
                     .filter(c => c.status === 'Active' || c.id === formData.country_id)
@@ -242,11 +307,50 @@ const VendorForm = ({ onCancel, onSuccess, initialData }) => {
                   ))}
                 </select>
               </div>
+              <div className="form-group">
+                <label>State</label>
+                <select 
+                  disabled={isLoading || !formData.country_id} 
+                  name="state_id" 
+                  value={formData.state_id || ''} 
+                  onChange={(e) => {
+                    handleChange({ target: { name: 'state_id', value: e.target.value || '' } });
+                    handleChange({ target: { name: 'city_id', value: '' } });
+                  }} 
+                  className="form-control form-control-sm"
+                >
+                  <option value="">Select State...</option>
+                  {states
+                    .filter(s => s.country_id === formData.country_id)
+                    .filter(s => s.status === 'Active' || s.id === formData.state_id)
+                    .map(s => (
+                      <option key={s.id} value={s.id}>{s.state_name}</option>
+                  ))}
+                </select>
+              </div>
+              <div className="form-group">
+                <label>City</label>
+                <select 
+                  disabled={isLoading || !formData.state_id} 
+                  name="city_id" 
+                  value={formData.city_id || ''} 
+                  onChange={handleChange} 
+                  className="form-control form-control-sm"
+                >
+                  <option value="">Select City...</option>
+                  {cities
+                    .filter(c => c.state_id === formData.state_id)
+                    .filter(c => c.status === 'Active' || c.id === formData.city_id)
+                    .map(c => (
+                      <option key={c.id} value={c.id}>{c.city_name}</option>
+                  ))}
+                </select>
+              </div>
             </div>
 
             <div className="flex justify-between align-center mb-sm">
               <h4 className="text-md font-semibold m-0">Additional Addresses</h4>
-              <Button type="button" variant="outline" size="sm" leftIcon={Plus} onClick={() => handleAddArrayItem('addresses', { address_type: 'Branch', country_id: '', address_line_1: '' })}>
+              <Button type="button" variant="outline" size="sm" leftIcon={Plus} onClick={() => handleAddArrayItem('addresses', { address_type: 'Branch', address_line_1: '', address_line_2: '', pincode: '', country_id: null, state_id: null, city_id: null })}>
                 Add Address
               </Button>
             </div>
@@ -268,6 +372,71 @@ const VendorForm = ({ onCancel, onSuccess, initialData }) => {
                       <div className="form-group" style={{ gridColumn: '1 / -1' }}>
                         <label>Address Line 1</label>
                         <input type="text" value={addr.address_line_1} onChange={e => handleArrayChange('addresses', i, 'address_line_1', e.target.value)} className="form-control form-control-sm" />
+                      </div>
+                      <div className="form-group">
+                        <label>Pincode</label>
+                        <input type="text" value={addr.pincode || ''} onChange={e => handleArrayChange('addresses', i, 'pincode', e.target.value)} className="form-control form-control-sm" />
+                      </div>
+                      <div className="form-group">
+                        <label>Country</label>
+                        <select 
+                          className="form-control form-control-sm" 
+                          value={addr.country_id || ''} 
+                          onChange={(e) => {
+                            const val = e.target.value || null;
+                            handleArrayChange('addresses', i, 'country_id', val);
+                            handleArrayChange('addresses', i, 'state_id', null);
+                            handleArrayChange('addresses', i, 'city_id', null);
+                          }}
+                        >
+                          <option value="">Select Country...</option>
+                          {countries
+                            .filter(c => c.status === 'Active' || c.id === addr.country_id)
+                            .map(c => (
+                              <option key={c.id} value={c.id}>{c.country_name}</option>
+                          ))}
+                        </select>
+                      </div>
+                      <div className="form-group">
+                        <label>State</label>
+                        <select 
+                          className="form-control form-control-sm" 
+                          value={addr.state_id || ''} 
+                          onChange={(e) => {
+                            const val = e.target.value || null;
+                            handleArrayChange('addresses', i, 'state_id', val);
+                            handleArrayChange('addresses', i, 'city_id', null);
+                          }}
+                          disabled={!addr.country_id}
+                        >
+                          <option value="">Select State...</option>
+                          {states
+                            .filter(s => s.country_id === addr.country_id)
+                            .filter(s => s.status === 'Active' || s.id === addr.state_id)
+                            .map(s => (
+                              <option key={s.id} value={s.id}>{s.state_name}</option>
+                          ))}
+                        </select>
+                      </div>
+                      <div className="form-group">
+                        <label>City</label>
+                        <select 
+                          className="form-control form-control-sm" 
+                          value={addr.city_id || ''} 
+                          onChange={(e) => {
+                            const val = e.target.value || null;
+                            handleArrayChange('addresses', i, 'city_id', val);
+                          }}
+                          disabled={!addr.state_id}
+                        >
+                          <option value="">Select City...</option>
+                          {cities
+                            .filter(c => c.state_id === addr.state_id)
+                            .filter(c => c.status === 'Active' || c.id === addr.city_id)
+                            .map(c => (
+                              <option key={c.id} value={c.id}>{c.city_name}</option>
+                          ))}
+                        </select>
                       </div>
                     </div>
                   </div>

@@ -86,6 +86,19 @@ export const responseErrorInterceptor = async (error) => {
     toast.error(message, { toastId: message });
   }
 
-  error.message = message;
+  if (error.response && error.response.data) {
+    error.response.data.message = message;
+  }
+
+  try {
+    Object.defineProperty(error, 'message', {
+      value: message,
+      writable: true,
+      configurable: true
+    });
+  } catch (e) {
+    error.message = message;
+  }
+
   return Promise.reject(error);
 };

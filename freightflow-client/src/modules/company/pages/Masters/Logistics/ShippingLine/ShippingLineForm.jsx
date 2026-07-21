@@ -2,10 +2,12 @@ import React, { useState, useEffect } from 'react';
 import { X } from 'lucide-react';
 import Button from '../../../../../../shared/components/Button';
 import { logisticsService } from '../../../../../masters/services/logistics.service';
+import { foundationService } from '../../../../../masters/services/foundation.service';
 import StatusToggle from '../../../../../../shared/components/Input/StatusToggle';
 
 const ShippingLineForm = ({ onCancel, onSuccess, initialData }) => {
   const isEditMode = !!initialData;
+  const [countries, setCountries] = useState([]);
   const [formData, setFormData] = useState({
     shipping_line_code: '',
     shipping_line_name: '',
@@ -24,6 +26,7 @@ const ShippingLineForm = ({ onCancel, onSuccess, initialData }) => {
   const [touched, setTouched] = useState({});
 
   useEffect(() => {
+    fetchCountries();
     if (initialData) {
       setFormData({
         shipping_line_code: initialData.shipping_line_code || '',
@@ -38,6 +41,23 @@ const ShippingLineForm = ({ onCancel, onSuccess, initialData }) => {
       });
     }
   }, [initialData]);
+
+  const fetchCountries = async () => {
+    try {
+      const res = await foundationService.getCountries({ page: 1, limit: 10000 });
+      let data = [];
+      if (res?.data?.data?.data && Array.isArray(res.data.data.data)) {
+        data = res.data.data.data;
+      } else if (res?.data?.data && Array.isArray(res.data.data)) {
+        data = res.data.data;
+      } else if (Array.isArray(res)) {
+        data = res;
+      }
+      setCountries(data);
+    } catch (err) {
+      console.error('Failed to fetch countries for shipping line form', err);
+    }
+  };
 
   const validateField = (name, value) => {
     let error = '';
@@ -143,17 +163,24 @@ const ShippingLineForm = ({ onCancel, onSuccess, initialData }) => {
             />
           </div>
           <div className="form-group">
-            <label>Country ID (UUID)</label>
-            <input 
-              disabled={isLoading} 
-              type="text" 
-              name="country_id" 
-              value={formData.country_id} 
-              onChange={handleChange} 
+            <label>Country</label>
+            <select
+              disabled={isLoading}
+              name="country_id"
+              value={formData.country_id}
+              onChange={handleChange}
               onBlur={handleBlur}
               className="form-control form-control-sm"
-              placeholder="Enter Country UUID"
-            />
+            >
+              <option value="">Select Country</option>
+              {countries
+                .filter(c => c.status === 'Active' || c.id === formData.country_id)
+                .map(c => (
+                  <option key={c.id} value={c.id}>
+                    {c.country_name} ({c.country_code})
+                  </option>
+              ))}
+            </select>
           </div>
           <div className="form-group">
             <label>Contact Person</label>

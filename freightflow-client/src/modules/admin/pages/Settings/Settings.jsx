@@ -40,17 +40,17 @@ const Settings = () => {
 
   return (
     <Page>
-      <PageHeader 
-        title="Platform Settings" 
-        subtitle="Global configurations and preferences for your account." 
+      <PageHeader
+        title="Platform Settings"
+        subtitle="Global configurations and preferences for your account."
         breadcrumbs={[{ label: 'Dashboard' }, { label: 'Settings' }]}
         primaryAction={{ label: 'Save Changes', onClick: handleSave }}
       />
-      
+
       <div className="settings-container mt-lg flex justify-center">
         {/* Content Area */}
-        <motion.div 
-          className="settings-content flex-col gap-xl w-full" 
+        <motion.div
+          className="settings-content flex-col gap-xl w-full"
           style={{ maxWidth: '800px' }}
           variants={containerVariants}
           initial="hidden"
@@ -64,18 +64,18 @@ const Settings = () => {
               </div>
               <h3 className="text-lg font-semibold m-0 text-secondary">My Profile</h3>
             </div>
-            
+
             <div className="profile-details" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '1.5rem' }}>
               <div className="flex-col gap-xs">
                 <span className="text-sm text-secondary-light font-medium uppercase tracking-wider">Full Name</span>
                 <span className="text-secondary font-bold text-md">{currentUser?.full_name || 'Admin User'}</span>
               </div>
-              
+
               <div className="flex-col gap-xs">
                 <span className="text-sm text-secondary-light font-medium uppercase tracking-wider">Email Address</span>
                 <span className="text-secondary font-bold text-md">{currentUser?.email || 'admin@freightflow.com'}</span>
               </div>
-              
+
               <div className="flex-col gap-xs">
                 <span className="text-sm text-secondary-light font-medium uppercase tracking-wider">Role</span>
                 <span className="badge-purple" style={{ width: 'fit-content' }}>
@@ -93,7 +93,7 @@ const Settings = () => {
               </div>
               <h3 className="text-lg font-semibold m-0 text-secondary">Display Preferences</h3>
             </div>
-            
+
             <div className="preferences-list" style={{ display: 'flex', flexDirection: 'column', gap: '2rem' }}>
               <div className="preference-item flex justify-between align-center flex-wrap gap-md">
                 <div>
@@ -101,22 +101,22 @@ const Settings = () => {
                   <p className="text-sm text-secondary-light m-0 mt-xs">Choose how you want to navigate the application.</p>
                 </div>
                 <div className="flex bg-background border-light rounded-md p-xs gap-xs">
-                  <button 
-                    className={`btn flex align-center gap-xs ${navMode === 'sidebar' ? 'bg-primary text-white shadow-sm' : 'bg-transparent text-secondary hover:bg-surface'} border-none transition-all duration-200`} 
+                  <button
+                    className={`btn flex align-center gap-xs ${navMode === 'sidebar' ? 'bg-primary text-white shadow-sm' : 'bg-transparent text-secondary hover:bg-surface'} border-none transition-all duration-200`}
                     style={{ padding: '0.5rem 1rem' }}
                     onClick={() => handleNavModeChange('sidebar')}
                   >
                     <SidebarIcon size={16} /> Sidebar
                   </button>
-                  <button 
-                    className={`btn flex align-center gap-xs ${navMode === 'menubar' ? 'bg-primary text-white shadow-sm' : 'bg-transparent text-secondary hover:bg-surface'} border-none transition-all duration-200`} 
+                  <button
+                    className={`btn flex align-center gap-xs ${navMode === 'menubar' ? 'bg-primary text-white shadow-sm' : 'bg-transparent text-secondary hover:bg-surface'} border-none transition-all duration-200`}
                     style={{ padding: '0.5rem 1rem' }}
                     onClick={() => handleNavModeChange('menubar')}
                   >
                     <Grip size={16} /> Menu bar
                   </button>
-                  <button 
-                    className={`btn flex align-center gap-xs ${navMode === 'both' ? 'bg-primary text-white shadow-sm' : 'bg-transparent text-secondary hover:bg-surface'} border-none transition-all duration-200`} 
+                  <button
+                    className={`btn flex align-center gap-xs ${navMode === 'both' ? 'bg-primary text-white shadow-sm' : 'bg-transparent text-secondary hover:bg-surface'} border-none transition-all duration-200`}
                     style={{ padding: '0.5rem 1rem' }}
                     onClick={() => handleNavModeChange('both')}
                   >
@@ -124,15 +124,15 @@ const Settings = () => {
                   </button>
                 </div>
               </div>
-              
+
               <div className="preference-item flex justify-between align-center border-t-light pt-lg flex-wrap gap-md">
                 <div>
                   <h4 className="m-0 text-md font-semibold text-secondary">Default List View</h4>
                   <p className="text-sm text-secondary-light m-0 mt-xs">Choose how you want to view lists of data by default.</p>
                 </div>
                 <div className="flex bg-background border-light rounded-md p-xs gap-xs">
-                  <button 
-                    className={`btn flex align-center gap-xs ${viewMode === 'table' ? 'bg-primary text-white shadow-sm' : 'bg-transparent text-secondary hover:bg-surface'} border-none transition-all duration-200`} 
+                  <button
+                    className={`btn flex align-center gap-xs ${viewMode === 'table' ? 'bg-primary text-white shadow-sm' : 'bg-transparent text-secondary hover:bg-surface'} border-none transition-all duration-200`}
                     style={{ padding: '0.5rem 1rem' }}
                     onClick={() => {
                       setViewMode('table');
@@ -141,7 +141,7 @@ const Settings = () => {
                   >
                     <Table size={16} /> Table
                   </button>
-                  <button 
+                  {/* <button 
                     className={`btn flex align-center gap-xs ${viewMode === 'card' ? 'bg-primary text-white shadow-sm' : 'bg-transparent text-secondary hover:bg-surface'} border-none transition-all duration-200`} 
                     style={{ padding: '0.5rem 1rem' }}
                     onClick={() => {
@@ -150,12 +150,12 @@ const Settings = () => {
                     }}
                   >
                     <CreditCard size={16} /> Card
-                  </button>
+                  </button> */}
                 </div>
               </div>
             </div>
           </motion.div>
-          
+
           <motion.div variants={itemVariants} className="mt-xl pt-md flex justify-end">
             <Button variant="primary" onClick={handleSave} leftIcon={Save} isLoading={isSaving} className="shadow-sm">
               Save Settings

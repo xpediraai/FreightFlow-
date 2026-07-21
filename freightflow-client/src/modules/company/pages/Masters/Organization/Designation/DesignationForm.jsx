@@ -31,7 +31,7 @@ const DesignationForm = ({ onCancel, onSuccess, initialData }) => {
         else if (deptRes?.data && Array.isArray(deptRes.data)) deptData = deptRes.data;
         else if (Array.isArray(deptRes)) deptData = deptRes;
         
-        setDepartments(deptData.filter(d => d.status === 'Active'));
+        setDepartments(deptData);
       } catch (error) {
         console.error('Failed to fetch departments:', error);
       }
@@ -92,10 +92,14 @@ const DesignationForm = ({ onCancel, onSuccess, initialData }) => {
     setIsLoading(true);
     
     try {
+      const payload = {
+        ...formData,
+        department_id: formData.department_id === '' ? null : formData.department_id
+      };
       if (isEditMode) {
-        await organizationService.updateDesignation(initialData.id, formData);
+        await organizationService.updateDesignation(initialData.id, payload);
       } else {
-        await organizationService.createDesignation(formData);
+        await organizationService.createDesignation(payload);
       }
       onSuccess && onSuccess();
     } catch (err) {
@@ -117,19 +121,6 @@ const DesignationForm = ({ onCancel, onSuccess, initialData }) => {
       <form onSubmit={handleSubmit} className="dense-form">
         <div className="form-grid">
           <div className="form-group">
-            <label>Designation Code <span className="text-danger">*</span></label>
-            <input 
-              disabled={isLoading || isEditMode} 
-              type="text" 
-              name="designation_code" 
-              value={formData.designation_code} 
-              onChange={handleChange} 
-              onBlur={handleBlur}
-              className="form-control form-control-sm uppercase" 
-            />
-            {errors.designation_code && <div className="text-danger text-xs mt-xs">{errors.designation_code}</div>}
-          </div>
-          <div className="form-group">
             <label>Designation Name <span className="text-danger">*</span></label>
             <input 
               disabled={isLoading} 
@@ -143,13 +134,58 @@ const DesignationForm = ({ onCancel, onSuccess, initialData }) => {
             {errors.designation_name && <div className="text-danger text-xs mt-xs">{errors.designation_name}</div>}
           </div>
           <div className="form-group">
-            <label>Department <span className="text-danger">*</span></label>
+            <label>Designation Code <span className="text-danger">*</span></label>
+            <input 
+              disabled={isLoading || isEditMode} 
+              type="text" 
+              name="designation_code" 
+              value={formData.designation_code} 
+              onChange={handleChange} 
+              onBlur={handleBlur}
+              className="form-control form-control-sm uppercase" 
+            />
+            {errors.designation_code && <div className="text-danger text-xs mt-xs">{errors.designation_code}</div>}
+          </div>
+          <div className="form-group">
+            <label>Department</label>
+            <select
+              disabled={isLoading}
+              name="department_id"
+              value={formData.department_id}
+              onChange={handleChange}
+              onBlur={handleBlur}
+              className="form-control form-control-sm"
+            >
+              <option value="">Select Department</option>
+              {departments
+                .filter(d => d.status === 'Active' || d.id === formData.department_id)
+                .map(d => (
+                  <option key={d.id} value={d.id}>
+                    {d.department_name}
+                  </option>
+              ))}
+            </select>
+          </div>
+          <div className="form-group">
+            <label>Description</label>
+            <input 
+              disabled={isLoading} 
+              type="text" 
+              name="description" 
+              value={formData.description} 
+              onChange={handleChange} 
+              onBlur={handleBlur}
+              className="form-control form-control-sm" 
+            />
+          </div>
+          <div className="form-group">
+            <label>Status</label>
             <StatusToggle 
               value={formData.status} 
               onChange={(val) => handleChange({ target: { name: 'status', value: val } })}
               disabled={isLoading}
             />
-            </div>
+          </div>
         </div>
 
         <div className="form-actions mt-lg flex justify-end gap-sm pt-md border-t-light">

@@ -77,8 +77,6 @@ const DriverList = ({ onEdit, searchQuery = '', viewMode = 'table', refreshTrigg
   const calculatedTotalPages = Math.ceil(calculatedTotalRecords / limit) || 1;
   const paginatedList = filteredList.slice((page - 1) * limit, page * limit);
 
-  co
-
   useEffect(() => {
     if (onTotalCountChange) {
       onTotalCountChange(calculatedTotalRecords);

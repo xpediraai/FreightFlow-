@@ -42,12 +42,7 @@ const CommodityList = ({ onEdit, searchQuery = '', viewMode = 'table', refreshTr
     fetchCommodities();
   }, [refreshTrigger]);
 
-  
-  useEffect(() => {
-    if (onTotalCountChange) {
-      onTotalCountChange(data ? data.length : 0);
-    }
-  }, [data ? data.length : 0, onTotalCountChange]);
+
 
   const fetchCommodities = async () => {
     setIsLoading(true);
@@ -84,6 +79,12 @@ const CommodityList = ({ onEdit, searchQuery = '', viewMode = 'table', refreshTr
   const calculatedTotalRecords = filteredList.length;
   const calculatedTotalPages = Math.ceil(calculatedTotalRecords / limit) || 1;
   const paginatedList = filteredList.slice((page - 1) * limit, page * limit);
+
+  useEffect(() => {
+    if (onTotalCountChange) {
+      onTotalCountChange(calculatedTotalRecords);
+    }
+  }, [calculatedTotalRecords, onTotalCountChange]);
 
   const columns = [
     {

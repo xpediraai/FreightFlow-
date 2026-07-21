@@ -2,10 +2,12 @@ import React, { useState, useEffect } from 'react';
 import { X } from 'lucide-react';
 import Button from '../../../../../../shared/components/Button';
 import { logisticsService } from '../../../../../masters/services/logistics.service';
+import { businessService } from '../../../../../masters/services/business.service';
 import StatusToggle from '../../../../../../shared/components/Input/StatusToggle';
 
 const VehicleForm = ({ onCancel, onSuccess, initialData }) => {
   const isEditMode = !!initialData;
+  const [vendors, setVendors] = useState([]);
   
   const formatDateForInput = (dateString) => {
     if (!dateString) return '';
@@ -36,6 +38,7 @@ const VehicleForm = ({ onCancel, onSuccess, initialData }) => {
   const [touched, setTouched] = useState({});
 
   useEffect(() => {
+    fetchVendors();
     if (initialData) {
       setFormData({
         vehicle_number: initialData.vehicle_number || '',
@@ -54,6 +57,23 @@ const VehicleForm = ({ onCancel, onSuccess, initialData }) => {
       });
     }
   }, [initialData]);
+
+  const fetchVendors = async () => {
+    try {
+      const res = await businessService.getVendors({ page: 1, limit: 10000 });
+      let data = [];
+      if (res?.data?.data?.data && Array.isArray(res.data.data.data)) {
+        data = res.data.data.data;
+      } else if (res?.data?.data && Array.isArray(res.data.data)) {
+        data = res.data.data;
+      } else if (Array.isArray(res)) {
+        data = res;
+      }
+      setVendors(data);
+    } catch (err) {
+      console.error('Failed to fetch vendors for vehicle form', err);
+    }
+  };
 
   const validateField = (name, value) => {
     let error = '';
@@ -178,26 +198,49 @@ const VehicleForm = ({ onCancel, onSuccess, initialData }) => {
             />
           </div>
           <div className="form-group">
-            <label>Vendor ID (UUID)</label>
-            <input 
-              disabled={isLoading} 
-              type="text" 
-              name="vendor_id" 
-              value={formData.vendor_id} 
-              onChange={handleChange} 
+            <label>Vendor</label>
+            <select
+              disabled={isLoading}
+              name="vendor_id"
+              value={formData.vendor_id}
+              onChange={handleChange}
               onBlur={handleBlur}
               className="form-control form-control-sm"
-              placeholder="Enter Vendor UUID"
-            />
+            >
+              <option value="">Select Vendor</option>
+              {vendors
+                .filter(v => v.status === 'Active' || v.id === formData.vendor_id)
+                .map(v => (
+                  <option key={v.id} value={v.id}>
+                    {v.vendor_name} ({v.vendor_code})
+                  </option>
+              ))}
+            </select>
           </div>
+
           <div className="form-group">
             <label>GPS Enabled</label>
+            <select
+              disabled={isLoading}
+              name="gps_enabled"
+              value={formData.gps_enabled}
+              onChange={handleChange}
+              onBlur={handleBlur}
+              className="form-control form-control-sm"
+            >
+              <option value="Yes">Yes</option>
+              <option value="No">No</option>
+            </select>
+          </div>
+
+          <div className="form-group">
+            <label>Status</label>
             <StatusToggle 
               value={formData.status} 
               onChange={(val) => handleChange({ target: { name: 'status', value: val } })}
               disabled={isLoading}
             />
-            </div>
+          </div>
         </div>
 
         <div className="form-actions mt-lg flex justify-end gap-sm pt-md border-t-light">
