@@ -49,7 +49,7 @@ const createCompany = async (companyData, userId, files, generatedId, reqInfo) =
             is_default: true // Assume first created company is default
         }, { transaction });
 
-        if (companyData.owner_id) {
+        if (companyData.owner_id && companyData.owner_id !== userId) {
             await UserCompanies.create({
                 user_id: companyData.owner_id,
                 company_id: newCompany.id,
@@ -64,7 +64,11 @@ const createCompany = async (companyData, userId, files, generatedId, reqInfo) =
         return newCompany;
     } catch (error) {
         await transaction.rollback();
-        writeLogToFile(`[${new Date().toISOString()}] Action: CREATE_COMPANY | User: ${userId} | IP: ${reqInfo.ip} | Success: false | Reason: ${error.message}`, createLogPath);
+        let reason = error.message;
+        if (error.errors && Array.isArray(error.errors)) {
+            reason += " - Details: " + error.errors.map(e => `${e.path}: ${e.message}`).join(", ");
+        }
+        writeLogToFile(`[${new Date().toISOString()}] Action: CREATE_COMPANY | User: ${userId} | IP: ${reqInfo.ip} | Success: false | Reason: ${reason}`, createLogPath);
         throw error;
     }
 };
