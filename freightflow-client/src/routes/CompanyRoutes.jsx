@@ -33,6 +33,14 @@ import Employees from '../modules/company/pages/Masters/Organization/Employee/Em
 import Customers from '../modules/company/pages/Masters/Business/Customer/Customers';
 import Vendors from '../modules/company/pages/Masters/Business/Vendor/Vendors';
 
+// Operations Pages
+import Shipments from '../modules/company/pages/Operations/Shipment/Shipments';
+import ShipmentFormPage from '../modules/company/pages/Operations/Shipment/ShipmentFormPage';
+import ShipmentDetailPage from '../modules/company/pages/Operations/Shipment/ShipmentDetailPage';
+
+import Jobs from '../modules/company/pages/Operations/Job/Jobs';
+import JobDetailPage from '../modules/company/pages/Operations/Job/JobDetailPage';
+
 // Placeholders for unimplemented features
 const GenericPlaceholder = ({ title }) => (
   <div style={{ padding: '2rem' }}>
@@ -45,6 +53,30 @@ const CompanyRoutes = [
   {
     path: 'dashboard',
     element: <Dashboard />,
+  },
+  {
+    path: 'operations/shipments',
+    element: <Shipments />,
+  },
+  {
+    path: 'operations/shipments/create',
+    element: <ShipmentFormPage />,
+  },
+  {
+    path: 'operations/shipments/:id/edit',
+    element: <ShipmentFormPage />,
+  },
+  {
+    path: 'operations/shipments/:id',
+    element: <ShipmentDetailPage />,
+  },
+  {
+    path: 'operations/jobs',
+    element: <Jobs />,
+  },
+  {
+    path: 'operations/jobs/:id',
+    element: <JobDetailPage />,
   },
   {
     path: 'company',

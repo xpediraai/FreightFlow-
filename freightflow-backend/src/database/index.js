@@ -50,6 +50,13 @@ db.PackageType = require("../modules/Masters/Common/PackageTypeMasters/packageTy
 db.Incoterm = require("../modules/Masters/Common/IncotermMasters/incoterm.model");
 db.Charge = require("../modules/Masters/Common/ChargeMasters/charge.model");
 db.PaymentTerm = require("../modules/Masters/Foundation/PaymentTermMasters/paymentTerm.model");
+db.Shipment = require("../modules/Operations/Shipment/shipment.model");
+db.Job = require("../modules/Operations/Job/job.model");
+db.Container = require("../modules/Operations/Container/container.model");
+db.Booking = require("../modules/Operations/Booking/booking.model");
+db.BillOfLading = require("../modules/Operations/BL/billOfLading.model");
+db.Tracking = require("../modules/Operations/Tracking/tracking.model");
+db.ShipmentCharge = require("../modules/Operations/Finance/shipmentCharge.model");
 
 // Define Associations
 db.Users.hasMany(db.RefreshTokens, { foreignKey: "user_id" });
@@ -127,4 +134,50 @@ db.Employee.belongsTo(db.State, { foreignKey: 'state_id', as: 'state' });
 db.Employee.belongsTo(db.City, { foreignKey: 'city_id', as: 'city' });
 db.Employee.belongsTo(db.Employee, { foreignKey: 'reporting_manager', as: 'manager' });
 
-module.exports = db;
+// Operations Associations
+db.Shipment.belongsTo(db.Customer, { foreignKey: 'customer_id', as: 'customer' });
+db.Shipment.belongsTo(db.Vendor, { foreignKey: 'vendor_id', as: 'vendor' });
+db.Shipment.belongsTo(db.Employee, { foreignKey: 'sales_person_id', as: 'salesPerson' });
+db.Shipment.belongsTo(db.Employee, { foreignKey: 'operation_executive_id', as: 'operationExecutive' });
+db.Shipment.belongsTo(db.Commodity, { foreignKey: 'commodity_id', as: 'commodity' });
+db.Shipment.belongsTo(db.PackageType, { foreignKey: 'package_type_id', as: 'packageType' });
+db.Shipment.belongsTo(db.UOM, { foreignKey: 'uom_id', as: 'uom' });
+db.Shipment.belongsTo(db.Country, { foreignKey: 'origin_country_id', as: 'originCountry' });
+db.Shipment.belongsTo(db.Port, { foreignKey: 'origin_port_id', as: 'originPort' });
+db.Shipment.belongsTo(db.Country, { foreignKey: 'destination_country_id', as: 'destinationCountry' });
+db.Shipment.belongsTo(db.Port, { foreignKey: 'destination_port_id', as: 'destinationPort' });
+db.Shipment.belongsTo(db.TransportMode, { foreignKey: 'transport_mode_id', as: 'transportMode' });
+db.Shipment.belongsTo(db.ShippingLine, { foreignKey: 'shipping_line_id', as: 'shippingLine' });
+db.Shipment.belongsTo(db.Vehicle, { foreignKey: 'vehicle_id', as: 'vehicle' });
+db.Shipment.belongsTo(db.Warehouse, { foreignKey: 'warehouse_id', as: 'warehouse' });
+db.Shipment.belongsTo(db.Currency, { foreignKey: 'currency_id', as: 'currency' });
+db.Shipment.belongsTo(db.PaymentTerm, { foreignKey: 'payment_term_id', as: 'paymentTerm' });
+db.Shipment.belongsTo(db.Incoterm, { foreignKey: 'incoterm_id', as: 'incoterm' });
+db.Shipment.belongsTo(db.Charge, { foreignKey: 'charge_id', as: 'charge' });
+
+db.Shipment.hasOne(db.Job, { foreignKey: 'shipment_id', as: 'job' });
+db.Job.belongsTo(db.Shipment, { foreignKey: 'shipment_id', as: 'shipment' });
+
+db.Job.belongsTo(db.Employee, { foreignKey: 'assigned_employee_id', as: 'assignedEmployee' });
+db.Job.belongsTo(db.Department, { foreignKey: 'department_id', as: 'department' });
+
+// Operations Pipeline Associations
+db.Shipment.hasMany(db.Container, { foreignKey: 'shipment_id', as: 'containers' });
+db.Container.belongsTo(db.Shipment, { foreignKey: 'shipment_id', as: 'shipment' });
+db.Container.belongsTo(db.ContainerType, { foreignKey: 'container_type_id', as: 'containerType' });
+
+db.Shipment.hasMany(db.Booking, { foreignKey: 'shipment_id', as: 'bookings' });
+db.Booking.belongsTo(db.Shipment, { foreignKey: 'shipment_id', as: 'shipment' });
+db.Booking.belongsTo(db.ShippingLine, { foreignKey: 'shipping_line_id', as: 'shippingLine' });
+
+db.Shipment.hasMany(db.BillOfLading, { foreignKey: 'shipment_id', as: 'billsOfLading' });
+db.BillOfLading.belongsTo(db.Shipment, { foreignKey: 'shipment_id', as: 'shipment' });
+
+db.Shipment.hasMany(db.Tracking, { foreignKey: 'shipment_id', as: 'trackings' });
+db.Tracking.belongsTo(db.Shipment, { foreignKey: 'shipment_id', as: 'shipment' });
+
+db.Shipment.hasMany(db.ShipmentCharge, { foreignKey: 'shipment_id', as: 'charges' });
+db.ShipmentCharge.belongsTo(db.Shipment, { foreignKey: 'shipment_id', as: 'shipment' });
+db.ShipmentCharge.belongsTo(db.Currency, { foreignKey: 'currency_id', as: 'currency' });
+
+module.exports = db;

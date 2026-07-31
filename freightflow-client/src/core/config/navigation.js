@@ -81,6 +81,15 @@ export const getNavItems = (role) => {
         }
       ]
     },
+    { 
+      name: 'Operations', 
+      icon: Briefcase,
+      color: '#0288D1',
+      children: [
+        { name: 'Shipments', path: '/company/operations/shipments', icon: Package, color: '#1976D2' },
+        { name: 'Jobs', path: '/company/operations/jobs', icon: Truck, color: '#2E7D32' },
+      ]
+    },
     { name: 'Settings', path: '/app/settings', icon: Settings, color: '#616161' },
   ];
 };

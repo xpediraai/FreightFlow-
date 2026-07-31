@@ -17,6 +17,7 @@ const Hero = () => {
           loop
           muted
           playsInline
+          preload="metadata"
           className="lp-hero-video"
         />
         <div className="lp-hero-overlay"></div>

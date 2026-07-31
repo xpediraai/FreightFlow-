@@ -75,7 +75,7 @@ const Login = () => {
       {/* Left Pane - Branding */}
       <div className="login-branding">
         <div className="login-branding-bg">
-          <video src={bgVideo} autoPlay loop muted playsInline className="login-bg-video" />
+          <video src={bgVideo} autoPlay loop muted playsInline preload="metadata" className="login-bg-video" />
           <div className="login-bg-overlay"></div>
         </div>
         
