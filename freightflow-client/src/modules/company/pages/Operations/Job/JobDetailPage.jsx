@@ -58,16 +58,34 @@ const JobDetailPage = () => {
   const handleStatusChange = async (newStatus) => {
     try {
       await operationsService.updateJobStatus(id, newStatus);
+      if (newStatus === 'Completed') {
+        setCurrentStep(9);
+      } else if (newStatus === 'Pending') {
+        setCurrentStep(1);
+      }
+      setJob(prev => prev ? { ...prev, status: newStatus } : prev);
       toast.success(`Job status updated to ${newStatus}`);
-      fetchJobDetails();
     } catch (err) {
       toast.error('Failed to update status');
     }
   };
 
-  const handleStepClick = (step) => {
+  const handleStepClick = async (step) => {
     setCurrentStep(step.id);
-    toast.info(`Progression updated to Stage ${step.id}: ${step.label}`);
+    let targetStatus = job?.status || 'In-Progress';
+    if (step.id === 9) {
+      targetStatus = 'Completed';
+    } else if (targetStatus === 'Completed' || targetStatus === 'Pending') {
+      targetStatus = 'In-Progress';
+    }
+
+    try {
+      await operationsService.updateJob(id, { current_stage: step.id, status: targetStatus });
+      setJob(prev => prev ? { ...prev, current_stage: step.id, status: targetStatus } : prev);
+      toast.success(`Workflow stage updated to Stage ${step.id}: ${step.label}`);
+    } catch (err) {
+      toast.info(`Stage set to ${step.label}`);
+    }
   };
 
   const toggleChecklist = (id) => {

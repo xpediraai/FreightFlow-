@@ -396,22 +396,29 @@ const JobList = ({
                   </div>
 
                   {/* STAGE PROGRESS BAR */}
-                  <div style={{ marginBottom: '16px' }}>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '12px', marginBottom: '6px' }}>
-                      <span style={{ color: '#4b5563', fontWeight: '500' }}>Current: <strong style={{ color: '#111827' }}>{job.status}</strong></span>
-                      <span style={{ color: '#9ca3af', fontSize: '11px', fontWeight: '600' }}>Stage 4/16</span>
-                    </div>
-                    <div style={{ backgroundColor: '#e5e7eb', height: '6px', borderRadius: '6px', overflow: 'hidden' }}>
-                      <div 
-                        style={{ 
-                          height: '100%', 
-                          borderRadius: '6px', 
-                          backgroundColor: styleInfo.progressBg, 
-                          width: styleInfo.progressWidth 
-                        }}
-                      />
-                    </div>
-                  </div>
+                  {(() => {
+                    const activeStage = job.status === 'Completed' ? 9 : (job.status === 'Pending' ? 1 : (job.current_stage || 4));
+                    const progressPercent = Math.round((activeStage / 9) * 100);
+                    return (
+                      <div style={{ marginBottom: '16px' }}>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '12px', marginBottom: '6px' }}>
+                          <span style={{ color: '#4b5563', fontWeight: '500' }}>Status: <strong style={{ color: '#111827' }}>{job.status}</strong></span>
+                          <span style={{ color: job.status === 'Completed' ? '#059669' : '#dc2626', fontSize: '11px', fontWeight: '700' }}>Stage {activeStage}/9 ({progressPercent}%)</span>
+                        </div>
+                        <div style={{ backgroundColor: '#e5e7eb', height: '6px', borderRadius: '6px', overflow: 'hidden' }}>
+                          <div 
+                            style={{ 
+                              height: '100%', 
+                              borderRadius: '6px', 
+                              backgroundColor: job.status === 'Completed' ? '#10b981' : '#dc2626', 
+                              width: `${progressPercent}%`,
+                              transition: 'width 0.3s ease'
+                            }}
+                          />
+                        </div>
+                      </div>
+                    );
+                  })()}
                 </div>
 
                 {/* HIGH-AESTHETIC BUTTONS FOOTER */}
