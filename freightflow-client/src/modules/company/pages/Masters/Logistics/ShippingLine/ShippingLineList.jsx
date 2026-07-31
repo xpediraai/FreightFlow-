@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import ConfirmDeleteModal from '../../../../../../shared/components/ConfirmDeleteModal';
 import TableView from '../../../../../../shared/components/TableView';
 import Badge from '../../../../../../shared/components/Badge';
+import MasterDataCard from '../../../../../../shared/components/Master/MasterDataCard';
 import { Edit2, Trash2 } from 'lucide-react';
 import { logisticsService } from '../../../../../masters/services/logistics.service';
 
@@ -141,7 +142,7 @@ const ShippingLineList = ({ onEdit, searchQuery = '', viewMode = 'table', refres
   if (viewMode === 'card') {
     return (
     <>
-      <div className="grid" style={{ gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: '1.5rem' }}>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(320px, 1fr))', gap: '20px', padding: '16px' }}>
         {paginatedList.map(line => (
           <div key={line.id}>
             <MasterDataCard
@@ -150,6 +151,7 @@ const ShippingLineList = ({ onEdit, searchQuery = '', viewMode = 'table', refres
               subtitle={line.scac_code ? `SCAC: ${line.scac_code}` : ''}
               status={line.status}
               onEdit={() => onEdit && onEdit(line)}
+              onDelete={() => handleDeleteClick(line)}
               gridData={[
                 { label: 'Contact', value: line.contact_person },
                 { label: 'Email', value: line.email }

@@ -2,6 +2,8 @@ import React, { useState, useEffect } from 'react';
 import ConfirmDeleteModal from '../../../../../../shared/components/ConfirmDeleteModal';
 import TableView from '../../../../../../shared/components/TableView';
 import Badge from '../../../../../../shared/components/Badge';
+import MasterDataCard from '../../../../../../shared/components/Master/MasterDataCard';
+import MasterLoader from '../../../../../../shared/components/Master/MasterLoader';
 import { Edit2, Trash2 } from 'lucide-react';
 import { businessService } from '../../../../../masters/services/business.service';
 
@@ -26,7 +28,7 @@ const CommodityList = ({ onEdit, searchQuery = '', viewMode = 'table', refreshTr
     if (!itemToDelete) return;
     setIsDeleting(true);
     try {
-      await commonService.deleteCommodity(itemToDelete.id);
+      await businessService.deleteCommodity(itemToDelete.id);
       setIsDeleteModalOpen(false);
       setItemToDelete(null);
       setCommodities(prev => prev.filter(item => item.id !== itemToDelete.id));
@@ -37,28 +39,29 @@ const CommodityList = ({ onEdit, searchQuery = '', viewMode = 'table', refreshTr
     }
   };
 
-
-  useEffect(() => {
-    fetchCommodities();
-  }, [refreshTrigger]);
-
-
-
   const fetchCommodities = async () => {
     setIsLoading(true);
     try {
-      const res = await businessService.getCommodities();
-      
+      const res = await businessService.getCommodities({ page: 1, limit: 10000 });
       let data = [];
-      if (res?.data?.data?.data && Array.isArray(res.data.data.data)) {
+      if (res?.data?.rows && Array.isArray(res.data.rows)) {
+        data = res.data.rows;
+      } else if (res?.data?.data?.data && Array.isArray(res.data.data.data)) {
         data = res.data.data.data;
       } else if (res?.data?.data && Array.isArray(res.data.data)) {
         data = res.data.data;
       } else if (res?.data && Array.isArray(res.data)) {
         data = res.data;
+      } else if (Array.isArray(res)) {
+        data = res;
+      } else if (res?.rows && Array.isArray(res.rows)) {
+        data = res.rows;
       }
       
       setCommodities(data);
+      const totalCount = res?.data?.total || res?.data?.count || res?.total || data.length;
+      if (res?.data?.totalPages) setTotalPages(res.data.totalPages);
+      if (totalCount) setTotalRecords(totalCount);
     } catch (error) {
       console.error('Failed to fetch commodities:', error);
     } finally {
@@ -66,16 +69,16 @@ const CommodityList = ({ onEdit, searchQuery = '', viewMode = 'table', refreshTr
     }
   };
 
-  
+  useEffect(() => {
+    fetchCommodities();
+  }, [refreshTrigger]);
 
-  
   const filteredList = commodities.filter(item => {
     if (statusFilter === 'ALL STATUS') return true;
     const isMatch = statusFilter === 'ACTIVE' ? item.status === 'Active' : (item.status === 'Inactive' || item.status !== 'Active');
     return isMatch;
   });
 
-  
   const calculatedTotalRecords = filteredList.length;
   const calculatedTotalPages = Math.ceil(calculatedTotalRecords / limit) || 1;
   const paginatedList = filteredList.slice((page - 1) * limit, page * limit);
@@ -85,6 +88,10 @@ const CommodityList = ({ onEdit, searchQuery = '', viewMode = 'table', refreshTr
       onTotalCountChange(calculatedTotalRecords);
     }
   }, [calculatedTotalRecords, onTotalCountChange]);
+
+  if (viewMode === 'card' && isLoading) {
+    return <MasterLoader type="card" />;
+  }
 
   const columns = [
     {
@@ -147,7 +154,7 @@ const CommodityList = ({ onEdit, searchQuery = '', viewMode = 'table', refreshTr
   if (viewMode === 'card') {
     return (
     <>
-      <div className="grid" style={{ gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: '1.5rem' }}>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(320px, 1fr))', gap: '20px', padding: '16px' }}>
         {paginatedList.map(c => (
           <div key={c.id}>
             <MasterDataCard
@@ -155,6 +162,7 @@ const CommodityList = ({ onEdit, searchQuery = '', viewMode = 'table', refreshTr
               code={c.commodity_code}
               status={c.status}
               onEdit={() => onEdit && onEdit(c)}
+              onDelete={() => handleDeleteClick(c)}
               gridData={[
                 { label: 'HS Code', value: c.hs_code },
                 { label: 'Hazardous', value: c.hazardous }

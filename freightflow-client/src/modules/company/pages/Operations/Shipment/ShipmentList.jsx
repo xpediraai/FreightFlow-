@@ -200,7 +200,7 @@ const ShipmentList = ({
   if (viewMode === 'card') {
     return (
       <>
-        <div className="grid" style={{ gridTemplateColumns: 'repeat(auto-fill, minmax(320px, 1fr))', gap: '1.5rem' }}>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(320px, 1fr))', gap: '20px', padding: '16px' }}>
           {shipments.map(shipment => (
             <div key={shipment.id} onClick={() => navigate(`/company/operations/shipments/${shipment.id}`)}>
               <MasterDataCard

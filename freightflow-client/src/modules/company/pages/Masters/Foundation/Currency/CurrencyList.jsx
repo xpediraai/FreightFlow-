@@ -3,6 +3,7 @@ import ConfirmDeleteModal from '../../../../../../shared/components/ConfirmDelet
 import TableView from '../../../../../../shared/components/TableView';
 import Badge from '../../../../../../shared/components/Badge';
 import MasterDataCard from '../../../../../../shared/components/Master/MasterDataCard';
+import MasterLoader from '../../../../../../shared/components/Master/MasterLoader';
 import { Eye, Edit2, Trash2 } from 'lucide-react';
 import { foundationService } from '../../../../../masters/services/foundation.service';
 
@@ -39,24 +40,26 @@ const CurrencyList = ({ onEdit, searchQuery = '', viewMode = 'table', refreshTri
   };
 
 
-  useEffect(() => {
-    fetchCurrencies();
-  }, [refreshTrigger]);
   const fetchCurrencies = async () => {
     setIsLoading(true);
     try {
       const data = await foundationService.getCurrencies({ page: 1, limit: 10000 });
       let currencyData = [];
-      if (data?.data?.data && Array.isArray(data.data.data)) {
+      if (data?.data?.rows && Array.isArray(data.data.rows)) {
+        currencyData = data.data.rows;
+      } else if (data?.data?.data && Array.isArray(data.data.data)) {
         currencyData = data.data.data;
       } else if (data?.data && Array.isArray(data.data)) {
         currencyData = data.data;
       } else if (Array.isArray(data)) {
         currencyData = data;
+      } else if (data?.rows && Array.isArray(data.rows)) {
+        currencyData = data.rows;
       }
       setCurrencies(currencyData);
+      const totalCount = data?.data?.total || data?.data?.count || data?.total || currencyData.length;
       if (data?.data?.totalPages) setTotalPages(data.data.totalPages);
-      if (data?.data?.total) setTotalRecords(data.data.total);
+      if (totalCount) setTotalRecords(totalCount);
     } catch (error) {
       console.error('Failed to fetch currencies:', error);
     } finally {
@@ -64,9 +67,10 @@ const CurrencyList = ({ onEdit, searchQuery = '', viewMode = 'table', refreshTri
     }
   };
 
-  
+  useEffect(() => {
+    fetchCurrencies();
+  }, [refreshTrigger]);
 
-  
   const filteredList = currencies.filter(item => {
     if (statusFilter === 'ALL STATUS') return true;
     const isMatch = statusFilter === 'ACTIVE' ? item.status === 'Active' : (item.status === 'Inactive' || item.status !== 'Active');
@@ -84,6 +88,10 @@ const CurrencyList = ({ onEdit, searchQuery = '', viewMode = 'table', refreshTri
       onTotalCountChange(calculatedTotalRecords);
     }
   }, [calculatedTotalRecords, onTotalCountChange]);
+
+  if (viewMode === 'card' && isLoading) {
+    return <MasterLoader type="card" />;
+  }
 
   const columns = [
     {
@@ -151,7 +159,7 @@ const CurrencyList = ({ onEdit, searchQuery = '', viewMode = 'table', refreshTri
   if (viewMode === 'card') {
     return (
     <>
-      <div className="grid" style={{ gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: '1.5rem' }}>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(320px, 1fr))', gap: '20px', padding: '16px' }}>
         {paginatedList.map(currency => (
           <div key={currency.id}>
             <MasterDataCard
@@ -159,6 +167,7 @@ const CurrencyList = ({ onEdit, searchQuery = '', viewMode = 'table', refreshTri
               code={currency.currency_code}
               status={currency.status}
               onEdit={() => onEdit && onEdit(currency)}
+              onDelete={() => handleDeleteClick(currency)}
               gridData={[
                 { label: 'Exchange Rate', value: currency.exchange_rate },
                 { label: 'Base Currency', value: currency.base_currency }

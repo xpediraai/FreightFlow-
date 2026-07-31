@@ -3,6 +3,7 @@ import ConfirmDeleteModal from '../../../../../../shared/components/ConfirmDelet
 import TableView from '../../../../../../shared/components/TableView';
 import Badge from '../../../../../../shared/components/Badge';
 import MasterDataCard from '../../../../../../shared/components/Master/MasterDataCard';
+import MasterLoader from '../../../../../../shared/components/Master/MasterLoader';
 import { Eye, Edit2, Trash2, MapPin } from 'lucide-react';
 import { foundationService } from '../../../../../masters/services/foundation.service';
 
@@ -39,24 +40,26 @@ const CityList = ({ onEdit, searchQuery = '', viewMode = 'table', refreshTrigger
   };
 
 
-  useEffect(() => {
-    fetchCities();
-  }, [refreshTrigger]);
   const fetchCities = async () => {
     setIsLoading(true);
     try {
       const data = await foundationService.getCities({ page: 1, limit: 10000 });
       let cityData = [];
-      if (data?.data?.data && Array.isArray(data.data.data)) {
+      if (data?.data?.rows && Array.isArray(data.data.rows)) {
+        cityData = data.data.rows;
+      } else if (data?.data?.data && Array.isArray(data.data.data)) {
         cityData = data.data.data;
       } else if (data?.data && Array.isArray(data.data)) {
         cityData = data.data;
       } else if (Array.isArray(data)) {
         cityData = data;
+      } else if (data?.rows && Array.isArray(data.rows)) {
+        cityData = data.rows;
       }
       setCities(cityData);
+      const totalCount = data?.data?.total || data?.data?.count || data?.total || cityData.length;
       if (data?.data?.totalPages) setTotalPages(data.data.totalPages);
-      if (data?.data?.total) setTotalRecords(data.data.total);
+      if (totalCount) setTotalRecords(totalCount);
     } catch (error) {
       console.error('Failed to fetch cities:', error);
     } finally {
@@ -64,26 +67,29 @@ const CityList = ({ onEdit, searchQuery = '', viewMode = 'table', refreshTrigger
     }
   };
 
-  
+  useEffect(() => {
+    fetchCities();
+  }, [refreshTrigger]);
 
-  
   const filteredList = cities.filter(item => {
     if (statusFilter === 'ALL STATUS') return true;
     const isMatch = statusFilter === 'ACTIVE' ? item.status === 'Active' : (item.status === 'Inactive' || item.status !== 'Active');
     return isMatch;
   });
 
-  
   const calculatedTotalRecords = filteredList.length;
   const calculatedTotalPages = Math.ceil(calculatedTotalRecords / limit) || 1;
   const paginatedList = filteredList.slice((page - 1) * limit, page * limit);
 
-  
   useEffect(() => {
     if (onTotalCountChange) {
       onTotalCountChange(calculatedTotalRecords);
     }
   }, [calculatedTotalRecords, onTotalCountChange]);
+
+  if (viewMode === 'card' && isLoading) {
+    return <MasterLoader type="card" />;
+  }
 
   const columns = [
     {
@@ -152,7 +158,7 @@ const CityList = ({ onEdit, searchQuery = '', viewMode = 'table', refreshTrigger
   if (viewMode === 'card') {
     return (
     <>
-      <div className="grid" style={{ gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: '1.5rem' }}>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(320px, 1fr))', gap: '20px', padding: '16px' }}>
         {paginatedList.map(city => (
           <div key={city.id}>
             <MasterDataCard
@@ -162,6 +168,7 @@ const CityList = ({ onEdit, searchQuery = '', viewMode = 'table', refreshTrigger
               locationText={`${city.State?.state_name || '-'} → ${city.Country?.country_name || '-'}`}
               locationIcon={MapPin}
               onEdit={() => onEdit && onEdit(city)}
+              onDelete={() => handleDeleteClick(city)}
               gridData={[
                 { label: 'Pincode', value: city.pincode },
                 { label: 'GST', value: city.gst }

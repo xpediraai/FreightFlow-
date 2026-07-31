@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import ConfirmDeleteModal from '../../../../../../shared/components/ConfirmDeleteModal';
 import TableView from '../../../../../../shared/components/TableView';
 import Badge from '../../../../../../shared/components/Badge';
+import MasterDataCard from '../../../../../../shared/components/Master/MasterDataCard';
 import { Edit2, Trash2 } from 'lucide-react';
 import { logisticsService } from '../../../../../masters/services/logistics.service';
 
@@ -150,7 +151,7 @@ const VehicleList = ({ onEdit, searchQuery = '', viewMode = 'table', refreshTrig
   if (viewMode === 'card') {
     return (
     <>
-      <div className="grid" style={{ gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: '1.5rem' }}>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(320px, 1fr))', gap: '20px', padding: '16px' }}>
         {paginatedList.map(vehicle => (
           <div key={vehicle.id}>
             <MasterDataCard
@@ -158,6 +159,7 @@ const VehicleList = ({ onEdit, searchQuery = '', viewMode = 'table', refreshTrig
               code={vehicle.code}
               status={vehicle.status}
               onEdit={() => onEdit && onEdit(vehicle)}
+              onDelete={() => handleDeleteClick(vehicle)}
               gridData={[
                 { label: 'Type', value: vehicle.vehicle_type || '-' },
                 { label: 'Capacity', value: vehicle.vehicle_capacity ? `${vehicle.vehicle_capacity} kg` : '-' },

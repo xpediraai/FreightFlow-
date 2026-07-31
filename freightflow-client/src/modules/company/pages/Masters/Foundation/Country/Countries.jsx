@@ -24,6 +24,10 @@ const Countries = () => {
     setSelectedCountry(country);
     setIsFormOpen(true);
     window.scrollTo({ top: 0, behavior: 'smooth' });
+    document.documentElement.scrollTo({ top: 0, behavior: 'smooth' });
+    document.body.scrollTo({ top: 0, behavior: 'smooth' });
+    const containers = document.querySelectorAll('.layout-content, .app-content, main, .page-content, #root > div');
+    containers.forEach(el => { try { el.scrollTo({ top: 0, behavior: 'smooth' }); } catch(err) {} });
   };
 
   const handleCancel = () => {
@@ -47,11 +51,16 @@ const Countries = () => {
       <div className="mt-lg">
         <div className="bg-surface border-light rounded-lg shadow-sm">
           <MasterToolbar entityName="Country" 
-          searchTerm={searchTerm}
-          onSearch={setSearchTerm}
+            searchTerm={searchTerm}
+            onSearch={setSearchTerm}
             totalRecords={totalRecords}
             statusFilter={statusFilter}
             onStatusChange={setStatusFilter}
+            viewMode={viewMode}
+            onViewModeChange={(mode) => {
+              setViewMode(mode);
+              localStorage.setItem('preferredViewMode', mode);
+            }}
           />
 
         <ExpandableForm isOpen={isFormOpen}>

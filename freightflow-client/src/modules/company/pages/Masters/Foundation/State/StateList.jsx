@@ -3,6 +3,7 @@ import ConfirmDeleteModal from '../../../../../../shared/components/ConfirmDelet
 import TableView from '../../../../../../shared/components/TableView';
 import Badge from '../../../../../../shared/components/Badge';
 import MasterDataCard from '../../../../../../shared/components/Master/MasterDataCard';
+import MasterLoader from '../../../../../../shared/components/Master/MasterLoader';
 import { Eye, Edit2, Trash2, MapPin } from 'lucide-react';
 import { foundationService } from '../../../../../masters/services/foundation.service';
 
@@ -39,24 +40,26 @@ const StateList = ({ onEdit, searchQuery = '', viewMode = 'table', refreshTrigge
   };
 
 
-  useEffect(() => {
-    fetchStates();
-  }, [refreshTrigger]);
   const fetchStates = async () => {
     setIsLoading(true);
     try {
       const data = await foundationService.getStates({ page: 1, limit: 10000 });
       let stateData = [];
-      if (data?.data?.data && Array.isArray(data.data.data)) {
+      if (data?.data?.rows && Array.isArray(data.data.rows)) {
+        stateData = data.data.rows;
+      } else if (data?.data?.data && Array.isArray(data.data.data)) {
         stateData = data.data.data;
       } else if (data?.data && Array.isArray(data.data)) {
         stateData = data.data;
       } else if (Array.isArray(data)) {
         stateData = data;
+      } else if (data?.rows && Array.isArray(data.rows)) {
+        stateData = data.rows;
       }
       setStates(stateData);
+      const totalCount = data?.data?.total || data?.data?.count || data?.total || stateData.length;
       if (data?.data?.totalPages) setTotalPages(data.data.totalPages);
-      if (data?.data?.total) setTotalRecords(data.data.total);
+      if (totalCount) setTotalRecords(totalCount);
     } catch (error) {
       console.error('Failed to fetch states:', error);
     } finally {
@@ -64,9 +67,10 @@ const StateList = ({ onEdit, searchQuery = '', viewMode = 'table', refreshTrigge
     }
   };
 
-  
+  useEffect(() => {
+    fetchStates();
+  }, [refreshTrigger]);
 
-  
   const filteredList = states.filter(item => {
     if (statusFilter === 'ALL STATUS') return true;
     const isMatch = statusFilter === 'ACTIVE' ? item.status === 'Active' : (item.status === 'Inactive' || item.status !== 'Active');
@@ -84,6 +88,10 @@ const StateList = ({ onEdit, searchQuery = '', viewMode = 'table', refreshTrigge
       onTotalCountChange(calculatedTotalRecords);
     }
   }, [calculatedTotalRecords, onTotalCountChange]);
+
+  if (viewMode === 'card' && isLoading) {
+    return <MasterLoader type="card" />;
+  }
 
   const columns = [
     {
@@ -142,7 +150,7 @@ const StateList = ({ onEdit, searchQuery = '', viewMode = 'table', refreshTrigge
   if (viewMode === 'card') {
     return (
     <>
-      <div className="grid" style={{ gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: '1.5rem' }}>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(320px, 1fr))', gap: '20px', padding: '16px' }}>
         {paginatedList.map(state => (
           <div key={state.id}>
             <MasterDataCard
@@ -152,6 +160,7 @@ const StateList = ({ onEdit, searchQuery = '', viewMode = 'table', refreshTrigge
               locationText={state.Country?.country_name || 'Worldwide'}
               locationIcon={MapPin}
               onEdit={() => onEdit && onEdit(state)}
+              onDelete={() => handleDeleteClick(state)}
               gridData={[
                 { label: 'GST State Code', value: state.gst_state_code }
               ]}

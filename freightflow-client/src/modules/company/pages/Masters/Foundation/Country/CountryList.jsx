@@ -3,6 +3,7 @@ import ConfirmDeleteModal from '../../../../../../shared/components/ConfirmDelet
 import TableView from '../../../../../../shared/components/TableView';
 import Badge from '../../../../../../shared/components/Badge';
 import MasterDataCard from '../../../../../../shared/components/Master/MasterDataCard';
+import MasterLoader from '../../../../../../shared/components/Master/MasterLoader';
 import { Eye, Edit2, Trash2 } from 'lucide-react';
 import { foundationService } from '../../../../../masters/services/foundation.service';
 
@@ -39,24 +40,26 @@ const CountryList = ({ onEdit, searchQuery = '', viewMode = 'table', refreshTrig
   };
 
 
-  useEffect(() => {
-    fetchCountries();
-  }, [refreshTrigger]);
   const fetchCountries = async () => {
     setIsLoading(true);
     try {
       const data = await foundationService.getCountries({ page: 1, limit: 10000 });
       let countryData = [];
-      if (data?.data?.data && Array.isArray(data.data.data)) {
+      if (data?.data?.rows && Array.isArray(data.data.rows)) {
+        countryData = data.data.rows;
+      } else if (data?.data?.data && Array.isArray(data.data.data)) {
         countryData = data.data.data;
       } else if (data?.data && Array.isArray(data.data)) {
         countryData = data.data;
       } else if (Array.isArray(data)) {
         countryData = data;
+      } else if (data?.rows && Array.isArray(data.rows)) {
+        countryData = data.rows;
       }
       setCountries(countryData);
+      const totalCount = data?.data?.total || data?.data?.count || data?.total || countryData.length;
       if (data?.data?.totalPages) setTotalPages(data.data.totalPages);
-      if (data?.data?.total) setTotalRecords(data.data.total);
+      if (totalCount) setTotalRecords(totalCount);
     } catch (error) {
       console.error('Failed to fetch countries:', error);
     } finally {
@@ -64,9 +67,10 @@ const CountryList = ({ onEdit, searchQuery = '', viewMode = 'table', refreshTrig
     }
   };
 
-  
+  useEffect(() => {
+    fetchCountries();
+  }, [refreshTrigger]);
 
-  
   const filteredList = countries.filter(item => {
     if (statusFilter === 'ALL STATUS') return true;
     const isMatch = statusFilter === 'ACTIVE' ? item.status === 'Active' : (item.status === 'Inactive' || item.status !== 'Active');
@@ -84,6 +88,10 @@ const CountryList = ({ onEdit, searchQuery = '', viewMode = 'table', refreshTrig
       onTotalCountChange(calculatedTotalRecords);
     }
   }, [calculatedTotalRecords, onTotalCountChange]);
+
+  if (viewMode === 'card' && isLoading) {
+    return <MasterLoader type="card" />;
+  }
 
   const columns = [
     {
@@ -137,7 +145,7 @@ const CountryList = ({ onEdit, searchQuery = '', viewMode = 'table', refreshTrig
   if (viewMode === 'card') {
     return (
     <>
-      <div className="grid" style={{ gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: '1.5rem' }}>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(320px, 1fr))', gap: '20px', padding: '16px' }}>
         {paginatedList.map(country => (
           <div key={country.id}>
             <MasterDataCard

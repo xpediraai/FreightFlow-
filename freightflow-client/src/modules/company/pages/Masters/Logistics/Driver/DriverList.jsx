@@ -2,6 +2,8 @@ import React, { useState, useEffect } from 'react';
 import ConfirmDeleteModal from '../../../../../../shared/components/ConfirmDeleteModal';
 import TableView from '../../../../../../shared/components/TableView';
 import Badge from '../../../../../../shared/components/Badge';
+import MasterDataCard from '../../../../../../shared/components/Master/MasterDataCard';
+import MasterLoader from '../../../../../../shared/components/Master/MasterLoader';
 import { Edit2, Trash2 } from 'lucide-react';
 import { logisticsService } from '../../../../../masters/services/logistics.service';
 
@@ -37,25 +39,26 @@ const DriverList = ({ onEdit, searchQuery = '', viewMode = 'table', refreshTrigg
     }
   };
 
-
-  useEffect(() => {
-    fetchDrivers();
-  }, [refreshTrigger]);
   const fetchDrivers = async () => {
     setIsLoading(true);
     try {
       const data = await logisticsService.getDrivers({ page: 1, limit: 10000 });
       let driverData = [];
-      if (data?.data?.data && Array.isArray(data.data.data)) {
+      if (data?.data?.rows && Array.isArray(data.data.rows)) {
+        driverData = data.data.rows;
+      } else if (data?.data?.data && Array.isArray(data.data.data)) {
         driverData = data.data.data;
       } else if (data?.data && Array.isArray(data.data)) {
         driverData = data.data;
       } else if (Array.isArray(data)) {
         driverData = data;
+      } else if (data?.rows && Array.isArray(data.rows)) {
+        driverData = data.rows;
       }
       setDrivers(driverData);
+      const totalCount = data?.data?.total || data?.data?.count || data?.total || driverData.length;
       if (data?.data?.totalPages) setTotalPages(data.data.totalPages);
-      if (data?.data?.total) setTotalRecords(data.data.total);
+      if (totalCount) setTotalRecords(totalCount);
     } catch (error) {
       console.error('Failed to fetch drivers:', error);
     } finally {
@@ -63,15 +66,15 @@ const DriverList = ({ onEdit, searchQuery = '', viewMode = 'table', refreshTrigg
     }
   };
 
-
-
+  useEffect(() => {
+    fetchDrivers();
+  }, [refreshTrigger]);
 
   const filteredList = drivers.filter(item => {
     if (statusFilter === 'ALL STATUS') return true;
     const isMatch = statusFilter === 'ACTIVE' ? item.status === 'Active' : (item.status === 'Inactive' || item.status !== 'Active');
     return isMatch;
   });
-
 
   const calculatedTotalRecords = filteredList.length;
   const calculatedTotalPages = Math.ceil(calculatedTotalRecords / limit) || 1;
@@ -82,6 +85,11 @@ const DriverList = ({ onEdit, searchQuery = '', viewMode = 'table', refreshTrigg
       onTotalCountChange(calculatedTotalRecords);
     }
   }, [calculatedTotalRecords, onTotalCountChange]);
+
+  if (viewMode === 'card' && isLoading) {
+    return <MasterLoader type="card" />;
+  }
+
   const columns = [
     {
       header: 'Driver Code',
@@ -139,7 +147,7 @@ const DriverList = ({ onEdit, searchQuery = '', viewMode = 'table', refreshTrigg
   if (viewMode === 'card') {
     return (
     <>
-      <div className="grid" style={{ gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: '1.5rem' }}>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(320px, 1fr))', gap: '20px', padding: '16px' }}>
         {paginatedList.map(driver => (
           <div key={driver.id}>
             <MasterDataCard
@@ -147,6 +155,7 @@ const DriverList = ({ onEdit, searchQuery = '', viewMode = 'table', refreshTrigg
               code={driver.driver_code}
               status={driver.status}
               onEdit={() => onEdit && onEdit(driver)}
+              onDelete={() => handleDeleteClick(driver)}
               gridData={[
                 { label: 'Mobile', value: driver.mobile },
                 { label: 'License', value: driver.license_number }

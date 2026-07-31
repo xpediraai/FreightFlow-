@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import ConfirmDeleteModal from '../../../../../../shared/components/ConfirmDeleteModal';
 import TableView from '../../../../../../shared/components/TableView';
 import Badge from '../../../../../../shared/components/Badge';
+import MasterDataCard from '../../../../../../shared/components/Master/MasterDataCard';
 import { Edit2, Trash2 } from 'lucide-react';
 import { organizationService } from '../../../../../masters/services/organization.service';
 
@@ -136,7 +137,7 @@ const DepartmentList = ({ onEdit, searchQuery = '', viewMode = 'table', refreshT
   if (viewMode === 'card') {
     return (
     <>
-      <div className="grid" style={{ gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: '1.5rem' }}>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(320px, 1fr))', gap: '20px', padding: '16px' }}>
         {paginatedList.map(dept => (
           <div key={dept.id}>
             <MasterDataCard
@@ -144,7 +145,7 @@ const DepartmentList = ({ onEdit, searchQuery = '', viewMode = 'table', refreshT
               code={dept.department_code}
               status={dept.status}
               onEdit={() => onEdit && onEdit(dept)}
-              
+              onDelete={() => handleDeleteClick(dept)}
             />
           </div>
         ))}

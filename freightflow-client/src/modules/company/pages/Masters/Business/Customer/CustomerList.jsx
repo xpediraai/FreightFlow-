@@ -3,6 +3,7 @@ import ConfirmDeleteModal from '../../../../../../shared/components/ConfirmDelet
 import TableView from '../../../../../../shared/components/TableView';
 import Badge from '../../../../../../shared/components/Badge';
 import MasterDataCard from '../../../../../../shared/components/Master/MasterDataCard';
+import MasterLoader from '../../../../../../shared/components/Master/MasterLoader';
 import { Edit2, Trash2, MapPin } from 'lucide-react';
 import { businessService } from '../../../../../masters/services/business.service';
 
@@ -38,25 +39,26 @@ const CustomerList = ({ onEdit, searchQuery = '', viewMode = 'table', refreshTri
     }
   };
 
-
-  useEffect(() => {
-    fetchCustomers();
-  }, [refreshTrigger]);
   const fetchCustomers = async () => {
     setIsLoading(true);
     try {
       const data = await businessService.getCustomers({ page: 1, limit: 10000 });
       let customerData = [];
-      if (data?.data?.data && Array.isArray(data.data.data)) {
+      if (data?.data?.rows && Array.isArray(data.data.rows)) {
+        customerData = data.data.rows;
+      } else if (data?.data?.data && Array.isArray(data.data.data)) {
         customerData = data.data.data;
       } else if (data?.data && Array.isArray(data.data)) {
         customerData = data.data;
       } else if (Array.isArray(data)) {
         customerData = data;
+      } else if (data?.rows && Array.isArray(data.rows)) {
+        customerData = data.rows;
       }
       setCustomers(customerData);
+      const totalCount = data?.data?.total || data?.data?.count || data?.total || customerData.length;
       if (data?.data?.totalPages) setTotalPages(data.data.totalPages);
-      if (data?.data?.total) setTotalRecords(data.data.total);
+      if (totalCount) setTotalRecords(totalCount);
     } catch (error) {
       console.error('Failed to fetch customers:', error);
     } finally {
@@ -64,8 +66,9 @@ const CustomerList = ({ onEdit, searchQuery = '', viewMode = 'table', refreshTri
     }
   };
 
-
-
+  useEffect(() => {
+    fetchCustomers();
+  }, [refreshTrigger]);
 
   const filteredList = customers.filter(item => {
     if (statusFilter === 'ALL STATUS') return true;
@@ -84,6 +87,10 @@ const CustomerList = ({ onEdit, searchQuery = '', viewMode = 'table', refreshTri
       onTotalCountChange(calculatedTotalRecords);
     }
   }, [calculatedTotalRecords, onTotalCountChange]);
+
+  if (viewMode === 'card' && isLoading) {
+    return <MasterLoader type="card" />;
+  }
   const columns = [
     {
       header: 'Code',
@@ -141,7 +148,7 @@ const CustomerList = ({ onEdit, searchQuery = '', viewMode = 'table', refreshTri
   if (viewMode === 'card') {
     return (
     <>
-      <div className="grid" style={{ gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: '1.5rem' }}>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(320px, 1fr))', gap: '20px', padding: '16px' }}>
         {paginatedList.map(c => (
           <div key={c.id}>
             <MasterDataCard
@@ -151,6 +158,7 @@ const CustomerList = ({ onEdit, searchQuery = '', viewMode = 'table', refreshTri
               locationText={`${c.city?.city_name || 'Global'} → ${c.country?.country_name || 'Worldwide'}`}
               locationIcon={MapPin}
               onEdit={() => onEdit && onEdit(c)}
+              onDelete={() => handleDeleteClick(c)}
               gridData={[
                 { label: 'Customer Type', value: c.customer_type },
                 { label: 'Category', value: c.customer_category },

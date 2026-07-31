@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Save, User, Layout, Sidebar as SidebarIcon, Table, CreditCard, Grip, AppWindow } from 'lucide-react';
+import { Save, User, Layout, Sidebar as SidebarIcon, Table, CreditCard, Grip, AppWindow, LayoutGrid } from 'lucide-react';
 import Page from '../../../../shared/components/Page';
 import PageHeader from '../../../../shared/components/PageHeader';
 import Button from '../../../../shared/components/Button';
@@ -132,25 +132,29 @@ const Settings = () => {
                 </div>
                 <div className="flex bg-background border-light rounded-md p-xs gap-xs">
                   <button
+                    type="button"
                     className={`btn flex align-center gap-xs ${viewMode === 'table' ? 'bg-primary text-white shadow-sm' : 'bg-transparent text-secondary hover:bg-surface'} border-none transition-all duration-200`}
                     style={{ padding: '0.5rem 1rem' }}
                     onClick={() => {
                       setViewMode('table');
                       localStorage.setItem('preferredViewMode', 'table');
+                      localStorage.setItem('preferredJobViewMode', 'table');
                     }}
                   >
                     <Table size={16} /> Table
                   </button>
-                  {/* <button 
-                    className={`btn flex align-center gap-xs ${viewMode === 'card' ? 'bg-primary text-white shadow-sm' : 'bg-transparent text-secondary hover:bg-surface'} border-none transition-all duration-200`} 
+                  <button 
+                    type="button"
+                    className={`btn flex align-center gap-xs ${viewMode === 'card' || viewMode === 'grid' ? 'bg-primary text-white shadow-sm' : 'bg-transparent text-secondary hover:bg-surface'} border-none transition-all duration-200`} 
                     style={{ padding: '0.5rem 1rem' }}
                     onClick={() => {
                       setViewMode('card');
                       localStorage.setItem('preferredViewMode', 'card');
+                      localStorage.setItem('preferredJobViewMode', 'grid');
                     }}
                   >
-                    <CreditCard size={16} /> Card
-                  </button> */}
+                    <LayoutGrid size={16} /> Grid Cards
+                  </button>
                 </div>
               </div>
             </div>

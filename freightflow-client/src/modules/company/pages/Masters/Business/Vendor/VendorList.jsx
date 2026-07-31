@@ -3,6 +3,7 @@ import ConfirmDeleteModal from '../../../../../../shared/components/ConfirmDelet
 import TableView from '../../../../../../shared/components/TableView';
 import Badge from '../../../../../../shared/components/Badge';
 import MasterDataCard from '../../../../../../shared/components/Master/MasterDataCard';
+import MasterLoader from '../../../../../../shared/components/Master/MasterLoader';
 import { Edit2, Trash2, MapPin } from 'lucide-react';
 import { businessService } from '../../../../../masters/services/business.service';
 
@@ -38,28 +39,29 @@ const VendorList = ({ onEdit, searchQuery = '', viewMode = 'table', refreshTrigg
     }
   };
 
-
-  useEffect(() => {
-    fetchVendors();
-  }, [refreshTrigger]);
-
-
-
   const fetchVendors = async () => {
     setIsLoading(true);
     try {
-      const res = await businessService.getVendors();
-      
+      const res = await businessService.getVendors({ page: 1, limit: 10000 });
       let data = [];
-      if (res?.data?.data?.data && Array.isArray(res.data.data.data)) {
+      if (res?.data?.rows && Array.isArray(res.data.rows)) {
+        data = res.data.rows;
+      } else if (res?.data?.data?.data && Array.isArray(res.data.data.data)) {
         data = res.data.data.data;
       } else if (res?.data?.data && Array.isArray(res.data.data)) {
         data = res.data.data;
       } else if (res?.data && Array.isArray(res.data)) {
         data = res.data;
+      } else if (Array.isArray(res)) {
+        data = res;
+      } else if (res?.rows && Array.isArray(res.rows)) {
+        data = res.rows;
       }
       
       setVendors(data);
+      const totalCount = res?.data?.total || res?.data?.count || res?.total || data.length;
+      if (res?.data?.totalPages) setTotalPages(res.data.totalPages);
+      if (totalCount) setTotalRecords(totalCount);
     } catch (error) {
       console.error('Failed to fetch vendors:', error);
     } finally {
@@ -67,16 +69,16 @@ const VendorList = ({ onEdit, searchQuery = '', viewMode = 'table', refreshTrigg
     }
   };
 
-  
+  useEffect(() => {
+    fetchVendors();
+  }, [refreshTrigger]);
 
-  
   const filteredList = vendors.filter(item => {
     if (statusFilter === 'ALL STATUS') return true;
     const isMatch = statusFilter === 'ACTIVE' ? item.status === 'Active' : (item.status === 'Inactive' || item.status !== 'Active');
     return isMatch;
   });
 
-  
   const calculatedTotalRecords = filteredList.length;
   const calculatedTotalPages = Math.ceil(calculatedTotalRecords / limit) || 1;
   const paginatedList = filteredList.slice((page - 1) * limit, page * limit);
@@ -86,6 +88,10 @@ const VendorList = ({ onEdit, searchQuery = '', viewMode = 'table', refreshTrigg
       onTotalCountChange(calculatedTotalRecords);
     }
   }, [calculatedTotalRecords, onTotalCountChange]);
+
+  if (viewMode === 'card' && isLoading) {
+    return <MasterLoader type="card" />;
+  }
 
   const columns = [
     {
@@ -155,7 +161,7 @@ const VendorList = ({ onEdit, searchQuery = '', viewMode = 'table', refreshTrigg
   if (viewMode === 'card') {
     return (
     <>
-      <div className="grid" style={{ gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: '1.5rem' }}>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(320px, 1fr))', gap: '20px', padding: '16px' }}>
         {paginatedList.map(v => (
           <div key={v.id}>
             <MasterDataCard
@@ -165,6 +171,7 @@ const VendorList = ({ onEdit, searchQuery = '', viewMode = 'table', refreshTrigg
               locationText={`${v.city?.city_name || 'Global'} → ${v.country?.country_name || 'Worldwide'}`}
               locationIcon={MapPin}
               onEdit={() => onEdit && onEdit(v)}
+              onDelete={() => handleDeleteClick(v)}
               gridData={[
                 { label: 'Vendor Type', value: v.vendor_type },
                 { label: 'Mobile', value: v.mobile },

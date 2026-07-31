@@ -2,6 +2,8 @@ import React, { useState, useEffect } from 'react';
 import ConfirmDeleteModal from '../../../../../../shared/components/ConfirmDeleteModal';
 import TableView from '../../../../../../shared/components/TableView';
 import Badge from '../../../../../../shared/components/Badge';
+import MasterDataCard from '../../../../../../shared/components/Master/MasterDataCard';
+import MasterLoader from '../../../../../../shared/components/Master/MasterLoader';
 import { Edit2, Trash2 } from 'lucide-react';
 import { logisticsService } from '../../../../../masters/services/logistics.service';
 
@@ -37,25 +39,26 @@ const PortList = ({ onEdit, searchQuery = '', viewMode = 'table', refreshTrigger
     }
   };
 
-
-  useEffect(() => {
-    fetchPorts();
-  }, [refreshTrigger]);
   const fetchPorts = async () => {
     setIsLoading(true);
     try {
       const data = await logisticsService.getPorts({ page: 1, limit: 10000 });
       let portData = [];
-      if (data?.data?.data && Array.isArray(data.data.data)) {
+      if (data?.data?.rows && Array.isArray(data.data.rows)) {
+        portData = data.data.rows;
+      } else if (data?.data?.data && Array.isArray(data.data.data)) {
         portData = data.data.data;
       } else if (data?.data && Array.isArray(data.data)) {
         portData = data.data;
       } else if (Array.isArray(data)) {
         portData = data;
+      } else if (data?.rows && Array.isArray(data.rows)) {
+        portData = data.rows;
       }
       setPorts(portData);
+      const totalCount = data?.data?.total || data?.data?.count || data?.total || portData.length;
       if (data?.data?.totalPages) setTotalPages(data.data.totalPages);
-      if (data?.data?.total) setTotalRecords(data.data.total);
+      if (totalCount) setTotalRecords(totalCount);
     } catch (error) {
       console.error('Failed to fetch ports:', error);
     } finally {
@@ -63,26 +66,29 @@ const PortList = ({ onEdit, searchQuery = '', viewMode = 'table', refreshTrigger
     }
   };
 
-  
+  useEffect(() => {
+    fetchPorts();
+  }, [refreshTrigger]);
 
-  
   const filteredList = ports.filter(item => {
     if (statusFilter === 'ALL STATUS') return true;
     const isMatch = statusFilter === 'ACTIVE' ? item.status === 'Active' : (item.status === 'Inactive' || item.status !== 'Active');
     return isMatch;
   });
 
-  
   const calculatedTotalRecords = filteredList.length;
   const calculatedTotalPages = Math.ceil(calculatedTotalRecords / limit) || 1;
   const paginatedList = filteredList.slice((page - 1) * limit, page * limit);
 
-  
   useEffect(() => {
     if (onTotalCountChange) {
       onTotalCountChange(calculatedTotalRecords);
     }
   }, [calculatedTotalRecords, onTotalCountChange]);
+
+  if (viewMode === 'card' && isLoading) {
+    return <MasterLoader type="card" />;
+  }
 
   const columns = [
     {
@@ -136,7 +142,7 @@ const PortList = ({ onEdit, searchQuery = '', viewMode = 'table', refreshTrigger
   if (viewMode === 'card') {
     return (
     <>
-      <div className="grid" style={{ gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: '1.5rem' }}>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(320px, 1fr))', gap: '20px', padding: '16px' }}>
         {paginatedList.map(port => (
           <div key={port.id}>
             <MasterDataCard
@@ -144,6 +150,7 @@ const PortList = ({ onEdit, searchQuery = '', viewMode = 'table', refreshTrigger
               code={port.port_code}
               status={port.status}
               onEdit={() => onEdit && onEdit(port)}
+              onDelete={() => handleDeleteClick(port)}
               gridData={[
                 { label: 'Time Zone', value: port.time_zone || '-' }
               ]}

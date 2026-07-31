@@ -4,6 +4,7 @@ import { Eye, Edit2, Trash2 } from 'lucide-react';
 import TableView from '../../../../shared/components/TableView/TableView';
 import Button from '../../../../shared/components/Button';
 import Badge from '../../../../shared/components/Badge';
+import MasterDataCard from '../../../../shared/components/Master/MasterDataCard';
 import { adminService } from '../../services/admin.service';
 
 const CompanyList = ({ onEdit, searchQuery = '', viewMode = 'table', refreshTrigger = 0, onTotalCountChange, statusFilter = 'ALL STATUS' }) => {

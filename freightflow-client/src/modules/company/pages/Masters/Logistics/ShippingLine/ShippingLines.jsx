@@ -47,11 +47,16 @@ const ShippingLines = () => {
       <div className="mt-lg">
         <div className="bg-surface border-light rounded-lg shadow-sm">
           <MasterToolbar entityName="Shipping Lines" 
-          searchTerm={searchTerm}
-          onSearch={setSearchTerm}
+            searchTerm={searchTerm}
+            onSearch={setSearchTerm}
             totalRecords={totalRecords}
             statusFilter={statusFilter}
             onStatusChange={setStatusFilter}
+            viewMode={viewMode}
+            onViewModeChange={(mode) => {
+              setViewMode(mode);
+              localStorage.setItem('preferredViewMode', mode);
+            }}
           />
 
         <ExpandableForm isOpen={isFormOpen}>

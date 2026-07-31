@@ -47,11 +47,16 @@ const Customers = () => {
       <div className="mt-lg">
         <div className="bg-surface border-light rounded-lg shadow-sm">
           <MasterToolbar entityName="Customer" 
-          searchTerm={searchTerm}
-          onSearch={setSearchTerm}
+            searchTerm={searchTerm}
+            onSearch={setSearchTerm}
             totalRecords={totalRecords}
             statusFilter={statusFilter}
             onStatusChange={setStatusFilter}
+            viewMode={viewMode}
+            onViewModeChange={(mode) => {
+              setViewMode(mode);
+              localStorage.setItem('preferredViewMode', mode);
+            }}
           />
 
         <ExpandableForm isOpen={isFormOpen}>

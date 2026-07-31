@@ -24,6 +24,10 @@ const States = () => {
     setSelectedState(stateData);
     setIsFormOpen(true);
     window.scrollTo({ top: 0, behavior: 'smooth' });
+    document.documentElement.scrollTo({ top: 0, behavior: 'smooth' });
+    document.body.scrollTo({ top: 0, behavior: 'smooth' });
+    const containers = document.querySelectorAll('.layout-content, .app-content, main, .page-content, #root > div');
+    containers.forEach(el => { try { el.scrollTo({ top: 0, behavior: 'smooth' }); } catch(err) {} });
   };
 
   const handleCancel = () => {

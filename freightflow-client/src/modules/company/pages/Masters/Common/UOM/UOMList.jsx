@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import ConfirmDeleteModal from '../../../../../../shared/components/ConfirmDeleteModal';
 import TableView from '../../../../../../shared/components/TableView';
 import Badge from '../../../../../../shared/components/Badge';
+import MasterDataCard from '../../../../../../shared/components/Master/MasterDataCard';
 import { Edit2, Trash2 } from 'lucide-react';
 import { commonService } from '../../../../../masters/services/common.service';
 
@@ -141,15 +142,15 @@ const UOMList = ({ onEdit, searchQuery = '', viewMode = 'table', refreshTrigger 
   if (viewMode === 'card') {
     return (
     <>
-      <div className="grid" style={{ gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: '1.5rem' }}>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(320px, 1fr))', gap: '20px', padding: '16px' }}>
         {paginatedList.map(uom => (
           <div key={uom.id}>
             <MasterDataCard
-              title={`uom.uom_name} (${uom.symbol})`}
+              title={`${uom.uom_name || uom.uom_code} (${uom.symbol || ''})`}
               code={uom.uom_code}
               status={uom.status}
               onEdit={() => onEdit && onEdit(uom)}
-              
+              onDelete={() => handleDeleteClick(uom)}
             />
           </div>
         ))}
