@@ -3,11 +3,13 @@ import Page from '../../../../../../shared/components/Page';
 import PageHeader from '../../../../../../shared/components/PageHeader';
 import MasterToolbar from '../../../../../../shared/components/Master/MasterToolbar';
 import ExpandableForm from '../../../../../../shared/components/Master/ExpandableForm';
+import BulkImportModal from '../../../../../../shared/components/BulkImportModal/BulkImportModal';
 import ShippingLineList from './ShippingLineList';
 import ShippingLineForm from './ShippingLineForm';
 
 const ShippingLines = () => {
   const [isFormOpen, setIsFormOpen] = useState(false);
+  const [isBulkImportOpen, setIsBulkImportOpen] = useState(false);
   const [selectedLine, setSelectedLine] = useState(null);
   const [searchTerm, setSearchTerm] = useState('');
   const [totalRecords, setTotalRecords] = useState(0);
@@ -41,12 +43,13 @@ const ShippingLines = () => {
     <Page>
       <PageHeader 
         title="Shipping Line Master"
-      
-        primaryAction={{ label: '+ Shipping Line', onClick: handleCreateNew }}/>
+        primaryAction={{ label: '+ Shipping Line', onClick: handleCreateNew }}
+      />
       
       <div className="mt-lg">
         <div className="bg-surface border-light rounded-lg shadow-sm">
-          <MasterToolbar entityName="Shipping Lines" 
+          <MasterToolbar 
+            entityName="Shipping Lines" 
             searchTerm={searchTerm}
             onSearch={setSearchTerm}
             totalRecords={totalRecords}
@@ -57,26 +60,34 @@ const ShippingLines = () => {
               setViewMode(mode);
               localStorage.setItem('preferredViewMode', mode);
             }}
+            onBulkImport={() => setIsBulkImportOpen(true)}
           />
 
-        <ExpandableForm isOpen={isFormOpen}>
-          <ShippingLineForm 
-            onCancel={handleCancel} 
-            onSuccess={handleSuccess} 
-            initialData={selectedLine} 
-          />
-        </ExpandableForm>
+          <ExpandableForm isOpen={isFormOpen}>
+            <ShippingLineForm 
+              onCancel={handleCancel} 
+              onSuccess={handleSuccess} 
+              initialData={selectedLine} 
+            />
+          </ExpandableForm>
 
-        <ShippingLineList 
-          onEdit={handleEdit} 
-          searchQuery={searchTerm}
-          viewMode={viewMode}
-          refreshTrigger={refreshTrigger}
+          <ShippingLineList 
+            onEdit={handleEdit} 
+            searchQuery={searchTerm}
+            viewMode={viewMode}
+            refreshTrigger={refreshTrigger}
             onTotalCountChange={setTotalRecords}
             statusFilter={statusFilter}
           />
         </div>
       </div>
+
+      <BulkImportModal 
+        isOpen={isBulkImportOpen}
+        onClose={() => setIsBulkImportOpen(false)}
+        entityType="shippingLine"
+        onImportSuccess={() => setRefreshTrigger(prev => prev + 1)}
+      />
     </Page>
   );
 };

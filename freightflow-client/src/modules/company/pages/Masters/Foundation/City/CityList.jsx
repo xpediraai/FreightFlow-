@@ -107,8 +107,8 @@ const CityList = ({ onEdit, searchQuery = '', viewMode = 'table', refreshTrigger
       key: 'state_country',
       render: (row) => (
         <div>
-          <div>{row.State?.state_name || '-'}</div>
-          <div className="text-secondary-light text-xs">{row.Country?.country_name || '-'}</div>
+          <div>{row.state?.state_name || row.State?.state_name || '-'}</div>
+          <div className="text-secondary-light text-xs">{row.country?.country_name || row.Country?.country_name || '-'}</div>
         </div>
       )
     },
@@ -165,7 +165,7 @@ const CityList = ({ onEdit, searchQuery = '', viewMode = 'table', refreshTrigger
               title={city.city_name}
               code={city.city_code}
               status={city.status}
-              locationText={`${city.State?.state_name || '-'} → ${city.Country?.country_name || '-'}`}
+              locationText={`${city.state?.state_name || city.State?.state_name || '-'} → ${city.country?.country_name || city.Country?.country_name || '-'}`}
               locationIcon={MapPin}
               onEdit={() => onEdit && onEdit(city)}
               onDelete={() => handleDeleteClick(city)}

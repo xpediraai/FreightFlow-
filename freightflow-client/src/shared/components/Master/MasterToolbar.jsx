@@ -1,5 +1,5 @@
 import React from 'react';
-import { Search, LayoutGrid, List } from 'lucide-react';
+import { Search, LayoutGrid, List, Upload } from 'lucide-react';
 
 const MasterToolbar = ({ 
   onSearch, 
@@ -9,7 +9,8 @@ const MasterToolbar = ({
   statusFilter = 'ALL STATUS',
   onStatusChange,
   viewMode = 'table',
-  onViewModeChange
+  onViewModeChange,
+  onBulkImport
 }) => {
   return (
     <div className="master-toolbar flex justify-between align-center p-md" style={{ borderBottom: '1px solid var(--border-light)', flexWrap: 'wrap', gap: '1rem' }}>
@@ -81,6 +82,28 @@ const MasterToolbar = ({
       </div>
       
       <div className="toolbar-right flex align-center gap-sm" style={{ flexWrap: 'wrap', flex: '1 1 auto', justifyContent: 'flex-end' }}>
+        {onBulkImport && (
+          <button
+            type="button"
+            onClick={onBulkImport}
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: '6px',
+              padding: '6px 12px',
+              borderRadius: '6px',
+              fontSize: '13px',
+              fontWeight: '600',
+              border: '1px solid #cbd5e1',
+              backgroundColor: '#ffffff',
+              color: '#334155',
+              cursor: 'pointer',
+              transition: 'all 0.15s ease'
+            }}
+          >
+            <Upload size={14} /> Bulk Import
+          </button>
+        )}
         {onStatusChange && (
           <select 
             value={statusFilter}

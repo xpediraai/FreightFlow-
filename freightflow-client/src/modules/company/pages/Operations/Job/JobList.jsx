@@ -426,7 +426,7 @@ const JobList = ({
                   style={{ 
                     display: 'flex', 
                     justify: 'space-between', 
-                    alignItems: 'center', 
+                    alignItems: 'center',    
                     paddingTop: '14px', 
                     borderTop: '1px solid #f3f4f6' 
                   }}

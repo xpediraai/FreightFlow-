@@ -107,7 +107,7 @@ const StateList = ({ onEdit, searchQuery = '', viewMode = 'table', refreshTrigge
     {
       header: 'Country',
       key: 'country',
-      render: (row) => row.Country?.country_name || '-'
+      render: (row) => row.country?.country_name || row.Country?.country_name || '-'
     },
     {
       header: 'GST State Code',
@@ -157,7 +157,7 @@ const StateList = ({ onEdit, searchQuery = '', viewMode = 'table', refreshTrigge
               title={state.state_name}
               code={state.state_code}
               status={state.status}
-              locationText={state.Country?.country_name || 'Worldwide'}
+              locationText={state.country?.country_name || state.Country?.country_name || 'Worldwide'}
               locationIcon={MapPin}
               onEdit={() => onEdit && onEdit(state)}
               onDelete={() => handleDeleteClick(state)}
