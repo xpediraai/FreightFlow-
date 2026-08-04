@@ -3,11 +3,13 @@ import Page from '../../../../../../shared/components/Page';
 import PageHeader from '../../../../../../shared/components/PageHeader';
 import MasterToolbar from '../../../../../../shared/components/Master/MasterToolbar';
 import ExpandableForm from '../../../../../../shared/components/Master/ExpandableForm';
+import BulkImportModal from '../../../../../../shared/components/BulkImportModal/BulkImportModal';
 import VendorList from './VendorList';
 import VendorForm from './VendorForm';
 
 const Vendors = () => {
   const [isFormOpen, setIsFormOpen] = useState(false);
+  const [isBulkImportOpen, setIsBulkImportOpen] = useState(false);
   const [selectedVendor, setSelectedVendor] = useState(null);
   const [searchTerm, setSearchTerm] = useState('');
   const [totalRecords, setTotalRecords] = useState(0);
@@ -39,39 +41,53 @@ const Vendors = () => {
 
   return (
     <Page>
-      <PageHeader 
+      <PageHeader
         title="Vendor Master"
-      
-        primaryAction={{ label: '+ Vendor', onClick: handleCreateNew }}/>
-      
+        primaryAction={{ label: '+ Vendor', onClick: handleCreateNew }}
+      />
+
       <div className="mt-lg">
         <div className="bg-surface border-light rounded-lg shadow-sm">
-          <MasterToolbar entityName="Vendor" 
-          searchTerm={searchTerm}
-          onSearch={setSearchTerm}
+          <MasterToolbar
+            entityName="Vendor"
+            searchTerm={searchTerm}
+            onSearch={setSearchTerm}
             totalRecords={totalRecords}
             statusFilter={statusFilter}
             onStatusChange={setStatusFilter}
+            viewMode={viewMode}
+            onViewModeChange={(mode) => {
+              setViewMode(mode);
+              localStorage.setItem('preferredViewMode', mode);
+            }}
+            onBulkImport={() => setIsBulkImportOpen(true)}
           />
 
-        <ExpandableForm isOpen={isFormOpen}>
-          <VendorForm 
-            onCancel={handleCancel} 
-            onSuccess={handleSuccess} 
-            initialData={selectedVendor} 
-          />
-        </ExpandableForm>
+          <ExpandableForm isOpen={isFormOpen}>
+            <VendorForm
+              onCancel={handleCancel}
+              onSuccess={handleSuccess}
+              initialData={selectedVendor}
+            />
+          </ExpandableForm>
 
-        <VendorList 
-          onEdit={handleEdit} 
-          searchQuery={searchTerm}
-          viewMode={viewMode}
-          refreshTrigger={refreshTrigger}
+          <VendorList
+            onEdit={handleEdit}
+            searchQuery={searchTerm}
+            viewMode={viewMode}
+            refreshTrigger={refreshTrigger}
             onTotalCountChange={setTotalRecords}
             statusFilter={statusFilter}
           />
         </div>
       </div>
+
+      <BulkImportModal
+        isOpen={isBulkImportOpen}
+        onClose={() => setIsBulkImportOpen(false)}
+        entityType="vendor"
+        onImportSuccess={() => setRefreshTrigger(prev => prev + 1)}
+      />
     </Page>
   );
 };

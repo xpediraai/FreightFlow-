@@ -3,11 +3,13 @@ import Page from '../../../../../../shared/components/Page';
 import PageHeader from '../../../../../../shared/components/PageHeader';
 import MasterToolbar from '../../../../../../shared/components/Master/MasterToolbar';
 import ExpandableForm from '../../../../../../shared/components/Master/ExpandableForm';
+import BulkImportModal from '../../../../../../shared/components/BulkImportModal/BulkImportModal';
 import ChargeList from './ChargeList';
 import ChargeForm from './ChargeForm';
 
 const Charges = () => {
   const [isFormOpen, setIsFormOpen] = useState(false);
+  const [isBulkImportOpen, setIsBulkImportOpen] = useState(false);
   const [selectedCharge, setSelectedCharge] = useState(null);
   const [searchTerm, setSearchTerm] = useState('');
   const [totalRecords, setTotalRecords] = useState(0);
@@ -37,41 +39,54 @@ const Charges = () => {
     setRefreshTrigger(prev => prev + 1);
   };
 
+  const handleBulkImportSuccess = () => {
+    setRefreshTrigger(prev => prev + 1);
+  };
+
   return (
     <Page>
       <PageHeader 
         title="Charge Master"
-      
-        primaryAction={{ label: '+ Charge', onClick: handleCreateNew }}/>
+        primaryAction={{ label: '+ Charge', onClick: handleCreateNew }}
+      />
       
       <div className="mt-lg">
         <div className="bg-surface border-light rounded-lg shadow-sm">
-          <MasterToolbar entityName="Charge" 
-          searchTerm={searchTerm}
-          onSearch={setSearchTerm}
+          <MasterToolbar 
+            entityName="Charge" 
+            searchTerm={searchTerm}
+            onSearch={setSearchTerm}
             totalRecords={totalRecords}
             statusFilter={statusFilter}
             onStatusChange={setStatusFilter}
+            onBulkImport={() => setIsBulkImportOpen(true)}
           />
 
-        <ExpandableForm isOpen={isFormOpen}>
-          <ChargeForm 
-            onCancel={handleCancel} 
-            onSuccess={handleSuccess} 
-            initialData={selectedCharge} 
-          />
-        </ExpandableForm>
+          <ExpandableForm isOpen={isFormOpen}>
+            <ChargeForm 
+              onCancel={handleCancel} 
+              onSuccess={handleSuccess} 
+              initialData={selectedCharge} 
+            />
+          </ExpandableForm>
 
-        <ChargeList 
-          onEdit={handleEdit} 
-          searchQuery={searchTerm}
-          viewMode={viewMode}
-          refreshTrigger={refreshTrigger}
+          <ChargeList 
+            onEdit={handleEdit} 
+            searchQuery={searchTerm}
+            viewMode={viewMode}
+            refreshTrigger={refreshTrigger}
             onTotalCountChange={setTotalRecords}
             statusFilter={statusFilter}
           />
         </div>
       </div>
+
+      <BulkImportModal 
+        isOpen={isBulkImportOpen}
+        onClose={() => setIsBulkImportOpen(false)}
+        entityType="charge"
+        onImportSuccess={handleBulkImportSuccess}
+      />
     </Page>
   );
 };
