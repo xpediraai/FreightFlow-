@@ -26,8 +26,7 @@ const incotermRoutes = require('./modules/Masters/Common/IncotermMasters/incoter
 const chargeRoutes = require('./modules/Masters/Common/ChargeMasters/charge.routes');
 const paymentTermRoutes = require('./modules/Masters/Foundation/PaymentTermMasters/paymentTerm.routes');
 const bulkImportRoutes = require('./modules/Masters/bulkImport.routes');
-const shipmentRoutes = require('./modules/Operations/Shipment/shipment.routes');
-const jobRoutes = require('./modules/Operations/Job/job.routes');
+
 
 // Mount routes
 router.use('/auth', authRoutes);
@@ -55,7 +54,5 @@ router.use('/incoterm', incotermRoutes);
 router.use('/charge', chargeRoutes);
 router.use('/payment-term', paymentTermRoutes);
 router.use('/masters/bulk-import', bulkImportRoutes);
-router.use('/shipment', shipmentRoutes);
-router.use('/job', jobRoutes);
 
 module.exports = router;
