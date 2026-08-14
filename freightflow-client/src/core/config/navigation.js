@@ -1,7 +1,7 @@
 import { 
   LayoutDashboard, Users, Building2, Truck, Package, Settings, Circle, 
   Globe, Box, Briefcase, MapPin, Grid, Map, CreditCard, Ruler, PackageOpen, FileText, Plane, Anchor, Ship, 
-  Warehouse, Car, Award, Store, ShoppingBag, Receipt, DollarSign
+  Warehouse, Car, Award, Store, ShoppingBag, Receipt, DollarSign, Radar
 } from 'lucide-react';
 
 export const getNavItems = (role) => {
@@ -16,6 +16,7 @@ export const getNavItems = (role) => {
   
   return [
     { name: 'Dashboard', path: '/company/dashboard', icon: LayoutDashboard, color: '#1976D2' },
+    { name: 'Shipment Tracking', path: '/company/tracking', icon: Radar, color: '#00BCD4' },
     { 
       name: 'Masters', 
       icon: Package,

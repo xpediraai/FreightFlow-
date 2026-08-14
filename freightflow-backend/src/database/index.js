@@ -51,12 +51,29 @@ db.Incoterm = require("../modules/Masters/Common/IncotermMasters/incoterm.model"
 db.Charge = require("../modules/Masters/Common/ChargeMasters/charge.model");
 db.PaymentTerm = require("../modules/Masters/Foundation/PaymentTermMasters/paymentTerm.model");
 
+// Operations / Tracking Models
+const trackingModels = require("../modules/Operations/Tracking/tracking.model");
+db.ShipmentTracking = trackingModels.ShipmentTracking;
+db.ShipmentTrackingContainer = trackingModels.ShipmentTrackingContainer;
+db.ShipmentTrackingHistory = trackingModels.ShipmentTrackingHistory;
+db.ShipmentTrackingSourceLog = trackingModels.ShipmentTrackingSourceLog;
+
 // Define Associations
 db.Users.hasMany(db.RefreshTokens, { foreignKey: "user_id" });
 db.RefreshTokens.belongsTo(db.Users, { foreignKey: "user_id" });
 
 db.Users.belongsToMany(db.Company, { through: db.UserCompanies, foreignKey: "user_id" });
 db.Company.belongsToMany(db.Users, { through: db.UserCompanies, foreignKey: "company_id" });
+
+// Tracking Associations
+db.ShipmentTracking.belongsTo(db.Company, { foreignKey: "company_id", as: "company" });
+db.ShipmentTracking.belongsTo(db.ShippingLine, { foreignKey: "shipping_line_id", as: "shipping_line" });
+db.ShipmentTracking.hasMany(db.ShipmentTrackingContainer, { foreignKey: "tracking_id", as: "containers" });
+db.ShipmentTrackingContainer.belongsTo(db.ShipmentTracking, { foreignKey: "tracking_id" });
+db.ShipmentTracking.hasMany(db.ShipmentTrackingHistory, { foreignKey: "tracking_id", as: "history" });
+db.ShipmentTrackingHistory.belongsTo(db.ShipmentTracking, { foreignKey: "tracking_id" });
+db.ShipmentTracking.hasMany(db.ShipmentTrackingSourceLog, { foreignKey: "tracking_id", as: "source_logs" });
+db.ShipmentTrackingSourceLog.belongsTo(db.ShipmentTracking, { foreignKey: "tracking_id" });
 
 // Master Associations
 db.State.belongsTo(db.Country, { foreignKey: 'country_id', as: 'country' });
