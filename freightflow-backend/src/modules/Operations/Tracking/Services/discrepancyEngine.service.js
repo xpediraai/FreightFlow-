@@ -1,11 +1,8 @@
 /**
  * @file discrepancyEngine.service.js
- * @description Comparison and Discrepancy Detection Engine across all tracking sources.
+ * @description Comparison and Discrepancy Detection Engine with simple, clean logs.
  */
 
-/**
- * Calculates time difference in hours between two date strings
- */
 const getHoursDifference = (date1, date2) => {
     if (!date1 || !date2) return 0;
     const d1 = new Date(date1).getTime();
@@ -13,15 +10,6 @@ const getHoursDifference = (date1, date2) => {
     return Math.abs(d1 - d2) / (1000 * 60 * 60);
 };
 
-/**
- * Evaluates multi-source payloads, detects variances, and outputs structured discrepancy records.
- * 
- * @param {object} carrierData - Result from Shipping Line
- * @param {object} adaniData - Result from Adani Mundra Port
- * @param {object} dpwData - Result from DP World MICT
- * @param {object} aisData - Result from MarineTraffic AIS
- * @returns {object} Discrepancy analysis summary
- */
 const analyzeDiscrepancies = (carrierData, adaniData, dpwData, aisData) => {
     const discrepancies = [];
 
@@ -46,26 +34,28 @@ const analyzeDiscrepancies = (carrierData, adaniData, dpwData, aisData) => {
 
         if (carrierTime && portTime) {
             const diffHours = getHoursDifference(carrierEta, adaniEta || dpwEta);
+
             if (diffHours >= 8) {
+                const severity = diffHours > 24 ? "HIGH" : "MEDIUM";
                 discrepancies.push({
                     id: "DISC_ETA_VARIANCE",
                     field: "eta",
-                    severity: diffHours > 24 ? "HIGH" : "MEDIUM",
+                    severity: severity,
                     title: "ETA Variance Detected",
-                    description: `Shipping Line ETA (${new Date(carrierEta).toLocaleDateString()}) differs from Port Berthing ETA (${new Date(adaniEta || dpwEta).toLocaleDateString()}) by ~${Math.round(diffHours)} hours due to berth queue / pilot scheduling.`,
+                    description: `Shipping Line ETA differs from Port Berthing ETA by ~${Math.round(diffHours)} hours due to berth queue.`,
                     source_values: {
                         carrier_eta: carrierEta,
                         port_eta: adaniEta || dpwEta,
                         ais_eta: aisEta
                     },
                     suggested_value: adaniEta || carrierEta,
-                    suggested_reason: "Port terminal scheduling generally reflects actual berth docking window"
+                    suggested_reason: "Port terminal scheduling reflects actual berth docking window"
                 });
             }
         }
     }
 
-    // 2. Vessel Name Cross-Check (normalized to handle ocean alliance co-loading prefixes)
+    // 2. Vessel Name Cross-Check
     const normalizeVesselName = (name) => {
         if (!name) return "";
         return name
@@ -95,32 +85,22 @@ const analyzeDiscrepancies = (carrierData, adaniData, dpwData, aisData) => {
         });
     }
 
-    // 3. Voyage Number Cross-Check
-    const carrierVoyage = (carrierData?.voyage_number || "").toUpperCase().trim();
-    const portVoyage = (adaniData?.inward_voyage || dpwData?.voyage_number || "").toUpperCase().trim();
-
-    if (carrierVoyage && portVoyage && carrierVoyage !== portVoyage && !portVoyage.includes(carrierVoyage)) {
-        discrepancies.push({
-            id: "DISC_VOYAGE_MISMATCH",
-            field: "voyage_number",
-            severity: "LOW",
-            title: "Inward Voyage Formatting Notice",
-            description: `Carrier voyage "${carrierVoyage}" matches Port Inward Schedule "${portVoyage}".`,
-            source_values: {
-                carrier_voyage: carrierVoyage,
-                port_inward_voyage: portVoyage
-            },
-            suggested_value: carrierVoyage
-        });
-    }
-
-    // 4. Determine Overall Confidence Score
     let confidenceScore = "HIGH";
     if (discrepancies.some(d => d.severity === "HIGH")) {
         confidenceScore = "LOW";
     } else if (discrepancies.length > 0) {
         confidenceScore = "MEDIUM";
     }
+
+    console.log(`\n🔍 Step 3: Discrepancy & Verification Analysis:`);
+    if (discrepancies.length > 0) {
+        discrepancies.forEach(d => {
+            console.log(`  • ${d.title}: ${d.description} (Severity: ${d.severity})`);
+        });
+    } else {
+        console.log(`  • No variances detected across all 4 feeds.`);
+    }
+    console.log(`  • Confidence Rating: ${confidenceScore}`);
 
     return {
         has_discrepancies: discrepancies.length > 0,

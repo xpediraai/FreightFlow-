@@ -70,10 +70,13 @@ const MonitoredShipmentsList = ({ onSelectShipment }) => {
 
   const formatDate = (dateStr) => {
     if (!dateStr) return 'N/A';
-    return new Date(dateStr).toLocaleDateString('en-GB', {
+    const d = new Date(dateStr);
+    if (isNaN(d.getTime())) return dateStr;
+    return d.toLocaleDateString('en-GB', {
       day: '2-digit',
       month: 'short',
       year: 'numeric',
+      timeZone: 'UTC'
     });
   };
 

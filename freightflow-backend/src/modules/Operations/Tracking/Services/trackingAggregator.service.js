@@ -1,27 +1,27 @@
 /**
  * @file trackingAggregator.service.js
- * @description Master Aggregator coordinating parallel multi-source scraping and data normalization.
+ * @description Master Aggregator coordinating parallel multi-source tracking with accurate date formatting.
  */
 
 const { fetchCarrierTracking } = require("./carrierTracker.service");
 const { fetchAdaniMundraTracking, fetchDpWorldMictTracking } = require("./portTracker.service");
 const { fetchAisTracking } = require("./aisTracker.service");
 const { analyzeDiscrepancies } = require("./discrepancyEngine.service");
-
+const { formatAccurateDateTime } = require("../../../../services/dynamicScraper.service");
 const ShippingLine = require("../../../Masters/Logistics/ShippingLineMasters/shippingLine.model");
 
 /**
- * Aggregates tracking data from all 4 sources in parallel with resilient fault-tolerance.
- * 
- * @param {string} shippingLineName - Carrier name (e.g., CMA CGM, Maersk, OOCL)
- * @param {string} blNumber - Master or House Bill of Lading Number
- * @param {string} [shippingLineId] - Optional Shipping Line Master UUID
- * @returns {Promise<object>} Complete aggregated tracking payload
+ * Aggregates tracking data from all 4 sources in parallel with clean log formatting.
  */
 const aggregateMultiSourceTracking = async (shippingLineName, blNumber, shippingLineId = null) => {
     const cleanBL = (blNumber || "").trim().toUpperCase();
 
-    // 0. Lookup Shipping Line Master Website URL from DB
+    console.log(`\n==================================================`);
+    console.log(`🚀 [TRACKING ENGINE] Multi-Source Scan Initiated`);
+    console.log(`-> BL Number: ${cleanBL}`);
+    console.log(`-> Shipping Line: ${shippingLineName || 'N/A'}`);
+    console.log(`==================================================`);
+
     let masterWebsiteUrl = null;
     try {
         if (shippingLineId) {
@@ -32,14 +32,13 @@ const aggregateMultiSourceTracking = async (shippingLineName, blNumber, shipping
             if (masterRec?.website) masterWebsiteUrl = masterRec.website;
         }
     } catch (e) {
-        // Fallback silently if DB query fails or running in offline unit test
+        // Silent catch
     }
 
-    // 1. Initial Carrier Fetch using target Shipping Line Master URL
+    // 1. Initial Dynamic Carrier Fetch
     const carrierRes = await fetchCarrierTracking(shippingLineName, cleanBL, masterWebsiteUrl);
-    
-    const fallbackVessel = (shippingLineName || "").toUpperCase().includes("OOCL") ? "OOCL HONG KONG" : `${(shippingLineName || "CARRIER").split(" ")[0].toUpperCase()} EXPRESS`;
-    const vesselName = carrierRes?.vessel_name || fallbackVessel;
+
+    const vesselName = carrierRes?.vessel_name || `${(shippingLineName || "CARRIER").split(" ")[0].toUpperCase()} EXPRESS`;
     const voyageNumber = carrierRes?.voyage_number || "VOY2026W";
     const imoNumber = carrierRes?.imo_number || "9776171";
 
@@ -50,9 +49,20 @@ const aggregateMultiSourceTracking = async (shippingLineName, blNumber, shipping
         fetchAisTracking(vesselName, imoNumber)
     ]);
 
-    const adaniRes = adaniSettled.status === "fulfilled" ? adaniSettled.value : { success: false, error: adaniSettled.reason?.message };
-    const dpwRes = dpwSettled.status === "fulfilled" ? dpwSettled.value : { success: false, error: dpwSettled.reason?.message };
-    const aisRes = aisSettled.status === "fulfilled" ? aisSettled.value : { success: false, error: aisSettled.reason?.message };
+    const adaniRes = adaniSettled.status === "fulfilled" ? adaniSettled.value : { success: false };
+    const dpwRes = dpwSettled.status === "fulfilled" ? dpwSettled.value : { success: false };
+    const aisRes = aisSettled.status === "fulfilled" ? aisSettled.value : { success: false };
+
+    console.log(`\n⚓ Step 2: Checking Berthing & Satellite Radar Feeds...`);
+    if (adaniRes.success) {
+        console.log(`  • Adani Mundra Port: ETA ${formatAccurateDateTime(adaniRes.port_eta)} (${adaniRes.berth_number})`);
+    }
+    if (dpwRes.success) {
+        console.log(`  • DP World MICT: ETA ${formatAccurateDateTime(dpwRes.port_eta)} (${dpwRes.terminal})`);
+    }
+    if (aisRes.success) {
+        console.log(`  • MarineTraffic AIS: Coordinates ${aisRes.latitude}° N, ${aisRes.longitude}° E (${aisRes.speed_knots} knots)`);
+    }
 
     // 3. Run Discrepancy & Verification Engine
     const discrepancyAnalysis = analyzeDiscrepancies(carrierRes, adaniRes, dpwRes, aisRes);
@@ -61,8 +71,6 @@ const aggregateMultiSourceTracking = async (shippingLineName, blNumber, shipping
     const carrierEta = carrierRes?.carrier_eta;
     const portEta = adaniRes?.port_eta || dpwRes?.port_eta;
     const aisEta = aisRes?.ais_eta;
-
-    // Prefer Port ETA if available as vessel nears port, otherwise Carrier ETA
     const consolidatedEta = portEta || carrierEta || aisEta;
 
     const consolidated = {
@@ -90,6 +98,8 @@ const aggregateMultiSourceTracking = async (shippingLineName, blNumber, shipping
         discrepancy_analysis: discrepancyAnalysis,
         last_scraped_at: new Date().toISOString()
     };
+
+    console.log(`==================================================\n`);
 
     return {
         success: true,

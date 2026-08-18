@@ -17,6 +17,10 @@ const createShippingLineSchema = Joi.object({
     website: Joi.string().uri().allow("", null).optional().messages({
         "string.uri": "Website must be a valid URL."
     }),
+    tracking_url: Joi.string().allow("", null).optional(),
+    tracking_method: Joi.string().valid("PUPPETEER_SCRAPE", "REST_API", "GENERIC_FETCH").optional(),
+    tracking_config: Joi.object().optional(),
+    bic_prefix: Joi.string().max(4).allow("", null).optional(),
     email: Joi.string().email().allow("", null).optional().messages({
         "string.email": "Email must be a valid email address."
     }),
@@ -35,6 +39,10 @@ const updateShippingLineSchema = Joi.object({
     website: Joi.string().uri().allow("", null).optional().messages({
         "string.uri": "Website must be a valid URL."
     }),
+    tracking_url: Joi.string().allow("", null).optional(),
+    tracking_method: Joi.string().valid("PUPPETEER_SCRAPE", "REST_API", "GENERIC_FETCH").optional(),
+    tracking_config: Joi.object().optional(),
+    bic_prefix: Joi.string().max(4).allow("", null).optional(),
     email: Joi.string().email().allow("", null).optional().messages({
         "string.email": "Email must be a valid email address."
     }),

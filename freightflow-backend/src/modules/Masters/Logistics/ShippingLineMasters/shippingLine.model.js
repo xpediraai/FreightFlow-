@@ -31,6 +31,22 @@ const ShippingLine = sequelize.define("ShippingLine", {
         type: DataTypes.STRING,
         allowNull: true,
     },
+    tracking_url: {
+        type: DataTypes.STRING,
+        allowNull: true,
+    },
+    tracking_method: {
+        type: DataTypes.ENUM("PUPPETEER_SCRAPE", "REST_API", "GENERIC_FETCH"),
+        defaultValue: "GENERIC_FETCH",
+    },
+    tracking_config: {
+        type: DataTypes.JSONB,
+        defaultValue: {},
+    },
+    bic_prefix: {
+        type: DataTypes.STRING,
+        allowNull: true,
+    },
     email: {
         type: DataTypes.STRING,
         allowNull: true,

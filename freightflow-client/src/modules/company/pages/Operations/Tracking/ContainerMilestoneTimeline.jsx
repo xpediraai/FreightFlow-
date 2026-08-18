@@ -18,12 +18,16 @@ const ContainerMilestoneTimeline = ({ containers = [] }) => {
 
   const formatDate = (d) => {
     if (!d) return 'Pending';
-    return new Date(d).toLocaleDateString('en-GB', {
+    const dateObj = new Date(d);
+    if (isNaN(dateObj.getTime())) return d;
+    return dateObj.toLocaleDateString('en-GB', {
       day: '2-digit',
       month: 'short',
       year: 'numeric',
       hour: '2-digit',
       minute: '2-digit',
+      hour12: true,
+      timeZone: 'UTC'
     });
   };
 
