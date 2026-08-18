@@ -155,18 +155,26 @@ const ConsolidatedTrackingCard = ({
           <span className="col-heading">
             <Package size={14} style={{ color: 'var(--primary, #d32f2f)' }} /> Containers ({consolidated.containers?.length || 0})
           </span>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '0.35rem', marginTop: '0.25rem' }}>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '0.4rem', marginTop: '0.25rem' }}>
             {(consolidated.containers || []).map((c) => (
               <div 
                 key={c.container_number}
-                style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', background: 'var(--background, #f5f7fa)', padding: '0.3rem 0.5rem', borderRadius: '4px', border: '1px solid var(--border, #e0e0e0)' }}
+                style={{ background: 'var(--background, #f8fafc)', padding: '0.4rem 0.6rem', borderRadius: '6px', border: '1px solid var(--border, #e2e8f0)' }}
               >
-                <span style={{ fontSize: '0.8rem', fontFamily: 'monospace', fontWeight: '700', color: 'var(--text-primary)' }}>
-                  {c.container_number}
-                </span>
-                <span style={{ fontSize: '0.7rem', background: 'rgba(0,0,0,0.06)', padding: '0.1rem 0.35rem', borderRadius: '3px', fontWeight: '600' }}>
-                  {c.container_type || '40HC'}
-                </span>
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '0.2rem' }}>
+                  <span style={{ fontSize: '0.825rem', fontFamily: 'monospace', fontWeight: '800', color: 'var(--text-primary)' }}>
+                    {c.container_number}
+                  </span>
+                  <span style={{ fontSize: '0.7rem', background: '#e2e8f0', color: '#334155', padding: '0.1rem 0.4rem', borderRadius: '4px', fontWeight: '700' }}>
+                    {c.container_type || '20GP'}
+                  </span>
+                </div>
+                {c.cargo_weight && (
+                  <div style={{ fontSize: '0.7rem', color: 'var(--text-secondary, #64748b)', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                    <span>{c.package_count || 'Package Goods'}</span>
+                    <span style={{ fontWeight: '600', color: '#0f172a' }}>{c.cargo_weight}</span>
+                  </div>
+                )}
               </div>
             ))}
           </div>

@@ -81,15 +81,20 @@ const ContainerMilestoneTimeline = ({ containers = [] }) => {
               <span style={{ fontSize: '0.875rem', fontFamily: 'monospace', fontWeight: '800', color: 'var(--text-primary)' }}>
                 {currentContainer.container_number}
               </span>
-              <span style={{ fontSize: '0.75rem', fontWeight: '600', background: '#e2e8f0', padding: '0.15rem 0.4rem', borderRadius: '4px', color: '#475569' }}>
-                Type: {currentContainer.container_type || '40HC'}
+              <span style={{ fontSize: '0.75rem', fontWeight: '700', background: '#e2e8f0', padding: '0.15rem 0.4rem', borderRadius: '4px', color: '#1e293b' }}>
+                {currentContainer.container_type || '20GP'}
               </span>
+              {currentContainer.package_count && (
+                <span style={{ fontSize: '0.75rem', fontWeight: '600', background: '#f1f5f9', color: '#475569', padding: '0.15rem 0.4rem', borderRadius: '4px' }}>
+                  Package: {currentContainer.package_count}
+                </span>
+              )}
               <span style={{ fontSize: '0.75rem', fontFamily: 'monospace', color: 'var(--text-secondary)' }}>
                 Seal: {currentContainer.seal_number || 'N/A'}
               </span>
               {currentContainer.cargo_weight && (
-                <span style={{ fontSize: '0.75rem', color: 'var(--text-secondary)', background: '#f1f5f9', padding: '0.15rem 0.4rem', borderRadius: '4px' }}>
-                  Wt: {currentContainer.cargo_weight}
+                <span style={{ fontSize: '0.75rem', fontWeight: '600', color: '#0f172a', background: '#f8fafc', border: '1px solid #cbd5e1', padding: '0.15rem 0.45rem', borderRadius: '4px' }}>
+                  Gross Weight: {currentContainer.cargo_weight}
                 </span>
               )}
             </div>

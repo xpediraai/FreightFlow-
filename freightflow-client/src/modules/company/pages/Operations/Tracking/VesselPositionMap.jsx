@@ -14,7 +14,7 @@ const VesselPositionMap = ({ vesselData }) => {
   if (!vesselData) return null;
 
   const {
-    vessel_name = 'CMA CGM G. WASHINGTON',
+    vessel_name = 'VESSEL EXPRESS',
     imo_number = '9365790',
     latitude = 22.4582,
     longitude = 69.6421,

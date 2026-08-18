@@ -30,9 +30,11 @@ const analyzeDiscrepancies = (carrierData, adaniData, dpwData, aisData) => {
     const dpwEta = dpwData?.port_eta;
     const aisEta = aisData?.ais_eta;
 
+    const carrierNameLabel = `${carrierData?.source_name || carrierData?.shipping_line_name || "Carrier"} (Carrier)`;
+
     // 1. ETA Cross-Check & Discrepancy
     const etas = [
-        { source: "CMA CGM (Carrier)", value: carrierEta },
+        { source: carrierNameLabel, value: carrierEta },
         { source: "Adani Mundra Port", value: adaniEta },
         { source: "DP World MICT", value: dpwEta },
         { source: "MarineTraffic AIS", value: aisEta }
@@ -63,12 +65,20 @@ const analyzeDiscrepancies = (carrierData, adaniData, dpwData, aisData) => {
         }
     }
 
-    // 2. Vessel Name Cross-Check
-    const carrierVessel = (carrierData?.vessel_name || "").toUpperCase().replace(/[^A-Z0-9]/g, "");
-    const aisVessel = (aisData?.vessel_name || "").toUpperCase().replace(/[^A-Z0-9]/g, "");
-    const portVessel = (adaniData?.vessel_name || "").toUpperCase().replace(/[^A-Z0-9]/g, "");
+    // 2. Vessel Name Cross-Check (normalized to handle ocean alliance co-loading prefixes)
+    const normalizeVesselName = (name) => {
+        if (!name) return "";
+        return name
+            .toUpperCase()
+            .replace(/\b(CMA|CGM|CMA CGM|CMA-CGM|OOCL|MAERSK|MSC|HMM|COSCO|EVERGREEN|EVER|HAPAG|LLOYD|ONE|ZIM|PIL|KMTC|MV|MT|MS|SS)\b/g, "")
+            .replace(/[^A-Z0-9]/g, "")
+            .trim();
+    };
 
-    if (carrierVessel && aisVessel && !carrierVessel.includes(aisVessel) && !aisVessel.includes(carrierVessel)) {
+    const carrierVesselNorm = normalizeVesselName(carrierData?.vessel_name);
+    const aisVesselNorm = normalizeVesselName(aisData?.vessel_name);
+
+    if (carrierVesselNorm && aisVesselNorm && carrierVesselNorm !== aisVesselNorm && !carrierVesselNorm.includes(aisVesselNorm) && !aisVesselNorm.includes(carrierVesselNorm)) {
         discrepancies.push({
             id: "DISC_VESSEL_MISMATCH",
             field: "vessel_name",

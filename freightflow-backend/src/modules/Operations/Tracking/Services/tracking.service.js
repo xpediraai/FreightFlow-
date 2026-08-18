@@ -20,8 +20,8 @@ const trackingLogPath = path.join(__dirname, "../../../../../logs/Tracking/Track
 /**
  * Executes multi-source live tracking preview without persisting to DB
  */
-const fetchLiveTracking = async (shippingLineName, blNumber) => {
-    return await aggregateMultiSourceTracking(shippingLineName, blNumber);
+const fetchLiveTracking = async (shippingLineName, blNumber, shippingLineId = null) => {
+    return await aggregateMultiSourceTracking(shippingLineName, blNumber, shippingLineId);
 };
 
 /**

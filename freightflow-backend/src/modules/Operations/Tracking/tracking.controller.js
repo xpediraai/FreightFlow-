@@ -17,7 +17,7 @@ const fetchLiveTracking = async (req, res) => {
             return res.status(400).json(errorResponse("VALIDATION_ERROR", error.details[0].message, error.details[0].message));
         }
 
-        const result = await trackingService.fetchLiveTracking(value.shipping_line_name, value.bl_number);
+        const result = await trackingService.fetchLiveTracking(value.shipping_line_name, value.bl_number, value.shipping_line_id);
 
         return res.status(200).json(successResponse(
             "TRACKING_FETCHED",
