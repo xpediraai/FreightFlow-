@@ -10,8 +10,12 @@ const { authenticateToken } = require("../../../middlewares/auth.middleware");
 // Live Multi-Source Preview
 router.post("/fetch", authenticateToken, trackingController.fetchLiveTracking);
 
+// Chrome Extension Direct Bridge Import
+router.post("/import", trackingController.importExtensionTracking);
+
 // Confirmation & Activation
 router.post("/confirm", authenticateToken, trackingController.confirmTracking);
+
 
 // List Monitored Shipments
 router.get("/", authenticateToken, trackingController.getTrackedShipments);

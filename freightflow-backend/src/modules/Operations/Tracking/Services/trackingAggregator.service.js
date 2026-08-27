@@ -35,14 +35,14 @@ const aggregateMultiSourceTracking = async (shippingLineName, blNumber, shipping
         // Silent catch
     }
 
-    // 1. Initial Dynamic Carrier Fetch
+    // 1. Dynamic Carrier Fetch
     const carrierRes = await fetchCarrierTracking(shippingLineName, cleanBL, masterWebsiteUrl);
 
-    const vesselName = carrierRes?.vessel_name || `${(shippingLineName || "CARRIER").split(" ")[0].toUpperCase()} EXPRESS`;
-    const voyageNumber = carrierRes?.voyage_number || "VOY2026W";
-    const imoNumber = carrierRes?.imo_number || "9776171";
+    const vesselName = carrierRes?.vessel_name || null;
+    const voyageNumber = carrierRes?.voyage_number || null;
+    const imoNumber = carrierRes?.imo_number || null;
 
-    // 2. Parallel Secondary Fetches (Adani Mundra, DP World, MarineTraffic AIS)
+    // 2. Parallel Secondary Fetches (Port, AIS)
     const [adaniSettled, dpwSettled, aisSettled] = await Promise.allSettled([
         fetchAdaniMundraTracking(vesselName, voyageNumber, cleanBL),
         fetchDpWorldMictTracking(vesselName, voyageNumber, cleanBL),
@@ -54,13 +54,13 @@ const aggregateMultiSourceTracking = async (shippingLineName, blNumber, shipping
     const aisRes = aisSettled.status === "fulfilled" ? aisSettled.value : { success: false };
 
     console.log(`\n⚓ Step 2: Checking Berthing & Satellite Radar Feeds...`);
-    if (adaniRes.success) {
-        console.log(`  • Adani Mundra Port: ETA ${formatAccurateDateTime(adaniRes.port_eta)} (${adaniRes.berth_number})`);
+    if (adaniRes.success && adaniRes.port_eta) {
+        console.log(`  • Adani Mundra Port: ETA ${formatAccurateDateTime(adaniRes.port_eta)} (${adaniRes.berth_number || 'TBD'})`);
     }
-    if (dpwRes.success) {
+    if (dpwRes.success && dpwRes.port_eta) {
         console.log(`  • DP World MICT: ETA ${formatAccurateDateTime(dpwRes.port_eta)} (${dpwRes.terminal})`);
     }
-    if (aisRes.success) {
+    if (aisRes.success && aisRes.latitude) {
         console.log(`  • MarineTraffic AIS: Coordinates ${aisRes.latitude}° N, ${aisRes.longitude}° E (${aisRes.speed_knots} knots)`);
     }
 
@@ -75,20 +75,20 @@ const aggregateMultiSourceTracking = async (shippingLineName, blNumber, shipping
 
     const consolidated = {
         bl_number: cleanBL,
-        shipping_line_name: carrierRes?.source_name || shippingLineName || "Shipping Line",
+        shipping_line_name: carrierRes?.source_name || shippingLineName || "Carrier",
         shipping_line_code: carrierRes?.shipping_line_code || "CARRIER",
         vessel_name: vesselName,
         voyage_number: voyageNumber,
         imo_number: imoNumber,
-        pol: carrierRes?.pol || { name: "Origin Port", code: "ORIGIN" },
-        pod: carrierRes?.pod || { name: "Mundra, India", code: "INMUN" },
-        current_location: aisRes?.current_location || "Arabian Sea (En Route to Mundra)",
-        latitude: aisRes?.latitude || 22.4582,
-        longitude: aisRes?.longitude || 69.6421,
-        speed_knots: aisRes?.speed_knots || 15.8,
-        heading: aisRes?.heading || 345.0,
-        nav_status: aisRes?.nav_status || "Underway Using Engine",
-        shipment_status: carrierRes?.current_status || "In Transit",
+        pol: carrierRes?.pol || null,
+        pod: carrierRes?.pod || null,
+        current_location: aisRes?.current_location || carrierRes?.pod?.name || carrierRes?.pol?.name || "In Transit",
+        latitude: aisRes?.latitude || null,
+        longitude: aisRes?.longitude || null,
+        speed_knots: aisRes?.speed_knots || null,
+        heading: aisRes?.heading || null,
+        nav_status: aisRes?.nav_status || "Underway",
+        shipment_status: carrierRes?.current_status || "IN TRANSIT",
         consolidated_eta: consolidatedEta,
         carrier_eta: carrierEta,
         port_eta: portEta,

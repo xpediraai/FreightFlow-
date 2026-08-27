@@ -31,11 +31,16 @@ const ShipmentTracking = () => {
     setIsLoading(true);
     setOverrideValues({});
     setLastSearchedParams({ shippingLineName, blNumber, shippingLineId });
+
     try {
       const res = await trackingService.fetchLiveTracking(shippingLineName, blNumber, shippingLineId);
-      const data = res?.data || res;
-      setTrackingResult(data);
-      toast.success(`Live tracking aggregated for BL ${blNumber}!`);
+      if (res && res.data) {
+        setTrackingResult(res.data);
+        const contCount = res.data?.consolidated?.containers?.length || 0;
+        toast.success(`⚡ Live multi-source telemetry fetched for ${blNumber}! (${contCount} containers detected)`);
+      } else {
+        toast.error("No tracking data returned for this shipment.");
+      }
     } catch (err) {
       console.error('Failed to fetch tracking data:', err);
       toast.error(err.response?.data?.messageToShow || err.message || 'Failed to fetch live tracking.');
@@ -43,6 +48,7 @@ const ShipmentTracking = () => {
       setIsLoading(false);
     }
   };
+
 
   const handleOverrideChange = (field, value) => {
     setOverrideValues((prev) => ({ ...prev, [field]: value }));
@@ -71,7 +77,7 @@ const ShipmentTracking = () => {
   };
 
   const handleSelectFromList = (shipment) => {
-    if (shipment.sources_snapshot) {
+    if (shipment) {
       setTrackingResult({
         consolidated: {
           bl_number: shipment.bl_number,
@@ -79,6 +85,14 @@ const ShipmentTracking = () => {
           shipping_line_code: shipment.shipping_line_code,
           vessel_name: shipment.vessel_name,
           voyage_number: shipment.voyage_number,
+          connecting_vessel_name: shipment.connecting_vessel_name,
+          connecting_voyage_number: shipment.connecting_voyage_number,
+          vessels: shipment.vessels && shipment.vessels.length > 0 ? shipment.vessels : (
+            shipment.vessel_name ? [
+              { vessel_name: shipment.vessel_name, voyage_number: shipment.voyage_number, leg_type: '1st Leg (Origin Vessel)' },
+              ...(shipment.connecting_vessel_name ? [{ vessel_name: shipment.connecting_vessel_name, voyage_number: shipment.connecting_voyage_number, leg_type: 'Connecting / Ocean Vessel' }] : [])
+            ] : []
+          ),
           imo_number: shipment.imo_number,
           pol: { name: shipment.pol_name, code: shipment.pol_code },
           pod: { name: shipment.pod_name, code: shipment.pod_code },
@@ -100,11 +114,20 @@ const ShipmentTracking = () => {
             confidence_score: shipment.discrepancies?.length > 0 ? 'MEDIUM' : 'HIGH',
           },
         },
-        sources: shipment.sources_snapshot,
+        sources: shipment.sources_snapshot || {
+          carrier: {
+            source: 'CMA_CGM_FEED',
+            vessel_name: shipment.vessel_name,
+            voyage_number: shipment.voyage_number,
+            current_status: shipment.shipment_status,
+            containers: shipment.containers || []
+          }
+        },
       });
       setActiveTab('LIVE_SEARCH');
     }
   };
+
 
   return (
     <Page>

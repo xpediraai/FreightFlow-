@@ -5,8 +5,10 @@ import {
   Circle, 
   Package, 
   MapPin, 
-  Calendar 
+  Calendar,
+  Ship
 } from 'lucide-react';
+
 import Badge from '../../../../../shared/components/Badge/Badge';
 
 const ContainerMilestoneTimeline = ({ containers = [] }) => {
@@ -86,16 +88,18 @@ const ContainerMilestoneTimeline = ({ containers = [] }) => {
                 {currentContainer.container_number}
               </span>
               <span style={{ fontSize: '0.75rem', fontWeight: '700', background: '#e2e8f0', padding: '0.15rem 0.4rem', borderRadius: '4px', color: '#1e293b' }}>
-                {currentContainer.container_type || '20GP'}
+                {currentContainer.container_type || '40HC'}
               </span>
               {currentContainer.package_count && (
                 <span style={{ fontSize: '0.75rem', fontWeight: '600', background: '#f1f5f9', color: '#475569', padding: '0.15rem 0.4rem', borderRadius: '4px' }}>
                   Package: {currentContainer.package_count}
                 </span>
               )}
-              <span style={{ fontSize: '0.75rem', fontFamily: 'monospace', color: 'var(--text-secondary)' }}>
-                Seal: {currentContainer.seal_number || 'N/A'}
-              </span>
+              {currentContainer.seal_number && currentContainer.seal_number !== 'N/A' && (
+                <span style={{ fontSize: '0.75rem', fontFamily: 'monospace', color: 'var(--text-secondary)' }}>
+                  Seal: {currentContainer.seal_number}
+                </span>
+              )}
               {currentContainer.cargo_weight && (
                 <span style={{ fontSize: '0.75rem', fontWeight: '600', color: '#0f172a', background: '#f8fafc', border: '1px solid #cbd5e1', padding: '0.15rem 0.45rem', borderRadius: '4px' }}>
                   Gross Weight: {currentContainer.cargo_weight}
@@ -103,7 +107,7 @@ const ContainerMilestoneTimeline = ({ containers = [] }) => {
               )}
             </div>
             <p style={{ fontSize: '0.75rem', color: 'var(--text-secondary)', margin: '0.15rem 0 0 0' }}>
-              Current Location: <strong style={{ color: 'var(--text-primary)' }}>{currentContainer.last_location || 'At Sea'}</strong>
+              Current Location: <strong style={{ color: 'var(--text-primary)' }}>{currentContainer.last_location || 'In Transit'}</strong>
               {currentContainer.last_movement && (
                 <span style={{ color: 'var(--success, #2e7d32)', marginLeft: '0.5rem', fontWeight: '600' }}>
                   • {currentContainer.last_movement}
@@ -114,7 +118,7 @@ const ContainerMilestoneTimeline = ({ containers = [] }) => {
         </div>
 
         <Badge variant="success" style={{ fontWeight: '700', padding: '0.35rem 0.75rem' }}>
-          {currentContainer.status || 'In Transit'}
+          {currentContainer.status || 'Active'}
         </Badge>
       </div>
 
@@ -150,10 +154,18 @@ const ContainerMilestoneTimeline = ({ containers = [] }) => {
                       {m.status}
                     </Badge>
                   </div>
-                  <p style={{ fontSize: '0.75rem', color: 'var(--text-secondary)', margin: '0.2rem 0 0 0', display: 'flex', alignItems: 'center', gap: '0.25rem' }}>
-                    <MapPin size={12} style={{ color: 'var(--primary)' }} /> {m.location}
-                  </p>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '0.2rem', marginTop: '0.2rem' }}>
+                    <p style={{ fontSize: '0.75rem', color: 'var(--text-secondary)', margin: 0, display: 'flex', alignItems: 'center', gap: '0.25rem' }}>
+                      <MapPin size={12} style={{ color: 'var(--primary)' }} /> {m.location || 'Terminal'}
+                    </p>
+                    {m.vessel && m.vessel !== '-' && (
+                      <p style={{ fontSize: '0.75rem', color: '#1e293b', fontWeight: '600', margin: 0, display: 'flex', alignItems: 'center', gap: '0.25rem' }}>
+                        <Ship size={12} style={{ color: 'var(--primary)' }} /> Vessel: {m.vessel}
+                      </p>
+                    )}
+                  </div>
                 </div>
+
 
                 <div style={{ textAlign: 'right' }}>
                   <span style={{ fontSize: '0.8rem', fontFamily: 'monospace', fontWeight: '700', color: 'var(--text-primary)', display: 'block' }}>

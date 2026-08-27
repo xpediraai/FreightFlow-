@@ -176,9 +176,9 @@ const MonitoredShipmentsList = ({ onSelectShipment }) => {
                   </td>
                   <td>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '0.35rem', fontSize: '0.8rem' }}>
-                      <span>{s.pol_code || 'CNTAO'}</span>
+                      <span>{s.pol_code || s.pol_name || '-'}</span>
                       <ArrowRight size={12} style={{ color: 'var(--text-secondary)' }} />
-                      <strong style={{ color: 'var(--primary)' }}>{s.pod_code || 'INMUN'}</strong>
+                      <strong style={{ color: 'var(--primary)' }}>{s.pod_code || s.pod_name || '-'}</strong>
                     </div>
                   </td>
                   <td>

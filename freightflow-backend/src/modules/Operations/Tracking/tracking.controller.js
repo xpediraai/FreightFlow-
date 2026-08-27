@@ -187,11 +187,39 @@ const overrideTrackingStatus = async (req, res) => {
     }
 };
 
+/**
+ * Direct Import from Chrome Extension
+ * POST /api/tracking/import
+ */
+const importExtensionTracking = async (req, res) => {
+    try {
+        const companyId = req.user?.company_id || null;
+        const userId = req.user?.user_id || req.user?.id || null;
+
+        const result = await trackingService.importExtensionTracking(req.body, companyId, userId);
+
+        return res.status(200).json(successResponse(
+            "EXTENSION_TRACKING_IMPORTED",
+            "CMA CGM live tracking details successfully imported into FreightFlow.",
+            "CMA CGM live tracking details successfully imported into FreightFlow.",
+            result
+        ));
+    } catch (err) {
+        return res.status(500).json(errorResponse(
+            "IMPORT_FAILED",
+            err.message,
+            "Failed to import tracking data from Chrome extension."
+        ));
+    }
+};
+
 module.exports = {
     fetchLiveTracking,
     confirmTracking,
     getTrackedShipments,
     getTrackingById,
     refreshShipmentTracking,
-    overrideTrackingStatus
+    overrideTrackingStatus,
+    importExtensionTracking
 };
+

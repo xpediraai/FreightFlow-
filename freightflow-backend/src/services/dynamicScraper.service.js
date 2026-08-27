@@ -9,7 +9,7 @@ const { scrapeWithPuppeteer } = require("./puppeteerScraper.service");
  * Known default carrier tracking URL paths when Master DB website is only a domain (e.g. https://www.cma-cgm.com).
  */
 const CARRIER_TRACKING_PATH_MAP = [
-    { match: ["CMA", "CMA CGM"], template: "https://www.cma-cgm.com/ebusiness/tracking/search?SearchBy=BL&Query={BL_NUMBER}" },
+    { match: ["CMA", "CMA CGM", "COMPAGNIE MARITIME", "AFFRETEMENT", "AFFRÈTEMENT", "CMDU", "ANL", "CNC"], template: "https://www.cma-cgm.com/ebusiness/tracking/search?SearchBy=BL&Query={BL_NUMBER}" },
     { match: ["MAERSK"], template: "https://www.maersk.com/tracking/{BL_NUMBER}" },
     { match: ["OOCL", "ORIENT"], template: "https://www.oocl.com/eng/ourservices/eservices/trackandtrace/Pages/CargoTracking.aspx?searchType=BL&searchValue={BL_NUMBER}" },
     { match: ["MSC"], template: "https://www.msc.com/en/track-a-shipment?trackingNumber={BL_NUMBER}" },
@@ -52,7 +52,12 @@ const buildDynamicTrackingUrl = (urlTemplate, blNumber, carrierName = "") => {
     const cleanBL = (blNumber || "").trim().toUpperCase();
     const cleanCarrier = (carrierName || "").toUpperCase();
 
-    // Check if urlTemplate is missing or is just a root domain (e.g. https://www.cma-cgm.com)
+    // Normalize CMA CGM and known ocean carriers to their real public tracking search endpoint
+    if (cleanCarrier.includes("CMA") || cleanCarrier.includes("CGM") || cleanCarrier.includes("COMPAGNIE") || cleanCarrier.includes("CMDU") || (urlTemplate && urlTemplate.includes("cma-cgm.com"))) {
+        return `https://www.cma-cgm.com/ebusiness/tracking/search?SearchBy=BL&Query=${encodeURIComponent(cleanBL)}`;
+    }
+
+    // Check if urlTemplate is missing or is just a root domain
     const isRootDomain = !urlTemplate || urlTemplate.replace(/https?:\/\//, "").replace(/\/$/, "").split("/").length === 1;
 
     if (isRootDomain) {
@@ -61,6 +66,7 @@ const buildDynamicTrackingUrl = (urlTemplate, blNumber, carrierName = "") => {
             return mapped.template.replace(/\{BL_NUMBER\}/g, encodeURIComponent(cleanBL));
         }
     }
+
 
     if (!urlTemplate) {
         return `https://www.google.com/search?q=${encodeURIComponent(`${cleanBL} container tracking`)}`;
@@ -128,142 +134,96 @@ const executeDynamicFetch = async (targetUrl, method = "GET", headers = {}, body
 };
 
 /**
- * Universally parses tracking response for ANY BL number and ANY shipping line without hardcoded IF branches.
+ * Parses real tracking response extracted from live carrier web portal or API.
+ * Uses genuine data without generating fake dummy records.
  */
 const parseDynamicResponse = (rawContent, trackingConfig, blNumber, carrierName, targetUrl, fetchResult = null) => {
     const cleanBL = (blNumber || "").trim().toUpperCase();
     const cleanCarrier = (carrierName || "").trim();
     const puppeteerData = fetchResult?.puppeteer_data;
 
-    // 1. Dynamic Vessel & Voyage Extraction
-    let vesselName = puppeteerData?.vessel_name || trackingConfig?.default_vessel;
-    if (!vesselName) {
-        const carrierPrefix = cleanCarrier.split(" ")[0].toUpperCase();
-        vesselName = `${carrierPrefix} EXPRESS`;
-    }
+    // 1. Vessel & Voyage
+    const vesselName = puppeteerData?.vessel_name || null;
+    const voyageNumber = puppeteerData?.voyage_number || null;
+    const imoNumber = trackingConfig?.imo_number || null;
 
-    let voyageNumber = puppeteerData?.voyage_number || trackingConfig?.default_voyage;
-    if (!voyageNumber) {
-        const hashVal = Math.abs(hashString(cleanBL));
-        voyageNumber = `VOY${(hashVal % 900) + 100}W`;
-    }
-
-    let imoNumber = trackingConfig?.imo_number || `${9000000 + (Math.abs(hashString(cleanBL)) % 899999)}`;
-
-    // 2. Dynamic Container Number Extraction
+    // 2. Container List
     let containerList = [];
-
     if (puppeteerData?.containers && puppeteerData.containers.length > 0) {
         containerList = puppeteerData.containers;
-    } else {
-        const bicPrefix = trackingConfig?.bic_prefix || (cleanBL.match(/^([A-Z]{4})\d+/) ? cleanBL.slice(0, 4) : `${cleanCarrier.slice(0, 3).toUpperCase()}U`);
-        const numContainers = 1 + (Math.abs(hashString(cleanBL)) % 2);
-
-        for (let i = 0; i < numContainers; i++) {
-            let contNum = "";
-            if (i === 0 && cleanBL.length === 11 && /^[A-Z]{4}\d{7}$/.test(cleanBL)) {
-                contNum = cleanBL;
-            } else {
-                const baseNum = (Math.abs(hashString(cleanBL + i)) % 8999999) + 1000000;
-                contNum = `${bicPrefix}${baseNum}`;
-            }
-            containerList.push(contNum);
-        }
+    } else if (cleanBL.length === 11 && /^[A-Z]{4}\d{7}$/.test(cleanBL)) {
+        containerList = [cleanBL];
     }
 
-    // 3. Dynamic Date & Milestone Calculation (Unique to each BL Number string)
-    const now = Date.now();
-    const hash = Math.abs(hashString(cleanBL));
-    const etaDays = 2 + (hash % 5);
+    // 3. Real Milestones/Moves extracted from carrier
+    const rawMoves = puppeteerData?.moves || [];
+    let dynamicMilestones = [];
 
-    const depDate = new Date(now - (5 + (hash % 3)) * 24 * 60 * 60 * 1000);
-    const gateInDate = new Date(depDate.getTime() - 2 * 24 * 60 * 60 * 1000);
-    const emptyDepotDate = new Date(gateInDate.getTime() - 9 * 24 * 60 * 60 * 1000);
-    const loadDate = new Date(depDate.getTime() - 16 * 60 * 60 * 1000);
-    const etaDate = new Date(now + etaDays * 24 * 60 * 60 * 1000);
-
-    const dynamicMilestones = [
-        {
-            event: "Gate Out Empty from Depot",
-            location: `${trackingConfig?.pol_name || 'Origin'} Depot Yard`,
-            date: emptyDepotDate.toISOString(),
+    if (rawMoves.length > 0) {
+        dynamicMilestones = rawMoves.map(m => ({
+            event: m.event || "Tracking Event",
+            location: m.location || m.vessel || "",
+            date: m.date || new Date().toISOString(),
             status: "Completed"
-        },
-        {
-            event: "Ready to be Loaded (Gate In)",
-            location: trackingConfig?.pol_name || "Origin Container Terminal",
-            date: gateInDate.toISOString(),
-            status: "Completed"
-        },
-        {
-            event: "Loaded on Board Vessel",
-            location: `${vesselName} (${voyageNumber})`,
-            date: loadDate.toISOString(),
-            status: "Completed"
-        },
-        {
-            event: "Vessel Departure",
-            location: trackingConfig?.pol_name || "Origin Port Terminal",
-            date: depDate.toISOString(),
-            status: "Completed"
-        },
-        {
-            event: "In Transit Ocean Voyage",
-            location: "En Route to Destination Port",
+        }));
+    } else if (puppeteerData?.current_status) {
+        dynamicMilestones.push({
+            event: puppeteerData.current_status,
+            location: puppeteerData.pol_name || puppeteerData.pod_name || "En Route",
             date: new Date().toISOString(),
-            status: "In Progress"
-        },
-        {
-            event: "Planned Vessel Arrival (ETA Berth)",
-            location: trackingConfig?.pod_name || "Mundra Port Terminal",
-            date: etaDate.toISOString(),
-            status: "Estimated"
-        }
-    ];
+            status: "Completed"
+        });
+    }
 
+    // 4. Containers payload
     const containersPayload = containerList.map((contNo) => ({
         container_number: contNo,
-        container_type: "40HC",
-        seal_number: `SEAL-${(Math.abs(hashString(contNo)) % 899999) + 100000}`,
-        status: "VESSEL DEPARTURE",
-        last_location: `${trackingConfig?.pol_name || 'Origin Port'} Wharf`,
+        container_type: puppeteerData?.container_type || "40HC",
+        seal_number: "N/A",
+        status: puppeteerData?.current_status || "IN TRANSIT",
+        last_location: puppeteerData?.pod_name || puppeteerData?.pol_name || "",
         milestones: dynamicMilestones
     }));
 
-    const carrierEtaIso = etaDate.toISOString();
-    const carrierEtaFormatted = formatAccurateDateTime(carrierEtaIso);
+    // 5. ETA
+    let carrierEtaIso = null;
+    let carrierEtaFormatted = "N/A";
 
-    console.log(`\n📦 Dynamic Shipment Summary for BL [${cleanBL}]:`);
-    console.log(`  • Carrier Name: ${cleanCarrier}`);
-    console.log(`  • Vessel Name: ${vesselName}`);
-    console.log(`  • Voyage Number: ${voyageNumber}`);
-    console.log(`  • IMO Number: ${imoNumber}`);
-    console.log(`  • Carrier ETA: ${carrierEtaFormatted}`);
-    console.log(`  • Containers (${containersPayload.length}): ${containersPayload.map(c => c.container_number).join(", ")}`);
+    if (puppeteerData?.eta_string) {
+        const parsedDate = new Date(puppeteerData.eta_string);
+        if (!isNaN(parsedDate.getTime())) {
+            carrierEtaIso = parsedDate.toISOString();
+            carrierEtaFormatted = formatAccurateDateTime(carrierEtaIso);
+        } else {
+            carrierEtaIso = puppeteerData.eta_string;
+            carrierEtaFormatted = puppeteerData.eta_string;
+        }
+    }
+
+    const polName = puppeteerData?.pol_name || trackingConfig?.pol_name || null;
+    const podName = puppeteerData?.pod_name || trackingConfig?.pod_name || null;
+
+    console.log(`\n📦 Real Shipment Parsed for BL [${cleanBL}]:`);
+    console.log(`  • Carrier: ${cleanCarrier}`);
+    console.log(`  • Vessel: ${vesselName || 'N/A'}`);
+    console.log(`  • Voyage: ${voyageNumber || 'N/A'}`);
+    console.log(`  • Status: ${puppeteerData?.current_status || 'N/A'}`);
+    console.log(`  • ETA: ${carrierEtaFormatted}`);
+    console.log(`  • Containers (${containersPayload.length}): ${containersPayload.map(c => c.container_number).join(", ") || 'None'}`);
 
     return {
         vessel_name: vesselName,
         voyage_number: voyageNumber,
         imo_number: imoNumber,
-        pol: { name: trackingConfig?.pol_name || "Origin Container Terminal", code: trackingConfig?.pol_code || "ORIGIN" },
-        pod: { name: trackingConfig?.pod_name || "Mundra Port, India", code: "INMUN" },
+        pol: polName ? { name: polName, code: trackingConfig?.pol_code || "" } : null,
+        pod: podName ? { name: podName, code: trackingConfig?.pod_code || "" } : null,
         carrier_eta: carrierEtaIso,
         carrier_eta_formatted: carrierEtaFormatted,
-        current_status: "VESSEL DEPARTURE",
+        current_status: puppeteerData?.current_status || (containerList.length > 0 ? "IN TRANSIT" : "STATUS PENDING"),
         containers: containersPayload,
         source_url: targetUrl
     };
 };
-
-function hashString(str) {
-    let hash = 0;
-    for (let i = 0; i < str.length; i++) {
-        const char = str.charCodeAt(i);
-        hash = ((hash << 5) - hash) + char;
-        hash |= 0;
-    }
-    return hash;
-}
 
 module.exports = {
     formatAccurateDateTime,
@@ -271,3 +231,4 @@ module.exports = {
     executeDynamicFetch,
     parseDynamicResponse
 };
+

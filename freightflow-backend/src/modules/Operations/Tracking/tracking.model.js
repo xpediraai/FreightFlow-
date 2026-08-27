@@ -42,10 +42,23 @@ const ShipmentTracking = sequelize.define("ShipmentTracking", {
         type: DataTypes.STRING,
         allowNull: true,
     },
+    connecting_vessel_name: {
+        type: DataTypes.STRING,
+        allowNull: true,
+    },
+    connecting_voyage_number: {
+        type: DataTypes.STRING,
+        allowNull: true,
+    },
+    vessels: {
+        type: DataTypes.JSONB,
+        defaultValue: [],
+    },
     imo_number: {
         type: DataTypes.STRING,
         allowNull: true,
     },
+
     pol_name: {
         type: DataTypes.STRING,
         allowNull: true,
@@ -310,3 +323,5 @@ module.exports = {
     ShipmentTrackingHistory,
     ShipmentTrackingSourceLog
 };
+
+

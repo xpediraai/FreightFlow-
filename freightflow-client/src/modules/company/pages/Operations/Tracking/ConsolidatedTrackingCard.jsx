@@ -69,14 +69,35 @@ const ConsolidatedTrackingCard = ({
                 {consolidated.shipment_status || 'In Transit'}
               </Badge>
             </div>
-            <h2>
-              {consolidated.vessel_name}{' '}
-              <span style={{ fontSize: '0.875rem', fontWeight: 'normal', color: 'var(--text-secondary, #757575)' }}>
-                (Voyage: <strong style={{ color: 'var(--text-primary, #212121)' }}>{consolidated.voyage_number}</strong>)
-              </span>
-            </h2>
+            {consolidated.vessels && consolidated.vessels.length > 1 ? (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '0.35rem', marginTop: '0.35rem' }}>
+                {consolidated.vessels.map((v, i) => (
+                  <div key={i} style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', flexWrap: 'wrap' }}>
+                    <span style={{ fontSize: '0.7rem', background: i === 0 ? 'rgba(25, 118, 210, 0.12)' : 'rgba(237, 108, 2, 0.12)', color: i === 0 ? 'var(--primary)' : '#ed6c02', padding: '0.15rem 0.45rem', borderRadius: '4px', fontWeight: '700' }}>
+                      {v.leg_type || (i === 0 ? '1st Leg (Origin)' : 'Connecting / Ocean')}
+                    </span>
+                    <span style={{ fontSize: '1.05rem', fontWeight: '800', color: 'var(--text-primary)' }}>
+                      {v.vessel_name}
+                    </span>
+                    {v.voyage_number && (
+                      <span style={{ fontSize: '0.8rem', color: 'var(--text-secondary)' }}>
+                        (Voyage: <strong style={{ color: 'var(--text-primary)' }}>{v.voyage_number}</strong>)
+                      </span>
+                    )}
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <h2>
+                {consolidated.vessel_name || '-'}{' '}
+                <span style={{ fontSize: '0.875rem', fontWeight: 'normal', color: 'var(--text-secondary, #757575)' }}>
+                  (Voyage: <strong style={{ color: 'var(--text-primary, #212121)' }}>{consolidated.voyage_number || '-'}</strong>)
+                </span>
+              </h2>
+            )}
           </div>
         </div>
+
 
         {/* Verification Action Button */}
         <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
@@ -109,14 +130,14 @@ const ConsolidatedTrackingCard = ({
           <div className="route-display">
             <div className="port-box">
               <p className="port-label">Origin (POL)</p>
-              <p className="port-name">{consolidated.pol?.name || 'Qingdao, China'}</p>
-              <span className="port-code">{consolidated.pol?.code || 'CNTAO'}</span>
+              <p className="port-name">{consolidated.pol?.name || '-'}</p>
+              {consolidated.pol?.code && <span className="port-code">{consolidated.pol.code}</span>}
             </div>
             <ArrowRight size={18} style={{ color: 'var(--text-secondary, #757575)', flexShrink: 0 }} />
             <div className="port-box">
               <p className="port-label">Destination (POD)</p>
-              <p className="port-name">{consolidated.pod?.name || 'Mundra, India'}</p>
-              <span className="port-code highlight">{consolidated.pod?.code || 'INMUN'}</span>
+              <p className="port-name">{consolidated.pod?.name || '-'}</p>
+              {consolidated.pod?.code && <span className="port-code highlight">{consolidated.pod.code}</span>}
             </div>
           </div>
         </div>
@@ -128,28 +149,38 @@ const ConsolidatedTrackingCard = ({
           </span>
           <div>
             <div className="eta-value">{formatDate(consolidated.consolidated_eta)}</div>
-            <div className="eta-countdown">
-              <Clock size={13} />
-              <span>{getDaysRemaining(consolidated.consolidated_eta, consolidated.shipment_status)}</span>
-            </div>
+            {consolidated.consolidated_eta && (
+              <div className="eta-countdown">
+                <Clock size={13} />
+                <span>{getDaysRemaining(consolidated.consolidated_eta, consolidated.shipment_status)}</span>
+              </div>
+            )}
           </div>
         </div>
 
         {/* Live Location / Coordinates */}
         <div className="consolidated-col">
           <span className="col-heading">
-            <Anchor size={14} style={{ color: 'var(--primary, #d32f2f)' }} /> Live AIS Telemetry
+            <Anchor size={14} style={{ color: 'var(--primary, #d32f2f)' }} /> Location & Telemetry
           </span>
           <div>
             <p style={{ fontSize: '0.875rem', fontWeight: '700', color: 'var(--text-primary, #212121)', margin: '0 0 0.25rem 0' }}>
-              {consolidated.current_location || 'Arabian Sea (Gulf of Kutch Approach)'}
+              {consolidated.current_location || 'En Route'}
             </p>
-            <p style={{ fontSize: '0.75rem', fontFamily: 'monospace', color: 'var(--text-secondary, #757575)', margin: 0 }}>
-              Lat: <strong style={{ color: 'var(--text-primary)' }}>{consolidated.latitude?.toFixed(4)}° N</strong>, Lon: <strong style={{ color: 'var(--text-primary)' }}>{consolidated.longitude?.toFixed(4)}° E</strong>
-            </p>
-            <p style={{ fontSize: '0.75rem', color: 'var(--text-secondary)', margin: '0.2rem 0 0 0' }}>
-              Speed: <strong>{consolidated.speed_knots} kts</strong> | Nav: <strong style={{ color: 'var(--success, #2e7d32)' }}>{consolidated.nav_status}</strong>
-            </p>
+            {consolidated.latitude ? (
+              <>
+                <p style={{ fontSize: '0.75rem', fontFamily: 'monospace', color: 'var(--text-secondary, #757575)', margin: 0 }}>
+                  Lat: <strong style={{ color: 'var(--text-primary)' }}>{consolidated.latitude?.toFixed(4)}° N</strong>, Lon: <strong style={{ color: 'var(--text-primary)' }}>{consolidated.longitude?.toFixed(4)}° E</strong>
+                </p>
+                <p style={{ fontSize: '0.75rem', color: 'var(--text-secondary)', margin: '0.2rem 0 0 0' }}>
+                  Speed: <strong>{consolidated.speed_knots || 0} kts</strong> | Nav: <strong style={{ color: 'var(--success, #2e7d32)' }}>{consolidated.nav_status || 'Underway'}</strong>
+                </p>
+              </>
+            ) : (
+              <p style={{ fontSize: '0.75rem', color: 'var(--text-secondary)', margin: 0 }}>
+                Status: <strong style={{ color: 'var(--success)' }}>{consolidated.shipment_status || 'In Transit'}</strong>
+              </p>
+            )}
           </div>
         </div>
 
@@ -169,7 +200,7 @@ const ConsolidatedTrackingCard = ({
                     {c.container_number}
                   </span>
                   <span style={{ fontSize: '0.7rem', background: '#e2e8f0', color: '#334155', padding: '0.1rem 0.4rem', borderRadius: '4px', fontWeight: '700' }}>
-                    {c.container_type || '20GP'}
+                    {c.container_type || '40HC'}
                   </span>
                 </div>
                 {c.cargo_weight && (

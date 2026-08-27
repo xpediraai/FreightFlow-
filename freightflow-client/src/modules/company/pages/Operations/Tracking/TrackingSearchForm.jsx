@@ -96,22 +96,23 @@ const TrackingSearchForm = ({ onSearch, isLoading }) => {
           </select>
         </div>
 
-        {/* BL Number Input */}
+        {/* BL / Container Number Input */}
         <div className="tracking-field-group">
-          <label>Master / House Bill of Lading (BL Number) *</label>
+          <label>BL Number or Container Number *</label>
           <div className="tracking-input-wrapper">
             <FileText size={18} className="tracking-input-icon" />
             <input
               type="text"
               value={blNumber}
               onChange={(e) => setBlNumber(e.target.value.toUpperCase())}
-              placeholder="Enter real BL Number (e.g. QGD3237299)"
+              placeholder="e.g. QGD3237299 or TCKU6648898"
               disabled={isLoading}
               required
               className="tracking-input with-icon"
             />
           </div>
         </div>
+
 
         {/* Submit Action */}
         <div>
@@ -126,6 +127,7 @@ const TrackingSearchForm = ({ onSearch, isLoading }) => {
         </div>
       </form>
     </div>
+
   );
 };
 

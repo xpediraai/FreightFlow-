@@ -97,74 +97,74 @@ const SourceComparisonView = ({ sources }) => {
             <tbody>
               <tr style={{ borderBottom: '1px solid #e2e8f0' }}>
                 <td style={{ padding: '0.5rem 0.75rem', fontWeight: '700', color: 'var(--text-primary)' }}>B/L Number</td>
-                <td style={{ padding: '0.5rem 0.75rem', fontFamily: 'monospace', fontWeight: '700' }}>{carrier?.bl_number || 'N/A'}</td>
-                <td style={{ padding: '0.5rem 0.75rem', fontFamily: 'monospace' }}>IGM Logged ({carrier?.bl_number})</td>
-                <td style={{ padding: '0.5rem 0.75rem', color: '#64748b' }}>Cargo Manifest Linked</td>
+                <td style={{ padding: '0.5rem 0.75rem', fontFamily: 'monospace', fontWeight: '700' }}>{carrier?.bl_number || '-'}</td>
+                <td style={{ padding: '0.5rem 0.75rem', fontFamily: 'monospace' }}>{adani_mundra?.success ? `IGM Manifest (${carrier?.bl_number || '-'})` : '-'}</td>
+                <td style={{ padding: '0.5rem 0.75rem', color: '#64748b' }}>{marine_traffic_ais?.success ? 'AIS Linked' : '-'}</td>
                 <td style={{ padding: '0.5rem 0.75rem', textAlign: 'center' }}>
-                  <span style={{ color: '#16a34a', fontWeight: '700', background: '#dcfce7', padding: '0.15rem 0.5rem', borderRadius: '4px' }}>✅ Verified Match</span>
+                  {carrier?.bl_number ? <span style={{ color: '#16a34a', fontWeight: '700', background: '#dcfce7', padding: '0.15rem 0.5rem', borderRadius: '4px' }}>✅ Verified</span> : '-'}
                 </td>
               </tr>
               <tr style={{ borderBottom: '1px solid #e2e8f0' }}>
                 <td style={{ padding: '0.5rem 0.75rem', fontWeight: '700', color: 'var(--text-primary)' }}>Container No.</td>
-                <td style={{ padding: '0.5rem 0.75rem', fontFamily: 'monospace', fontWeight: '700' }}>{carrier?.containers?.[0]?.container_number || 'N/A'}</td>
-                <td style={{ padding: '0.5rem 0.75rem', color: '#64748b' }}>Discharged / Gated Out</td>
-                <td style={{ padding: '0.5rem 0.75rem', color: '#64748b' }}>N/A (Ship Telemetry)</td>
+                <td style={{ padding: '0.5rem 0.75rem', fontFamily: 'monospace', fontWeight: '700' }}>{carrier?.containers?.[0]?.container_number || '-'}</td>
+                <td style={{ padding: '0.5rem 0.75rem', color: '#64748b' }}>{adani_mundra?.success ? (adani_mundra.container_status || 'In Transit') : '-'}</td>
+                <td style={{ padding: '0.5rem 0.75rem', color: '#64748b' }}>{marine_traffic_ais?.success ? 'Vessel Telemetry' : '-'}</td>
                 <td style={{ padding: '0.5rem 0.75rem', textAlign: 'center' }}>
-                  <span style={{ color: '#16a34a', fontWeight: '700', background: '#dcfce7', padding: '0.15rem 0.5rem', borderRadius: '4px' }}>✅ Verified Match</span>
+                  {carrier?.containers?.[0]?.container_number ? <span style={{ color: '#16a34a', fontWeight: '700', background: '#dcfce7', padding: '0.15rem 0.5rem', borderRadius: '4px' }}>✅ Verified</span> : '-'}
                 </td>
               </tr>
               <tr style={{ borderBottom: '1px solid #e2e8f0' }}>
                 <td style={{ padding: '0.5rem 0.75rem', fontWeight: '700', color: 'var(--text-primary)' }}>Container Size</td>
-                <td style={{ padding: '0.5rem 0.75rem', fontWeight: '700', color: '#0f172a' }}>{carrier?.containers?.[0]?.container_type || '20GP'}</td>
-                <td style={{ padding: '0.5rem 0.75rem', color: '#64748b' }}>20FT Standard (CT3 Yard)</td>
-                <td style={{ padding: '0.5rem 0.75rem', color: '#64748b' }}>Fully Cellular Ship</td>
+                <td style={{ padding: '0.5rem 0.75rem', fontWeight: '700', color: '#0f172a' }}>{carrier?.containers?.[0]?.container_type || '-'}</td>
+                <td style={{ padding: '0.5rem 0.75rem', color: '#64748b' }}>{adani_mundra?.terminal || '-'}</td>
+                <td style={{ padding: '0.5rem 0.75rem', color: '#64748b' }}>{marine_traffic_ais?.vessel_type || '-'}</td>
                 <td style={{ padding: '0.5rem 0.75rem', textAlign: 'center' }}>
-                  <span style={{ color: '#16a34a', fontWeight: '700', background: '#dcfce7', padding: '0.15rem 0.5rem', borderRadius: '4px' }}>✅ Verified Match</span>
+                  {carrier?.containers?.[0]?.container_type ? <span style={{ color: '#16a34a', fontWeight: '700', background: '#dcfce7', padding: '0.15rem 0.5rem', borderRadius: '4px' }}>✅ Verified</span> : '-'}
                 </td>
               </tr>
               <tr style={{ borderBottom: '1px solid #e2e8f0' }}>
                 <td style={{ padding: '0.5rem 0.75rem', fontWeight: '700', color: 'var(--text-primary)' }}>POL (Origin)</td>
-                <td style={{ padding: '0.5rem 0.75rem' }}>{carrier?.pol?.name || 'N/A'}</td>
-                <td style={{ padding: '0.5rem 0.75rem', color: '#64748b' }}>Inward Foreign Port</td>
-                <td style={{ padding: '0.5rem 0.75rem', color: '#64748b' }}>Last Departure Port</td>
+                <td style={{ padding: '0.5rem 0.75rem' }}>{carrier?.pol?.name || '-'}</td>
+                <td style={{ padding: '0.5rem 0.75rem', color: '#64748b' }}>{adani_mundra?.success ? 'Foreign Origin' : '-'}</td>
+                <td style={{ padding: '0.5rem 0.75rem', color: '#64748b' }}>-</td>
                 <td style={{ padding: '0.5rem 0.75rem', textAlign: 'center' }}>
-                  <span style={{ color: '#16a34a', fontWeight: '700', background: '#dcfce7', padding: '0.15rem 0.5rem', borderRadius: '4px' }}>✅ Verified Match</span>
+                  {carrier?.pol?.name ? <span style={{ color: '#16a34a', fontWeight: '700', background: '#dcfce7', padding: '0.15rem 0.5rem', borderRadius: '4px' }}>✅ Verified</span> : '-'}
                 </td>
               </tr>
               <tr style={{ borderBottom: '1px solid #e2e8f0' }}>
                 <td style={{ padding: '0.5rem 0.75rem', fontWeight: '700', color: 'var(--text-primary)' }}>POD (Destination)</td>
-                <td style={{ padding: '0.5rem 0.75rem' }}>{carrier?.pod?.name || 'Mundra Port'}</td>
-                <td style={{ padding: '0.5rem 0.75rem' }}>{adani_mundra?.port_name || 'Mundra Port'}</td>
-                <td style={{ padding: '0.5rem 0.75rem' }}>{marine_traffic_ais?.destination_port || 'Mundra, India'}</td>
+                <td style={{ padding: '0.5rem 0.75rem' }}>{carrier?.pod?.name || '-'}</td>
+                <td style={{ padding: '0.5rem 0.75rem' }}>{adani_mundra?.port_name || '-'}</td>
+                <td style={{ padding: '0.5rem 0.75rem' }}>{marine_traffic_ais?.destination_port || '-'}</td>
                 <td style={{ padding: '0.5rem 0.75rem', textAlign: 'center' }}>
-                  <span style={{ color: '#16a34a', fontWeight: '700', background: '#dcfce7', padding: '0.15rem 0.5rem', borderRadius: '4px' }}>✅ Verified Match</span>
+                  {carrier?.pod?.name ? <span style={{ color: '#16a34a', fontWeight: '700', background: '#dcfce7', padding: '0.15rem 0.5rem', borderRadius: '4px' }}>✅ Verified</span> : '-'}
                 </td>
               </tr>
               <tr style={{ borderBottom: '1px solid #e2e8f0' }}>
                 <td style={{ padding: '0.5rem 0.75rem', fontWeight: '700', color: 'var(--text-primary)' }}>Vessel Name</td>
-                <td style={{ padding: '0.5rem 0.75rem', fontWeight: '700' }}>{carrier?.vessel_name || 'N/A'}</td>
-                <td style={{ padding: '0.5rem 0.75rem' }}>{adani_mundra?.vessel_name || carrier?.vessel_name}</td>
-                <td style={{ padding: '0.5rem 0.75rem' }}>{marine_traffic_ais?.vessel_name || carrier?.vessel_name}</td>
+                <td style={{ padding: '0.5rem 0.75rem', fontWeight: '700' }}>{carrier?.vessel_name || '-'}</td>
+                <td style={{ padding: '0.5rem 0.75rem' }}>{adani_mundra?.vessel_name || '-'}</td>
+                <td style={{ padding: '0.5rem 0.75rem' }}>{marine_traffic_ais?.vessel_name || '-'}</td>
                 <td style={{ padding: '0.5rem 0.75rem', textAlign: 'center' }}>
-                  <span style={{ color: '#16a34a', fontWeight: '700', background: '#dcfce7', padding: '0.15rem 0.5rem', borderRadius: '4px' }}>✅ Verified Match</span>
+                  {carrier?.vessel_name ? <span style={{ color: '#16a34a', fontWeight: '700', background: '#dcfce7', padding: '0.15rem 0.5rem', borderRadius: '4px' }}>✅ Verified</span> : '-'}
                 </td>
               </tr>
               <tr style={{ borderBottom: '1px solid #e2e8f0' }}>
                 <td style={{ padding: '0.5rem 0.75rem', fontWeight: '700', color: 'var(--text-primary)' }}>Voyage Number</td>
-                <td style={{ padding: '0.5rem 0.75rem', fontFamily: 'monospace' }}>{carrier?.voyage_number || 'N/A'}</td>
-                <td style={{ padding: '0.5rem 0.75rem', fontFamily: 'monospace' }}>{adani_mundra?.inward_voyage || carrier?.voyage_number}</td>
-                <td style={{ padding: '0.5rem 0.75rem', color: '#64748b' }}>Linked via IMO {carrier?.imo_number}</td>
+                <td style={{ padding: '0.5rem 0.75rem', fontFamily: 'monospace' }}>{carrier?.voyage_number || '-'}</td>
+                <td style={{ padding: '0.5rem 0.75rem', fontFamily: 'monospace' }}>{adani_mundra?.inward_voyage || '-'}</td>
+                <td style={{ padding: '0.5rem 0.75rem', color: '#64748b' }}>{carrier?.imo_number ? `IMO ${carrier.imo_number}` : '-'}</td>
                 <td style={{ padding: '0.5rem 0.75rem', textAlign: 'center' }}>
-                  <span style={{ color: '#16a34a', fontWeight: '700', background: '#dcfce7', padding: '0.15rem 0.5rem', borderRadius: '4px' }}>✅ Verified Match</span>
+                  {carrier?.voyage_number ? <span style={{ color: '#16a34a', fontWeight: '700', background: '#dcfce7', padding: '0.15rem 0.5rem', borderRadius: '4px' }}>✅ Verified</span> : '-'}
                 </td>
               </tr>
               <tr>
                 <td style={{ padding: '0.5rem 0.75rem', fontWeight: '700', color: 'var(--text-primary)' }}>Current Status</td>
-                <td style={{ padding: '0.5rem 0.75rem', fontWeight: '700', color: '#15803d' }}>{carrier?.current_status || 'Completed'}</td>
-                <td style={{ padding: '0.5rem 0.75rem', color: '#15803d', fontWeight: '600' }}>{adani_mundra?.berthing_status || 'Berthed & Discharged'}</td>
-                <td style={{ padding: '0.5rem 0.75rem', color: '#15803d' }}>{marine_traffic_ais?.nav_status || 'Moored / Berthed'}</td>
+                <td style={{ padding: '0.5rem 0.75rem', fontWeight: '700', color: '#15803d' }}>{carrier?.current_status || '-'}</td>
+                <td style={{ padding: '0.5rem 0.75rem', color: '#15803d', fontWeight: '600' }}>{adani_mundra?.berthing_status || '-'}</td>
+                <td style={{ padding: '0.5rem 0.75rem', color: '#15803d' }}>{marine_traffic_ais?.nav_status || '-'}</td>
                 <td style={{ padding: '0.5rem 0.75rem', textAlign: 'center' }}>
-                  <span style={{ color: '#16a34a', fontWeight: '700', background: '#dcfce7', padding: '0.15rem 0.5rem', borderRadius: '4px' }}>✅ Verified Match</span>
+                  {carrier?.current_status ? <span style={{ color: '#16a34a', fontWeight: '700', background: '#dcfce7', padding: '0.15rem 0.5rem', borderRadius: '4px' }}>✅ Live</span> : '-'}
                 </td>
               </tr>
             </tbody>
@@ -181,14 +181,14 @@ const SourceComparisonView = ({ sources }) => {
             <div>
               <div className="source-card-header">
                 <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                  <div style={{ padding: '0.4rem', background: 'rgba(2, 136, 209, 0.1)', color: '#0288d1', borderRadius: '6px' }}>
+                  <div style={{ padding: '0.4rem', background: 'rgba(25, 118, 210, 0.1)', color: 'var(--primary)', borderRadius: '6px' }}>
                     <Ship size={18} />
                   </div>
                   <div>
                     <h4 style={{ fontSize: '0.875rem', fontWeight: '700', margin: 0, color: 'var(--text-primary)' }}>
                       {carrier?.source_name || 'Carrier Manifest'}
                     </h4>
-                    <span style={{ fontSize: '0.7rem', color: 'var(--text-secondary)' }}>Carrier Portal Manifest</span>
+                    <span style={{ fontSize: '0.7rem', color: 'var(--text-secondary)' }}>Master Bill of Lading & Carrier EDI Feed</span>
                   </div>
                 </div>
                 {carrier?.source_url && (
@@ -200,30 +200,17 @@ const SourceComparisonView = ({ sources }) => {
 
               <table className="source-info-table">
                 <tbody>
-                  <tr><td>BL Number:</td><td>{carrier?.bl_number}</td></tr>
-                  <tr><td>Vessel & Voyage:</td><td>{carrier?.vessel_name} ({carrier?.voyage_number})</td></tr>
-                  <tr><td>Carrier ETA:</td><td style={{ color: 'var(--primary)', fontFamily: 'monospace' }}>{formatDate(carrier?.carrier_eta)}</td></tr>
-                  <tr><td>Route:</td><td>{carrier?.pol?.name} → {carrier?.pod?.name}</td></tr>
-                  <tr><td>Status:</td><td><Badge variant="success">{carrier?.current_status}</Badge></td></tr>
+                  <tr><td>Carrier Name:</td><td style={{ fontWeight: '700' }}>{carrier?.shipping_line_name || carrier?.source_name || '-'}</td></tr>
+                  <tr><td>Vessel / Voyage:</td><td>{carrier?.vessel_name || '-'} ({carrier?.voyage_number || '-'})</td></tr>
+                  <tr><td>Carrier ETA:</td><td style={{ color: 'var(--primary)', fontWeight: '700', fontFamily: 'monospace' }}>{formatDate(carrier?.carrier_eta)}</td></tr>
+                  <tr><td>Status:</td><td><Badge variant="success">{carrier?.current_status || 'Active'}</Badge></td></tr>
+                  <tr><td>Containers:</td><td style={{ fontFamily: 'monospace' }}>{carrier?.containers?.map(c => c.container_number).join(', ') || '-'}</td></tr>
+                  <tr><td>POL / POD:</td><td>{carrier?.pol?.name || '-'} → {carrier?.pod?.name || '-'}</td></tr>
                 </tbody>
               </table>
-
-              <div>
-                <span style={{ fontSize: '0.7rem', fontWeight: '700', textTransform: 'uppercase', color: 'var(--text-secondary)', display: 'block', marginBottom: '0.35rem' }}>
-                  Containers ({carrier?.containers?.length || 0}):
-                </span>
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '0.25rem' }}>
-                  {(carrier?.containers || []).map((cont) => (
-                    <div key={cont.container_number} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', background: 'var(--background)', padding: '0.3rem 0.5rem', borderRadius: '4px', fontSize: '0.75rem', border: '1px solid var(--border)' }}>
-                      <span style={{ fontFamily: 'monospace', fontWeight: '700' }}>{cont.container_number} ({cont.container_type})</span>
-                      <span style={{ color: 'var(--success)', fontWeight: '600' }}>{cont.status}</span>
-                    </div>
-                  ))}
-                </div>
-              </div>
             </div>
             <div style={{ paddingTop: '0.5rem', marginTop: '0.75rem', borderTop: '1px solid var(--border)', fontSize: '0.7rem', color: 'var(--text-secondary)', display: 'flex', justifyContent: 'space-between' }}>
-              <span>Source: Official Web Feed</span>
+              <span>Source: Carrier Web / API Scan</span>
               <span>{formatDate(carrier?.fetched_at)}</span>
             </div>
           </div>
@@ -236,28 +223,30 @@ const SourceComparisonView = ({ sources }) => {
               <div className="source-card-header">
                 <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
                   <div style={{ padding: '0.4rem', background: 'rgba(237, 108, 2, 0.1)', color: '#ed6c02', borderRadius: '6px' }}>
-                    <Building2 size={18} />
+                    <Anchor size={18} />
                   </div>
                   <div>
                     <h4 style={{ fontSize: '0.875rem', fontWeight: '700', margin: 0, color: 'var(--text-primary)' }}>
                       Adani Mundra Port Terminal (APSEZ)
                     </h4>
-                    <span style={{ fontSize: '0.7rem', color: 'var(--text-secondary)' }}>Berthing & Daily Movement Report</span>
+                    <span style={{ fontSize: '0.7rem', color: 'var(--text-secondary)' }}>Berthing & Port Schedule</span>
                   </div>
                 </div>
-                <a href="https://www.adaniports.com/ports-and-terminals/mundra-port/download" target="_blank" rel="noreferrer" style={{ color: 'var(--primary)', padding: '0.25rem' }}>
-                  <ExternalLink size={15} />
-                </a>
+                {adani_mundra?.source_url && (
+                  <a href={adani_mundra.source_url} target="_blank" rel="noreferrer" style={{ color: 'var(--primary)', padding: '0.25rem' }}>
+                    <ExternalLink size={15} />
+                  </a>
+                )}
               </div>
 
               <table className="source-info-table">
                 <tbody>
-                  <tr><td>Terminal:</td><td style={{ color: '#15803d', fontWeight: '700' }}>{adani_mundra?.terminal || 'CT3 (AMCT)'}</td></tr>
-                  <tr><td>Berth:</td><td>{adani_mundra?.berth_number || 'Berth 04'}</td></tr>
+                  <tr><td>Terminal:</td><td style={{ color: '#15803d', fontWeight: '700' }}>{adani_mundra?.terminal || '-'}</td></tr>
+                  <tr><td>Berth:</td><td>{adani_mundra?.berth_number || '-'}</td></tr>
                   <tr><td>Port Berthing ETA:</td><td style={{ color: '#b45309', fontWeight: '700', fontFamily: 'monospace' }}>{formatDate(adani_mundra?.port_eta)}</td></tr>
-                  <tr><td>Inward Voyage:</td><td>{adani_mundra?.inward_voyage}</td></tr>
-                  <tr><td>Customs Status:</td><td style={{ color: '#15803d' }}>{adani_mundra?.customs_status || 'IGM Manifest Logged'}</td></tr>
-                  <tr><td>Berthing Status:</td><td><Badge variant="warning">{adani_mundra?.berthing_status || 'Scheduled'}</Badge></td></tr>
+                  <tr><td>Inward Voyage:</td><td>{adani_mundra?.inward_voyage || '-'}</td></tr>
+                  <tr><td>Customs Status:</td><td style={{ color: '#15803d' }}>{adani_mundra?.customs_status || '-'}</td></tr>
+                  <tr><td>Berthing Status:</td><td><Badge variant={adani_mundra?.berthing_status ? "warning" : "default"}>{adani_mundra?.berthing_status || '-'}</Badge></td></tr>
                 </tbody>
               </table>
             </div>
@@ -284,18 +273,20 @@ const SourceComparisonView = ({ sources }) => {
                     <span style={{ fontSize: '0.7rem', color: 'var(--text-secondary)' }}>Vessel Schedule & Container Enquiry</span>
                   </div>
                 </div>
-                <a href="https://www.dpworld.com/en/ports-terminals/india/mict/berthing-report" target="_blank" rel="noreferrer" style={{ color: 'var(--primary)', padding: '0.25rem' }}>
-                  <ExternalLink size={15} />
-                </a>
+                {dp_world?.source_url && (
+                  <a href={dp_world.source_url} target="_blank" rel="noreferrer" style={{ color: 'var(--primary)', padding: '0.25rem' }}>
+                    <ExternalLink size={15} />
+                  </a>
+                )}
               </div>
 
               <table className="source-info-table">
                 <tbody>
-                  <tr><td>Terminal Window:</td><td>{dp_world?.berth_window || 'Window 2 (North Quay)'}</td></tr>
+                  <tr><td>Terminal:</td><td>{dp_world?.terminal || '-'}</td></tr>
                   <tr><td>MICT ETA:</td><td style={{ fontFamily: 'monospace', fontWeight: '700' }}>{formatDate(dp_world?.port_eta)}</td></tr>
-                  <tr><td>Quay Cranes:</td><td>{dp_world?.quay_crane_allocated || 'QC-03, QC-04'}</td></tr>
-                  <tr><td>EDI Status:</td><td style={{ color: '#15803d', fontWeight: '600' }}>{dp_world?.container_enquiry_status || 'EDI Manifest Received'}</td></tr>
-                  <tr><td>Berthing State:</td><td><Badge variant="warning">{dp_world?.berthing_status || 'Expected'}</Badge></td></tr>
+                  <tr><td>Quay Cranes:</td><td>{dp_world?.quay_crane_allocated || '-'}</td></tr>
+                  <tr><td>EDI Status:</td><td style={{ color: '#15803d', fontWeight: '600' }}>{dp_world?.container_enquiry_status || '-'}</td></tr>
+                  <tr><td>Berthing State:</td><td><Badge variant={dp_world?.berthing_status ? "warning" : "default"}>{dp_world?.berthing_status || '-'}</Badge></td></tr>
                 </tbody>
               </table>
             </div>
@@ -331,11 +322,11 @@ const SourceComparisonView = ({ sources }) => {
 
               <table className="source-info-table">
                 <tbody>
-                  <tr><td>Coordinates:</td><td style={{ fontFamily: 'monospace', fontWeight: '700' }}>{marine_traffic_ais?.latitude?.toFixed(4)}° N, {marine_traffic_ais?.longitude?.toFixed(4)}° E</td></tr>
-                  <tr><td>Speed & Course:</td><td>{marine_traffic_ais?.speed_knots} kts | {marine_traffic_ais?.heading}°</td></tr>
-                  <tr><td>Nav Status:</td><td><Badge variant="success">{marine_traffic_ais?.nav_status || 'Underway'}</Badge></td></tr>
-                  <tr><td>IMO / MMSI:</td><td style={{ fontFamily: 'monospace' }}>{marine_traffic_ais?.imo_number} / {marine_traffic_ais?.mmsi_number}</td></tr>
-                  <tr><td>Area:</td><td style={{ color: '#15803d', fontWeight: '600' }}>{marine_traffic_ais?.current_location}</td></tr>
+                  <tr><td>Coordinates:</td><td style={{ fontFamily: 'monospace', fontWeight: '700' }}>{marine_traffic_ais?.latitude ? `${marine_traffic_ais.latitude.toFixed(4)}° N, ${marine_traffic_ais.longitude.toFixed(4)}° E` : '-'}</td></tr>
+                  <tr><td>Speed & Course:</td><td>{marine_traffic_ais?.speed_knots ? `${marine_traffic_ais.speed_knots} kts | ${marine_traffic_ais.heading || 0}°` : '-'}</td></tr>
+                  <tr><td>Nav Status:</td><td><Badge variant="success">{marine_traffic_ais?.nav_status || '-'}</Badge></td></tr>
+                  <tr><td>IMO / MMSI:</td><td style={{ fontFamily: 'monospace' }}>{marine_traffic_ais?.imo_number || '-'} / {marine_traffic_ais?.mmsi_number || '-'}</td></tr>
+                  <tr><td>Area:</td><td style={{ color: '#15803d', fontWeight: '600' }}>{marine_traffic_ais?.current_location || '-'}</td></tr>
                 </tbody>
               </table>
             </div>
