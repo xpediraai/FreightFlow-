@@ -1,7 +1,7 @@
 import { 
   LayoutDashboard, Users, Building2, Truck, Package, Settings, Circle, 
   Globe, Box, Briefcase, MapPin, Grid, Map, CreditCard, Ruler, PackageOpen, FileText, Plane, Anchor, Ship, 
-  Warehouse, Car, Award, Store, ShoppingBag, Receipt, DollarSign
+  Warehouse, Car, Award, Store, ShoppingBag, Receipt, DollarSign, FileOutput, HelpCircle
 } from 'lucide-react';
 
 export const getNavItems = (role) => {
@@ -16,6 +16,14 @@ export const getNavItems = (role) => {
   
   return [
     { name: 'Dashboard', path: '/company/dashboard', icon: LayoutDashboard, color: '#1976D2' },
+    { 
+      name: 'Export', 
+      icon: FileOutput, 
+      color: '#4CAF50',
+      children: [
+        { name: 'Shipping Inquiry', path: '/company/export/shipping-inquiry', icon: HelpCircle, color: '#009688' },
+      ]
+    },
     { 
       name: 'Masters', 
       icon: Package,

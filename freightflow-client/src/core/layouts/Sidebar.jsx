@@ -107,7 +107,7 @@ const Sidebar = ({ isOpen }) => {
   return (
     <aside className={clsx('layout-sidebar', { 'closed': !isOpen })} style={{ display: 'flex', flexDirection: 'column' }}>
       <div className="p-lg flex items-center justify-center border-b" style={{ borderColor: 'var(--secondary-dark)' }}>
-        <h2 className="text-primary font-bold whitespace-nowrap overflow-hidden" style={{ opacity: isOpen ? 1 : 0, transition: 'opacity 0.2s' }}>FreightFlow</h2>
+        <h2 className="font-bold whitespace-nowrap overflow-hidden" style={{ color: '#d32f2f', opacity: isOpen ? 1 : 0, transition: 'opacity 0.2s' }}>FreightFlow</h2>
       </div>
       <nav className="flex-col gap-xs p-md flex-grow overflow-y-auto" style={{ display: 'flex' }}>
         {navItems.map((item, idx) => (

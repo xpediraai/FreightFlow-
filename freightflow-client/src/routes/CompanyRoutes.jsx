@@ -33,6 +33,9 @@ import Employees from '../modules/company/pages/Masters/Organization/Employee/Em
 import Customers from '../modules/company/pages/Masters/Business/Customer/Customers';
 import Vendors from '../modules/company/pages/Masters/Business/Vendor/Vendors';
 
+// Export Modules
+import ShippingInquiries from '../modules/company/pages/Export/ShippingInquiry/ShippingInquiries';
+
 // Placeholders for unimplemented features
 const GenericPlaceholder = ({ title }) => (
   <div style={{ padding: '2rem' }}>
@@ -137,6 +140,14 @@ const CompanyRoutes = [
   {
     path: 'masters/business/charge',
     element: <Charges />,
+  },
+  {
+    path: 'export/shipping-inquiry',
+    element: <ShippingInquiries />,
+  },
+  {
+    path: 'export/*',
+    element: <GenericPlaceholder title="Export Operations" />,
   },
   {
     path: 'masters/*',
