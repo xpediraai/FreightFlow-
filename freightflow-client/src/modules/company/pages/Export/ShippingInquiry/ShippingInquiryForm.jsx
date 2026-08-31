@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { X, Check } from 'lucide-react';
+import { X, Check, Building2, MapPin, Package, Box, FileText, Calendar, Ship, AlertCircle } from 'lucide-react';
 import Button from '../../../../../shared/components/Button';
 import { businessService } from '../../../../masters/services/business.service';
 import { foundationService } from '../../../../masters/services/foundation.service';
@@ -14,28 +14,43 @@ export const generateInquiryNo = (existingCount = 0) => {
   return `ESI/SS/${month}-${year}/${seq}`;
 };
 
-const DEFAULT_CUSTOMERS = [
+const DEFAULT_EXPORTERS = [
   { id: 'c1', customer_name: 'Apex Global Logistics Ltd' },
   { id: 'c2', customer_name: 'Sunlight Exports & Trading' },
   { id: 'c3', customer_name: 'Gujarat Textiles Pvt Ltd' },
   { id: 'c4', customer_name: 'Orient Shipping & Freight Corp' },
 ];
 
-const DEFAULT_LOCATIONS = [
-  'Ahmedabad', 'Surat', 'Mumbai (Nhava Sheva)', 'Mundra Port', 
-  'Delhi', 'Dubai (Jebel Ali)', 'Rotterdam', 'Singapore', 'London', 'New York'
+const DEFAULT_PORTS = [
+  { id: 'p1', port_name: 'Mundra Port (INMUN)', port_code: 'INMUN' },
+  { id: 'p2', port_name: 'Nhava Sheva / JNPT (INNSA)', port_code: 'INNSA' },
+  { id: 'p3', port_name: 'Hazira Port (INHZR)', port_code: 'INHZR' },
+  { id: 'p4', port_name: 'Kandla Port (IXY)', port_code: 'IXY' },
+  { id: 'p5', port_name: 'Dubai / Jebel Ali (AEJEA)', port_code: 'AEJEA' },
+  { id: 'p6', port_name: 'Rotterdam (NLRTM)', port_code: 'NLRTM' },
+  { id: 'p7', port_name: 'Singapore (SGSIN)', port_code: 'SGSIN' },
+  { id: 'p8', port_name: 'Hamburg (DEHAM)', port_code: 'DEHAM' },
+  { id: 'p9', port_name: 'New York / New Jersey (USNYC)', port_code: 'USNYC' },
+  { id: 'p10', port_name: 'Shanghai (CNSHA)', port_code: 'CNSHA' }
 ];
 
-const DEFAULT_TRANSPORT_MODES = ['Sea', 'Air', 'Land'];
+const DEFAULT_SHIPPING_LINES = [
+  { id: 'sl1', name: 'Maersk Line' },
+  { id: 'sl2', name: 'MSC (Mediterranean Shipping Company)' },
+  { id: 'sl3', name: 'CMA CGM' },
+  { id: 'sl4', name: 'Hapag-Lloyd' },
+  { id: 'sl5', name: 'ONE (Ocean Network Express)' },
+  { id: 'sl6', name: 'COSCO Shipping' }
+];
 
 const DEFAULT_CONTAINER_TYPES = [
-  { id: 'ct1', container_code: '20GP', container_name: '20ft General Purpose' },
-  { id: 'ct2', container_code: '40GP', container_name: '40ft General Purpose' },
-  { id: 'ct3', container_code: '40HC', container_name: '40ft High Cube' },
-  { id: 'ct4', container_code: '20RF', container_name: '20ft Reefer' },
-  { id: 'ct5', container_code: '40RF', container_name: '40ft Reefer' },
-  { id: 'ct6', container_code: '20OT', container_name: '20ft Open Top' },
-  { id: 'ct7', container_code: '40FR', container_name: '40ft Flat Rack' }
+  { id: 'ct1', container_code: "20'", container_name: "20' Standard Dry (20GP)" },
+  { id: 'ct2', container_code: "40'", container_name: "40' Standard Dry (40GP)" },
+  { id: 'ct3', container_code: "40' HC", container_name: "40' High Cube (40HC)" },
+  { id: 'ct4', container_code: "20' RF", container_name: "20' Reefer Container" },
+  { id: 'ct5', container_code: "40' RF", container_name: "40' Reefer Container" },
+  { id: 'ct6', container_code: "20' OT", container_name: "20' Open Top" },
+  { id: 'ct7', container_code: "40' FR", container_name: "40' Flat Rack" }
 ];
 
 const ShippingInquiryForm = ({ onCancel, onSuccess, initialData, existingCount = 0 }) => {
@@ -44,37 +59,45 @@ const ShippingInquiryForm = ({ onCancel, onSuccess, initialData, existingCount =
   const [isDropdownsLoading, setIsDropdownsLoading] = useState(true);
   const [globalError, setGlobalError] = useState('');
 
-  // Dropdown States (Live API Data + Static Defaults)
-  const [customers, setCustomers] = useState(DEFAULT_CUSTOMERS);
-  const [locations, setLocations] = useState(DEFAULT_LOCATIONS);
-  const [transportModes, setTransportModes] = useState(DEFAULT_TRANSPORT_MODES);
+  // Live Master Dropdown States
+  const [exporters, setExporters] = useState(DEFAULT_EXPORTERS);
+  const [ports, setPorts] = useState(DEFAULT_PORTS);
+  const [shippingLines, setShippingLines] = useState(DEFAULT_SHIPPING_LINES);
   const [containerTypes, setContainerTypes] = useState(DEFAULT_CONTAINER_TYPES);
 
   const [formData, setFormData] = useState({
     inquiry_no: '',
-    customer_id: '',
-    customer_name: '',
-    origin: '',
-    destination: '',
+    exporter_id: '',
+    exporter_name: '',
+    pol: '',
+    pod: '',
+    fpod: '',
     commodity: '',
-    container_type: '',
-    quantity: '',
-    weight: '',
-    mode: 'Sea',
+    hsn_code: '',
+    cargo_type: 'General', // General | Hazardous | Reefer | OOG
+    gross_weight: '',
+    container_type: "20'", // 20' | 40' | 40' HC | Master Types
+    no_of_containers: '1',
+    shipment_terms: 'FOB', // FOB | CIF | CFR | EXW
+    cargo_ready_date: '',
+    stuffing_location: 'Factory', // Factory | CFS | Other
+    stuffing_location_other: '',
+    shipping_line_preference: '',
+    free_days_required: '',
+    special_requirements: '',
     priority: 'Medium',
-    status: 'Pending',
-    remarks: ''
+    status: 'Pending'
   });
 
+  // Fetch Master Data on Mount
   useEffect(() => {
     const fetchLiveMasterDropdowns = async () => {
       setIsDropdownsLoading(true);
       try {
-        const [custRes, cityRes, portRes, modeRes, containerTypeRes] = await Promise.allSettled([
+        const [custRes, portRes, shipLineRes, containerTypeRes] = await Promise.allSettled([
           businessService.getCustomers(),
-          foundationService.getCities(),
           logisticsService.getPorts(),
-          commonService.getTransportModes(),
+          logisticsService.getShippingLines(),
           commonService.getContainerTypes()
         ]);
 
@@ -86,38 +109,28 @@ const ShippingInquiryForm = ({ onCancel, onSuccess, initialData, existingCount =
           return [];
         };
 
-        // 1. Customers
+        // 1. Exporters (Customers)
         const custData = extractData(custRes);
         if (custData.length > 0) {
-          setCustomers(custData);
-        } else {
-          setCustomers(DEFAULT_CUSTOMERS);
+          setExporters(custData);
         }
 
-        // 2. Locations (Cities + Ports)
-        const cityData = extractData(cityRes).map(c => c.city_name || c.name).filter(Boolean);
-        const portData = extractData(portRes).map(p => p.port_name || p.name).filter(Boolean);
-        const mergedLocations = Array.from(new Set([...cityData, ...portData]));
-        if (mergedLocations.length > 0) {
-          setLocations(mergedLocations);
-        } else {
-          setLocations(DEFAULT_LOCATIONS);
+        // 2. Ports (POL / POD)
+        const portData = extractData(portRes);
+        if (portData.length > 0) {
+          setPorts(portData);
         }
 
-        // 3. Transport Modes
-        const modeData = extractData(modeRes).map(m => typeof m === 'object' ? (m.mode_name || m.name || m.mode_code) : m).filter(Boolean);
-        if (modeData.length > 0) {
-          setTransportModes(modeData);
-        } else {
-          setTransportModes(DEFAULT_TRANSPORT_MODES);
+        // 3. Shipping Lines
+        const lineData = extractData(shipLineRes);
+        if (lineData.length > 0) {
+          setShippingLines(lineData);
         }
 
         // 4. Container Types
         const contData = extractData(containerTypeRes);
         if (contData.length > 0) {
           setContainerTypes(contData);
-        } else {
-          setContainerTypes(DEFAULT_CONTAINER_TYPES);
         }
 
       } catch (err) {
@@ -130,10 +143,31 @@ const ShippingInquiryForm = ({ onCancel, onSuccess, initialData, existingCount =
     fetchLiveMasterDropdowns();
   }, []);
 
+  // Initialize or populate form
   useEffect(() => {
     if (initialData) {
       setFormData({
-        ...initialData
+        inquiry_no: initialData.inquiry_no || generateInquiryNo(existingCount),
+        exporter_id: initialData.exporter_id || initialData.customer_id || '',
+        exporter_name: initialData.exporter_name || initialData.customer_name || '',
+        pol: initialData.pol || initialData.origin || '',
+        pod: initialData.pod || initialData.destination || '',
+        fpod: initialData.fpod || '',
+        commodity: initialData.commodity || '',
+        hsn_code: initialData.hsn_code || '',
+        cargo_type: initialData.cargo_type || 'General',
+        gross_weight: initialData.gross_weight || initialData.weight || '',
+        container_type: initialData.container_type || "20'",
+        no_of_containers: initialData.no_of_containers || initialData.quantity || '1',
+        shipment_terms: initialData.shipment_terms || 'FOB',
+        cargo_ready_date: initialData.cargo_ready_date ? initialData.cargo_ready_date.split('T')[0] : '',
+        stuffing_location: initialData.stuffing_location || 'Factory',
+        stuffing_location_other: initialData.stuffing_location_other || '',
+        shipping_line_preference: initialData.shipping_line_preference || '',
+        free_days_required: initialData.free_days_required !== undefined ? String(initialData.free_days_required) : '',
+        special_requirements: initialData.special_requirements || initialData.remarks || '',
+        priority: initialData.priority || 'Medium',
+        status: initialData.status || 'Pending'
       });
     } else {
       setFormData(prev => ({
@@ -145,24 +179,24 @@ const ShippingInquiryForm = ({ onCancel, onSuccess, initialData, existingCount =
 
   const handleChange = (e) => {
     const { name, value } = e.target;
-    if (name === 'customer_id') {
-      const selectedCust = customers.find(c => String(c.id) === String(value));
+    if (name === 'exporter_id') {
+      const selectedExp = exporters.find(c => String(c.id) === String(value));
       setFormData(prev => ({
         ...prev,
-        customer_id: value,
-        customer_name: selectedCust ? (selectedCust.customer_name || selectedCust.name) : ''
+        exporter_id: value,
+        exporter_name: selectedExp ? (selectedExp.customer_name || selectedExp.name || selectedExp.company_name) : ''
       }));
-    } else if (name === 'origin') {
+    } else if (name === 'pol') {
       setFormData(prev => ({
         ...prev,
-        origin: value,
-        destination: prev.destination === value ? '' : prev.destination
+        pol: value,
+        pod: prev.pod === value ? '' : prev.pod
       }));
-    } else if (name === 'destination') {
+    } else if (name === 'pod') {
       setFormData(prev => ({
         ...prev,
-        destination: value,
-        origin: prev.origin === value ? '' : prev.origin
+        pod: value,
+        pol: prev.pol === value ? '' : prev.pol
       }));
     } else {
       setFormData(prev => ({ ...prev, [name]: value }));
@@ -173,24 +207,75 @@ const ShippingInquiryForm = ({ onCancel, onSuccess, initialData, existingCount =
     e.preventDefault();
     setGlobalError('');
 
-    if (!formData.customer_id && !formData.customer_name) {
-      setGlobalError('Please select a Customer.');
+    // --- Validation Rules ---
+    if (!formData.exporter_id && !formData.exporter_name) {
+      setGlobalError('Exporter is mandatory. Please select an Exporter.');
       return;
     }
-    if (!formData.origin || !formData.destination) {
-      setGlobalError('Origin and Destination are required.');
+    if (!formData.pol) {
+      setGlobalError('Port of Loading (POL) is mandatory.');
       return;
     }
-    if (formData.origin === formData.destination) {
-      setGlobalError('Origin and Destination cannot be the same city/port.');
+    if (!formData.pod) {
+      setGlobalError('Port of Discharge (POD) is mandatory.');
       return;
+    }
+    if (formData.pol.trim().toLowerCase() === formData.pod.trim().toLowerCase()) {
+      setGlobalError('Port of Loading (POL) and Port of Discharge (POD) cannot be identical.');
+      return;
+    }
+    if (!formData.commodity.trim()) {
+      setGlobalError('Commodity description is mandatory.');
+      return;
+    }
+    if (!formData.hsn_code.trim()) {
+      setGlobalError('HSN Code is mandatory for quotation preparation.');
+      return;
+    }
+    if (!formData.container_type) {
+      setGlobalError('Container Requirement is mandatory.');
+      return;
+    }
+    const containerCount = parseInt(formData.no_of_containers, 10);
+    if (isNaN(containerCount) || containerCount <= 0) {
+      setGlobalError('No. of Containers must be a positive integer greater than 0.');
+      return;
+    }
+    if (!formData.gross_weight.trim()) {
+      setGlobalError('Gross Weight per container is mandatory.');
+      return;
+    }
+    if (!formData.cargo_ready_date) {
+      setGlobalError('Expected Cargo Ready Date is mandatory.');
+      return;
+    }
+    if (formData.stuffing_location === 'Other' && !formData.stuffing_location_other.trim()) {
+      setGlobalError('Please specify the stuffing location details when "Other" is selected.');
+      return;
+    }
+    if (formData.free_days_required !== '' && formData.free_days_required !== null) {
+      const days = parseInt(formData.free_days_required, 10);
+      if (isNaN(days) || days < 0) {
+        setGlobalError('Free Days Required cannot be negative.');
+        return;
+      }
     }
 
     setIsLoading(true);
 
     try {
+      // Build updated payload ensuring 100% backward compatibility for legacy list/search views
       const payload = {
         ...formData,
+        // Legacy aliases
+        customer_id: formData.exporter_id,
+        customer_name: formData.exporter_name,
+        origin: formData.pol,
+        destination: formData.pod,
+        quantity: `${formData.no_of_containers} x ${formData.container_type}`,
+        weight: formData.gross_weight,
+        remarks: formData.special_requirements,
+        mode: 'Sea',
         id: isEditMode ? initialData.id : `inq_${Date.now()}`,
         created_at: isEditMode ? initialData.created_at : new Date().toISOString()
       };
@@ -203,198 +288,445 @@ const ShippingInquiryForm = ({ onCancel, onSuccess, initialData, existingCount =
     }
   };
 
+  const sectionHeaderStyle = {
+    fontSize: '0.875rem',
+    fontWeight: '700',
+    letterSpacing: '0.05em',
+    textTransform: 'uppercase',
+    color: 'var(--primary, #1976D2)',
+    borderBottom: '2px solid #e3f2fd',
+    paddingBottom: '0.4rem',
+    marginBottom: '0.85rem',
+    marginTop: '1.25rem',
+    display: 'flex',
+    alignItems: 'center',
+    gap: '0.5rem'
+  };
+
   return (
-    <div className="bg-surface border-light rounded-lg shadow-sm p-lg">
-      <div className="flex justify-between align-center mb-md border-b-light pb-sm">
+    <div className="bg-surface border-light rounded-lg shadow-sm p-lg" style={{ backgroundColor: '#ffffff', borderRadius: '8px', border: '1px solid #e5e7eb', padding: '1.5rem' }}>
+      <div className="flex justify-between align-center mb-md border-b-light pb-sm" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem', borderBottom: '1px solid #f3f4f6', paddingBottom: '0.75rem' }}>
         <div>
-          <h2 className="text-lg font-semibold m-0">
-            {isEditMode ? `Edit Shipping Inquiry (${formData.inquiry_no})` : 'Create New Shipping Inquiry'}
+          <h2 className="text-lg font-semibold m-0" style={{ margin: 0, fontSize: '1.25rem', color: '#111827', fontWeight: 600 }}>
+            {isEditMode ? `Edit Export Shipment Inquiry (${formData.inquiry_no})` : 'New Export Shipment Inquiry'}
           </h2>
-          <p className="text-xs text-tertiary m-0 mt-xs">Select options from dropdowns to create or update an inquiry.</p>
+          <p className="text-xs text-tertiary m-0 mt-xs" style={{ margin: 0, fontSize: '0.85rem', color: '#6b7280', marginTop: '0.25rem' }}>
+            Capture exporter, routing, cargo, and container requirements for export quotation preparation.
+          </p>
         </div>
         <Button variant="ghost" onClick={onCancel} leftIcon={X} size="sm">Close</Button>
       </div>
 
-      {globalError && <div className="alert alert-danger mb-md p-sm text-sm" style={{ backgroundColor: '#ffebee', color: '#c62828', padding: '0.75rem', borderRadius: '4px' }}>{globalError}</div>}
+      {globalError && (
+        <div className="alert alert-danger mb-md p-sm text-sm" style={{ backgroundColor: '#ffebee', color: '#c62828', padding: '0.75rem 1rem', borderRadius: '6px', borderLeft: '4px solid #ef5350', marginBottom: '1rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+          <AlertCircle size={18} />
+          <span>{globalError}</span>
+        </div>
+      )}
 
       <form onSubmit={handleSubmit}>
-        <div className="form-grid pt-sm" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: '1rem' }}>
-          
+        
+        {/* SECTION 1 — EXPORTER DETAILS */}
+        <div style={sectionHeaderStyle}>
+          <Building2 size={16} color="#1976D2" />
+          <span>Section 1 — Exporter Details</span>
+        </div>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: '1rem' }}>
           {/* Inquiry No */}
           <div className="form-group">
-            <label className="text-sm font-medium">Inquiry No <span className="text-danger">*</span></label>
+            <label className="text-sm font-medium" style={{ display: 'block', fontSize: '0.85rem', fontWeight: 500, marginBottom: '0.35rem' }}>Inquiry No <span style={{ color: '#d32f2f' }}>*</span></label>
             <input
               type="text"
               name="inquiry_no"
               value={formData.inquiry_no}
-              onChange={handleChange}
-              readOnly={!isEditMode}
+              readOnly
               className="form-control form-control-sm"
-              style={{ backgroundColor: isEditMode ? 'var(--bg-surface)' : 'var(--bg-surface-hover)', fontWeight: 600, color: 'var(--color-primary)' }}
-              required
+              style={{ width: '100%', padding: '0.45rem 0.65rem', borderRadius: '4px', border: '1px solid #d1d5db', backgroundColor: '#f9fafb', fontWeight: 600, color: '#1976D2' }}
             />
-            <small className="text-tertiary text-xs" style={{ fontSize: '0.75rem', color: '#757575' }}>Format: ESI/SS/MM-YY/001</small>
+            <small style={{ fontSize: '0.75rem', color: '#6b7280' }}>System generated (Format: ESI/SS/MM-YY/001)</small>
           </div>
 
-          {/* Customer Master Select Dropdown */}
+          {/* Exporter Dropdown */}
           <div className="form-group">
-            <label className="text-sm font-medium">Customer Master <span className="text-danger">*</span></label>
+            <label className="text-sm font-medium" style={{ display: 'block', fontSize: '0.85rem', fontWeight: 500, marginBottom: '0.35rem' }}>Exporter <span style={{ color: '#d32f2f' }}>*</span></label>
             <select
-              name="customer_id"
-              value={formData.customer_id}
+              name="exporter_id"
+              value={formData.exporter_id}
               onChange={handleChange}
               disabled={isLoading}
               className="form-control form-control-sm"
+              style={{ width: '100%', padding: '0.45rem 0.65rem', borderRadius: '4px', border: '1px solid #d1d5db' }}
               required
             >
-              <option value="">Select Customer Master...</option>
-              {customers.map(c => (
-                <option key={c.id} value={c.id}>
-                  {c.customer_name || c.name}
+              <option value="">Select Exporter (Customer Master)...</option>
+              {exporters.map(exp => (
+                <option key={exp.id} value={exp.id}>
+                  {exp.customer_name || exp.name || exp.company_name}
                 </option>
               ))}
             </select>
           </div>
+        </div>
 
-          {/* Transport Mode Select Dropdown */}
+        {/* SECTION 2 — ROUTING DETAILS */}
+        <div style={sectionHeaderStyle}>
+          <MapPin size={16} color="#1976D2" />
+          <span>Section 2 — Routing Details</span>
+        </div>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: '1rem' }}>
+          {/* POL */}
           <div className="form-group">
-            <label className="text-sm font-medium">Transport Mode <span className="text-danger">*</span></label>
+            <label className="text-sm font-medium" style={{ display: 'block', fontSize: '0.85rem', fontWeight: 500, marginBottom: '0.35rem' }}>Port of Loading (POL) <span style={{ color: '#d32f2f' }}>*</span></label>
             <select
-              name="mode"
-              value={formData.mode}
+              name="pol"
+              value={formData.pol}
               onChange={handleChange}
               disabled={isLoading}
               className="form-control form-control-sm"
+              style={{ width: '100%', padding: '0.45rem 0.65rem', borderRadius: '4px', border: '1px solid #d1d5db' }}
               required
             >
-              <option value="">Select Transport Mode...</option>
-              {transportModes.map(m => {
-                const modeVal = typeof m === 'object' ? (m.mode_name || m.name || m.mode_code) : m;
+              <option value="">Select Port of Loading (POL)...</option>
+              {ports.map(p => {
+                const label = typeof p === 'object' ? (p.port_name || p.name || p.port_code) : p;
                 return (
-                  <option key={modeVal} value={modeVal}>
-                    {modeVal}
+                  <option key={typeof p === 'object' ? (p.id || label) : p} value={label} disabled={label === formData.pod}>
+                    {label} {label === formData.pod ? ' (Selected as POD)' : ''}
                   </option>
                 );
               })}
             </select>
           </div>
 
-          {/* Origin Select Dropdown (City/Port Master) */}
+          {/* POD */}
           <div className="form-group">
-            <label className="text-sm font-medium">Origin (City / Port) <span className="text-danger">*</span></label>
+            <label className="text-sm font-medium" style={{ display: 'block', fontSize: '0.85rem', fontWeight: 500, marginBottom: '0.35rem' }}>Port of Discharge (POD) <span style={{ color: '#d32f2f' }}>*</span></label>
             <select
-              name="origin"
-              value={formData.origin}
+              name="pod"
+              value={formData.pod}
               onChange={handleChange}
               disabled={isLoading}
               className="form-control form-control-sm"
+              style={{ width: '100%', padding: '0.45rem 0.65rem', borderRadius: '4px', border: '1px solid #d1d5db' }}
               required
             >
-              <option value="">Select Origin (City / Port)...</option>
-              {locations.map(loc => (
-                <option key={loc} value={loc} disabled={loc === formData.destination}>
-                  {loc} {loc === formData.destination ? ' (Selected as Destination)' : ''}
-                </option>
-              ))}
+              <option value="">Select Port of Discharge (POD)...</option>
+              {ports.map(p => {
+                const label = typeof p === 'object' ? (p.port_name || p.name || p.port_code) : p;
+                return (
+                  <option key={typeof p === 'object' ? (p.id || label) : p} value={label} disabled={label === formData.pol}>
+                    {label} {label === formData.pol ? ' (Selected as POL)' : ''}
+                  </option>
+                );
+              })}
             </select>
           </div>
 
-          {/* Destination Select Dropdown (City/Port Master) */}
+          {/* FPOD */}
           <div className="form-group">
-            <label className="text-sm font-medium">Destination (City / Port) <span className="text-danger">*</span></label>
-            <select
-              name="destination"
-              value={formData.destination}
+            <label className="text-sm font-medium" style={{ display: 'block', fontSize: '0.85rem', fontWeight: 500, marginBottom: '0.35rem' }}>Final Place of Delivery (FPOD) <span style={{ color: '#6b7280', fontSize: '0.75rem' }}>(Optional)</span></label>
+            <input
+              type="text"
+              name="fpod"
+              value={formData.fpod}
               onChange={handleChange}
               disabled={isLoading}
+              placeholder="e.g. Inland Depot / Destination ICD / Factory"
               className="form-control form-control-sm"
-              required
-            >
-              <option value="">Select Destination (City / Port)...</option>
-              {locations.map(loc => (
-                <option key={loc} value={loc} disabled={loc === formData.origin}>
-                  {loc} {loc === formData.origin ? ' (Selected as Origin)' : ''}
-                </option>
-              ))}
-            </select>
+              style={{ width: '100%', padding: '0.45rem 0.65rem', borderRadius: '4px', border: '1px solid #d1d5db' }}
+            />
           </div>
+        </div>
 
-          {/* Product / Commodity Input (Plain Text Input) */}
+        {/* SECTION 3 — CARGO DETAILS */}
+        <div style={sectionHeaderStyle}>
+          <Package size={16} color="#1976D2" />
+          <span>Section 3 — Cargo Details</span>
+        </div>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '1rem' }}>
+          {/* Commodity */}
           <div className="form-group">
-            <label className="text-sm font-medium">Product / Commodity</label>
+            <label className="text-sm font-medium" style={{ display: 'block', fontSize: '0.85rem', fontWeight: 500, marginBottom: '0.35rem' }}>Commodity <span style={{ color: '#d32f2f' }}>*</span></label>
             <input
               type="text"
               name="commodity"
               value={formData.commodity}
               onChange={handleChange}
               disabled={isLoading}
-              placeholder="e.g. Garments"
+              placeholder="e.g. Cotton Yarn / Ceramic Tiles"
               className="form-control form-control-sm"
+              style={{ width: '100%', padding: '0.45rem 0.65rem', borderRadius: '4px', border: '1px solid #d1d5db' }}
+              required
             />
           </div>
 
-          {/* Container Type Master Select Dropdown */}
+          {/* HSN Code */}
           <div className="form-group">
-            <label className="text-sm font-medium">Container Type Master</label>
+            <label className="text-sm font-medium" style={{ display: 'block', fontSize: '0.85rem', fontWeight: 500, marginBottom: '0.35rem' }}>HSN Code <span style={{ color: '#d32f2f' }}>*</span></label>
+            <input
+              type="text"
+              name="hsn_code"
+              value={formData.hsn_code}
+              onChange={handleChange}
+              disabled={isLoading}
+              placeholder="e.g. 5205.12 / 6907.21"
+              className="form-control form-control-sm"
+              style={{ width: '100%', padding: '0.45rem 0.65rem', borderRadius: '4px', border: '1px solid #d1d5db' }}
+              required
+            />
+          </div>
+
+          {/* Cargo Type */}
+          <div className="form-group">
+            <label className="text-sm font-medium" style={{ display: 'block', fontSize: '0.85rem', fontWeight: 500, marginBottom: '0.35rem' }}>Cargo Type <span style={{ color: '#d32f2f' }}>*</span></label>
+            <select
+              name="cargo_type"
+              value={formData.cargo_type}
+              onChange={handleChange}
+              disabled={isLoading}
+              className="form-control form-control-sm"
+              style={{ width: '100%', padding: '0.45rem 0.65rem', borderRadius: '4px', border: '1px solid #d1d5db' }}
+              required
+            >
+              <option value="General">General Cargo</option>
+              <option value="Hazardous">Hazardous (HAZ)</option>
+              <option value="Reefer">Reefer (Temperature Controlled)</option>
+              <option value="OOG">OOG (Out of Gauge / Overdimensional)</option>
+            </select>
+          </div>
+
+          {/* Gross Weight */}
+          <div className="form-group">
+            <label className="text-sm font-medium" style={{ display: 'block', fontSize: '0.85rem', fontWeight: 500, marginBottom: '0.35rem' }}>Gross Weight (per container) <span style={{ color: '#d32f2f' }}>*</span></label>
+            <input
+              type="text"
+              name="gross_weight"
+              value={formData.gross_weight}
+              onChange={handleChange}
+              disabled={isLoading}
+              placeholder="e.g. 24,000 KG / 24 MT"
+              className="form-control form-control-sm"
+              style={{ width: '100%', padding: '0.45rem 0.65rem', borderRadius: '4px', border: '1px solid #d1d5db' }}
+              required
+            />
+          </div>
+        </div>
+
+        {/* SECTION 4 — CONTAINER REQUIREMENTS */}
+        <div style={sectionHeaderStyle}>
+          <Box size={16} color="#1976D2" />
+          <span>Section 4 — Container Requirements</span>
+        </div>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: '1rem' }}>
+          {/* Container Requirement */}
+          <div className="form-group">
+            <label className="text-sm font-medium" style={{ display: 'block', fontSize: '0.85rem', fontWeight: 500, marginBottom: '0.35rem' }}>Container Requirement <span style={{ color: '#d32f2f' }}>*</span></label>
             <select
               name="container_type"
               value={formData.container_type}
               onChange={handleChange}
               disabled={isLoading}
               className="form-control form-control-sm"
+              style={{ width: '100%', padding: '0.45rem 0.65rem', borderRadius: '4px', border: '1px solid #d1d5db' }}
+              required
             >
               <option value="">Select Container Type...</option>
               {containerTypes.map(ct => {
-                const name = typeof ct === 'object' ? (ct.container_name || ct.name || ct.container_code || ct.code) : ct;
-                const code = typeof ct === 'object' ? (ct.container_code || ct.code) : '';
-                const displayLabel = code && name && code !== name ? `${code} - ${name}` : (name || code);
-                const id = typeof ct === 'object' ? (ct.id || name) : ct;
+                const code = typeof ct === 'object' ? (ct.container_code || ct.code) : ct;
+                const name = typeof ct === 'object' ? (ct.container_name || ct.name) : ct;
+                const label = code && name && code !== name ? `${code} - ${name}` : (code || name);
+                const val = code || name;
                 return (
-                  <option key={id} value={name}>
-                    {displayLabel}
+                  <option key={typeof ct === 'object' ? (ct.id || val) : ct} value={val}>
+                    {label}
                   </option>
                 );
               })}
             </select>
           </div>
 
-          {/* Quantity */}
+          {/* No. of Containers */}
           <div className="form-group">
-            <label className="text-sm font-medium">Quantity</label>
+            <label className="text-sm font-medium" style={{ display: 'block', fontSize: '0.85rem', fontWeight: 500, marginBottom: '0.35rem' }}>No. of Containers <span style={{ color: '#d32f2f' }}>*</span></label>
             <input
-              type="text"
-              name="quantity"
-              value={formData.quantity}
+              type="number"
+              min="1"
+              step="1"
+              name="no_of_containers"
+              value={formData.no_of_containers}
               onChange={handleChange}
               disabled={isLoading}
-              placeholder="e.g. 100 Boxes"
+              placeholder="e.g. 2"
               className="form-control form-control-sm"
+              style={{ width: '100%', padding: '0.45rem 0.65rem', borderRadius: '4px', border: '1px solid #d1d5db' }}
+              required
+            />
+          </div>
+        </div>
+
+        {/* SECTION 5 — COMMERCIAL / SHIPMENT TERMS */}
+        <div style={sectionHeaderStyle}>
+          <FileText size={16} color="#1976D2" />
+          <span>Section 5 — Commercial / Shipment Terms</span>
+        </div>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: '1rem' }}>
+          {/* Shipment Terms */}
+          <div className="form-group">
+            <label className="text-sm font-medium" style={{ display: 'block', fontSize: '0.85rem', fontWeight: 500, marginBottom: '0.35rem' }}>Shipment Terms (Incoterms) <span style={{ color: '#d32f2f' }}>*</span></label>
+            <select
+              name="shipment_terms"
+              value={formData.shipment_terms}
+              onChange={handleChange}
+              disabled={isLoading}
+              className="form-control form-control-sm"
+              style={{ width: '100%', padding: '0.45rem 0.65rem', borderRadius: '4px', border: '1px solid #d1d5db' }}
+              required
+            >
+              <option value="FOB">FOB — Free On Board</option>
+              <option value="CIF">CIF — Cost, Insurance & Freight</option>
+              <option value="CFR">CFR — Cost & Freight</option>
+              <option value="EXW">EXW — Ex Works</option>
+            </select>
+          </div>
+        </div>
+
+        {/* SECTION 6 — STUFFING & CARGO READINESS */}
+        <div style={sectionHeaderStyle}>
+          <Calendar size={16} color="#1976D2" />
+          <span>Section 6 — Stuffing & Cargo Readiness</span>
+        </div>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: '1rem' }}>
+          {/* Expected Cargo Ready Date */}
+          <div className="form-group">
+            <label className="text-sm font-medium" style={{ display: 'block', fontSize: '0.85rem', fontWeight: 500, marginBottom: '0.35rem' }}>Expected Cargo Ready Date <span style={{ color: '#d32f2f' }}>*</span></label>
+            <input
+              type="date"
+              name="cargo_ready_date"
+              value={formData.cargo_ready_date}
+              onChange={handleChange}
+              disabled={isLoading}
+              className="form-control form-control-sm"
+              style={{ width: '100%', padding: '0.45rem 0.65rem', borderRadius: '4px', border: '1px solid #d1d5db' }}
+              required
             />
           </div>
 
-          {/* Weight */}
+          {/* Stuffing Location */}
           <div className="form-group">
-            <label className="text-sm font-medium">Weight</label>
-            <input
-              type="text"
-              name="weight"
-              value={formData.weight}
+            <label className="text-sm font-medium" style={{ display: 'block', fontSize: '0.85rem', fontWeight: 500, marginBottom: '0.35rem' }}>Stuffing Location <span style={{ color: '#d32f2f' }}>*</span></label>
+            <select
+              name="stuffing_location"
+              value={formData.stuffing_location}
               onChange={handleChange}
               disabled={isLoading}
-              placeholder="e.g. 500 KG"
               className="form-control form-control-sm"
-            />
+              style={{ width: '100%', padding: '0.45rem 0.65rem', borderRadius: '4px', border: '1px solid #d1d5db' }}
+              required
+            >
+              <option value="Factory">Factory Stuffing</option>
+              <option value="CFS">CFS Stuffing (Container Freight Station)</option>
+              <option value="Other">Other</option>
+            </select>
           </div>
 
-          {/* Status Dropdown */}
+          {/* Conditional Stuffing Location Other */}
+          {formData.stuffing_location === 'Other' && (
+            <div className="form-group">
+              <label className="text-sm font-medium" style={{ display: 'block', fontSize: '0.85rem', fontWeight: 500, marginBottom: '0.35rem' }}>Specify Stuffing Location <span style={{ color: '#d32f2f' }}>*</span></label>
+              <input
+                type="text"
+                name="stuffing_location_other"
+                value={formData.stuffing_location_other}
+                onChange={handleChange}
+                disabled={isLoading}
+                placeholder="e.g. Private Warehouse, Morbi / Sanand"
+                className="form-control form-control-sm"
+                style={{ width: '100%', padding: '0.45rem 0.65rem', borderRadius: '4px', border: '1px solid #d1d5db' }}
+                required
+              />
+            </div>
+          )}
+        </div>
+
+        {/* SECTION 7 — SHIPPING LINE & FREE DAYS */}
+        <div style={sectionHeaderStyle}>
+          <Ship size={16} color="#1976D2" />
+          <span>Section 7 — Carrier & Commercial Requirements</span>
+        </div>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: '1rem' }}>
+          {/* Shipping Line Preference */}
           <div className="form-group">
-            <label className="text-sm font-medium">Status</label>
+            <label className="text-sm font-medium" style={{ display: 'block', fontSize: '0.85rem', fontWeight: 500, marginBottom: '0.35rem' }}>Shipping Line Preference <span style={{ color: '#6b7280', fontSize: '0.75rem' }}>(Optional)</span></label>
+            <select
+              name="shipping_line_preference"
+              value={formData.shipping_line_preference}
+              onChange={handleChange}
+              disabled={isLoading}
+              className="form-control form-control-sm"
+              style={{ width: '100%', padding: '0.45rem 0.65rem', borderRadius: '4px', border: '1px solid #d1d5db' }}
+            >
+              <option value="">No Line Preference (Any Line)</option>
+              {shippingLines.map(sl => {
+                const name = typeof sl === 'object' ? (sl.name || sl.shipping_line_name || sl.line_name) : sl;
+                return (
+                  <option key={typeof sl === 'object' ? (sl.id || name) : sl} value={name}>
+                    {name}
+                  </option>
+                );
+              })}
+            </select>
+          </div>
+
+          {/* Free Days Required */}
+          <div className="form-group">
+            <label className="text-sm font-medium" style={{ display: 'block', fontSize: '0.85rem', fontWeight: 500, marginBottom: '0.35rem' }}>Free Days Required <span style={{ color: '#6b7280', fontSize: '0.75rem' }}>(Optional)</span></label>
+            <input
+              type="number"
+              min="0"
+              name="free_days_required"
+              value={formData.free_days_required}
+              onChange={handleChange}
+              disabled={isLoading}
+              placeholder="e.g. 14 Days"
+              className="form-control form-control-sm"
+              style={{ width: '100%', padding: '0.45rem 0.65rem', borderRadius: '4px', border: '1px solid #d1d5db' }}
+            />
+          </div>
+        </div>
+
+        {/* SECTION 8 — SPECIAL REQUIREMENTS & STATUS */}
+        <div style={sectionHeaderStyle}>
+          <FileText size={16} color="#1976D2" />
+          <span>Section 8 — Special Requirements & Operational Status</span>
+        </div>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: '1rem' }}>
+          {/* Priority */}
+          <div className="form-group">
+            <label className="text-sm font-medium" style={{ display: 'block', fontSize: '0.85rem', fontWeight: 500, marginBottom: '0.35rem' }}>Priority</label>
+            <select
+              name="priority"
+              value={formData.priority}
+              onChange={handleChange}
+              disabled={isLoading}
+              className="form-control form-control-sm"
+              style={{ width: '100%', padding: '0.45rem 0.65rem', borderRadius: '4px', border: '1px solid #d1d5db' }}
+            >
+              <option value="Low">Low Priority</option>
+              <option value="Medium">Medium Priority</option>
+              <option value="High">High Priority</option>
+            </select>
+          </div>
+
+          {/* Status */}
+          <div className="form-group">
+            <label className="text-sm font-medium" style={{ display: 'block', fontSize: '0.85rem', fontWeight: 500, marginBottom: '0.35rem' }}>Inquiry Status</label>
             <select
               name="status"
               value={formData.status}
               onChange={handleChange}
               disabled={isLoading}
               className="form-control form-control-sm"
+              style={{ width: '100%', padding: '0.45rem 0.65rem', borderRadius: '4px', border: '1px solid #d1d5db' }}
             >
               <option value="Pending">Pending</option>
               <option value="Quoted">Quoted</option>
@@ -403,41 +735,25 @@ const ShippingInquiryForm = ({ onCancel, onSuccess, initialData, existingCount =
               <option value="Cancelled">Cancelled</option>
             </select>
           </div>
-
-          {/* Priority Dropdown (Low, Medium, High) */}
-          <div className="form-group">
-            <label className="text-sm font-medium">Priority</label>
-            <select
-              name="priority"
-              value={formData.priority || 'Medium'}
-              onChange={handleChange}
-              disabled={isLoading}
-              className="form-control form-control-sm"
-            >
-              <option value="Low">Low</option>
-              <option value="Medium">Medium</option>
-              <option value="High">High</option>
-            </select>
-          </div>
-
         </div>
 
-        {/* Remarks */}
-        <div className="form-group mt-md" style={{ marginTop: '1rem' }}>
-          <label className="text-sm font-medium">Remarks / Special Instructions</label>
+        {/* Special Requirements Textarea */}
+        <div className="form-group" style={{ marginTop: '1rem' }}>
+          <label className="text-sm font-medium" style={{ display: 'block', fontSize: '0.85rem', fontWeight: 500, marginBottom: '0.35rem' }}>Special Requirements / Exporter Instructions <span style={{ color: '#6b7280', fontSize: '0.75rem' }}>(Optional)</span></label>
           <textarea
-            name="remarks"
-            rows="2"
-            value={formData.remarks}
+            name="special_requirements"
+            rows="3"
+            value={formData.special_requirements}
             onChange={handleChange}
             disabled={isLoading}
-            placeholder="Add any specific container type, temperature, or handling requirements..."
+            placeholder="Specify any carrier preferences, temperature settings, hazardous class, documentation instructions..."
             className="form-control form-control-sm"
-            style={{ width: '100%', resize: 'vertical' }}
+            style={{ width: '100%', padding: '0.5rem 0.65rem', borderRadius: '4px', border: '1px solid #d1d5db', resize: 'vertical' }}
           />
         </div>
 
-        <div className="form-actions mt-xl flex justify-end gap-sm pt-md border-t-light" style={{ display: 'flex', gap: '0.5rem', justifyContent: 'flex-end', marginTop: '1.5rem', paddingTop: '1rem', borderTop: '1px solid #e0e0e0' }}>
+        {/* Form Action Buttons */}
+        <div className="form-actions" style={{ display: 'flex', gap: '0.5rem', justifyContent: 'flex-end', marginTop: '1.5rem', paddingTop: '1rem', borderTop: '1px solid #e0e0e0' }}>
           <Button variant="outline" type="button" onClick={onCancel} disabled={isLoading}>Cancel</Button>
           <Button variant="primary" type="submit" disabled={isLoading} isLoading={isLoading} leftIcon={Check}>
             {isEditMode ? 'Update Inquiry' : 'Save Inquiry'}
@@ -449,3 +765,4 @@ const ShippingInquiryForm = ({ onCancel, onSuccess, initialData, existingCount =
 };
 
 export default ShippingInquiryForm;
+

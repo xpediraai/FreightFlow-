@@ -71,7 +71,7 @@ const ShippingInquiries = () => {
     <Page>
       <PageHeader
         title="Shipping Inquiry"
-        subtitle="Manage export shipping inquiries, routes, quantities, and operational statuses."
+        subtitle="Manage export shipment inquiries, POL/POD routing, container requirements, and cargo readiness."
         primaryAction={{ label: '+ Shipping Inquiry', onClick: handleCreateNew }}
       />
 
