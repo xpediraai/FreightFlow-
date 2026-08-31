@@ -44,6 +44,27 @@ const DEFAULT_CARRIER_A = { line: 'Maersk Line', freight: 85000, local: 16000, n
 const DEFAULT_CARRIER_B = { line: 'MSC Line', freight: 82000, local: 17500, notes: 'Transshipment via Colombo, 18 days transit' };
 const DEFAULT_CARRIER_C = { line: 'CMA CGM', freight: 87000, local: 15500, notes: 'Direct service, strong local equipment' };
 
+const DEFAULT_UOMS = [
+  { id: 'uom_1', uom_code: 'KG', uom_name: 'Kilograms (KG)' },
+  { id: 'uom_2', uom_code: 'MT', uom_name: 'Metric Tonnes (MT)' },
+  { id: 'uom_3', uom_code: 'LBS', uom_name: 'Pounds (LBS)' },
+  { id: 'uom_4', uom_code: 'CBM', uom_name: 'Cubic Meters (CBM)' },
+  { id: 'uom_5', uom_code: 'PCS', uom_name: 'Pieces (PCS)' }
+];
+
+const parseWeightString = (str = '') => {
+  if (!str) return { val: '', uom: 'KG' };
+  const cleaned = String(str).trim();
+  const match = cleaned.match(/^([\d.,]+)\s*([A-Za-z]+)?$/);
+  if (match) {
+    return {
+      val: match[1] || '',
+      uom: (match[2] || 'KG').toUpperCase()
+    };
+  }
+  return { val: cleaned, uom: 'KG' };
+};
+
 const QuotationForm = ({ onCancel, onSuccess, initialData, existingCount = 0 }) => {
   const isEditMode = !!initialData;
   const [isLoading, setIsLoading] = useState(false);
@@ -52,6 +73,7 @@ const QuotationForm = ({ onCancel, onSuccess, initialData, existingCount = 0 }) 
   // Loaded Shipping Inquiries for Dropdown Linkage
   const [savedInquiries, setSavedInquiries] = useState([]);
   const [shippingLinesMaster, setShippingLinesMaster] = useState([]);
+  const [uoms, setUoms] = useState(DEFAULT_UOMS);
 
   // Form State
   const [formData, setFormData] = useState({
@@ -68,6 +90,8 @@ const QuotationForm = ({ onCancel, onSuccess, initialData, existingCount = 0 }) 
     hsn_code: '',
     cargo_type: 'General',
     gross_weight: '',
+    weight_value: '',
+    weight_uom: 'KG',
     container_type: "20'",
     no_of_containers: '1',
     shipment_terms: 'FOB',
@@ -116,7 +140,7 @@ const QuotationForm = ({ onCancel, onSuccess, initialData, existingCount = 0 }) 
     return item.applicable ? sum + (Number(item.amount) || 0) : sum;
   }, 0);
 
-  // Fetch Saved Inquiries & Master Shipping Lines
+  // Fetch Saved Inquiries & Master Shipping Lines & UOMs
   useEffect(() => {
     try {
       const inqRaw = localStorage.getItem('freightflow_shipping_inquiries');
@@ -128,24 +152,38 @@ const QuotationForm = ({ onCancel, onSuccess, initialData, existingCount = 0 }) 
       console.error('Failed to load saved inquiries for dropdown:', err);
     }
 
-    const fetchLines = async () => {
+    const fetchMasters = async () => {
       try {
-        const res = await logisticsService.getShippingLines();
-        const data = res?.data?.data?.data || res?.data?.data || res?.data;
-        if (Array.isArray(data)) setShippingLinesMaster(data);
+        const [linesRes, uomRes] = await Promise.allSettled([
+          logisticsService.getShippingLines(),
+          commonService.getUOMs()
+        ]);
+        if (linesRes.status === 'fulfilled' && linesRes.value) {
+          const data = linesRes.value?.data?.data?.data || linesRes.value?.data?.data || linesRes.value?.data;
+          if (Array.isArray(data)) setShippingLinesMaster(data);
+        }
+        if (uomRes.status === 'fulfilled' && uomRes.value) {
+          const data = uomRes.value?.data?.data?.data || uomRes.value?.data?.data || uomRes.value?.data;
+          if (Array.isArray(data)) setUoms(data);
+        }
       } catch (err) {
-        console.error('Failed to fetch shipping lines master:', err);
+        console.error('Failed to fetch masters:', err);
       }
     };
-    fetchLines();
+    fetchMasters();
   }, []);
 
   // Initialize or Populate Form Data
   useEffect(() => {
     if (initialData) {
+      const rawWeight = initialData.gross_weight || initialData.weight || '';
+      const parsedWeight = parseWeightString(rawWeight);
       setFormData(prev => ({
         ...prev,
         ...initialData,
+        gross_weight: rawWeight,
+        weight_value: initialData.weight_value || parsedWeight.val,
+        weight_uom: initialData.weight_uom || parsedWeight.uom,
         carrier_option_a: initialData.carrier_option_a || DEFAULT_CARRIER_A,
         carrier_option_b: initialData.carrier_option_b || DEFAULT_CARRIER_B,
         carrier_option_c: initialData.carrier_option_c || DEFAULT_CARRIER_C,
@@ -170,6 +208,8 @@ const QuotationForm = ({ onCancel, onSuccess, initialData, existingCount = 0 }) 
     const selectedInq = savedInquiries.find(item => String(item.id) === String(inqId) || item.inquiry_no === inqId);
     if (selectedInq) {
       const containerQty = parseInt(selectedInq.no_of_containers || selectedInq.quantity || '1', 10) || 1;
+      const rawWeight = selectedInq.gross_weight || selectedInq.weight || '';
+      const parsedWeight = parseWeightString(rawWeight);
       
       setFormData(prev => ({
         ...prev,
@@ -183,7 +223,9 @@ const QuotationForm = ({ onCancel, onSuccess, initialData, existingCount = 0 }) 
         commodity: selectedInq.commodity || '',
         hsn_code: selectedInq.hsn_code || '',
         cargo_type: selectedInq.cargo_type || 'General',
-        gross_weight: selectedInq.gross_weight || selectedInq.weight || '',
+        gross_weight: rawWeight,
+        weight_value: parsedWeight.val,
+        weight_uom: parsedWeight.uom,
         container_type: selectedInq.container_type || "20'",
         no_of_containers: String(containerQty),
         shipment_terms: selectedInq.shipment_terms || 'FOB',
@@ -311,11 +353,16 @@ const QuotationForm = ({ onCancel, onSuccess, initialData, existingCount = 0 }) 
       return;
     }
 
+    const finalWeight = formData.weight_value 
+      ? `${formData.weight_value} ${formData.weight_uom || 'KG'}`.trim()
+      : formData.gross_weight;
+
     setIsLoading(true);
 
     try {
       const payload = {
         ...formData,
+        gross_weight: finalWeight,
         charges,
         total_amount: totalAmount,
         id: isEditMode ? initialData.id : `quot_${Date.now()}`,
@@ -544,17 +591,35 @@ const QuotationForm = ({ onCancel, onSuccess, initialData, existingCount = 0 }) 
             />
           </div>
 
-          {/* Gross Weight */}
+          {/* Gross Weight with UOM Master Dropdown */}
           <div className="form-group">
             <label style={{ display: 'block', fontSize: '0.85rem', fontWeight: 500, marginBottom: '0.35rem' }}>Gross Weight</label>
-            <input
-              type="text"
-              name="gross_weight"
-              value={formData.gross_weight}
-              onChange={handleChange}
-              placeholder="e.g. 24 MT"
-              style={{ width: '100%', padding: '0.45rem 0.65rem', borderRadius: '4px', border: '1px solid #d1d5db' }}
-            />
+            <div style={{ display: 'flex', gap: '0.4rem' }}>
+              <input
+                type="text"
+                name="weight_value"
+                value={formData.weight_value || ''}
+                onChange={handleChange}
+                placeholder="e.g. 24000"
+                style={{ width: '60%', padding: '0.45rem 0.65rem', borderRadius: '4px', border: '1px solid #d1d5db' }}
+              />
+              <select
+                name="weight_uom"
+                value={formData.weight_uom || 'KG'}
+                onChange={handleChange}
+                style={{ width: '40%', padding: '0.45rem 0.5rem', borderRadius: '4px', border: '1px solid #d1d5db', fontWeight: 600, backgroundColor: '#f8fafc' }}
+              >
+                {uoms.map(u => {
+                  const code = u.uom_code || u.code || u.uom_name || u.name || 'KG';
+                  const label = u.uom_name || u.name || code;
+                  return (
+                    <option key={u.id || code} value={code}>
+                      {code} ({label})
+                    </option>
+                  );
+                })}
+              </select>
+            </div>
           </div>
 
           {/* Shipment Terms */}

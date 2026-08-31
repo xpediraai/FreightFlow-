@@ -53,6 +53,27 @@ const DEFAULT_CONTAINER_TYPES = [
   { id: 'ct7', container_code: "40' FR", container_name: "40' Flat Rack" }
 ];
 
+const DEFAULT_UOMS = [
+  { id: 'uom_1', uom_code: 'KG', uom_name: 'Kilograms (KG)' },
+  { id: 'uom_2', uom_code: 'MT', uom_name: 'Metric Tonnes (MT)' },
+  { id: 'uom_3', uom_code: 'LBS', uom_name: 'Pounds (LBS)' },
+  { id: 'uom_4', uom_code: 'CBM', uom_name: 'Cubic Meters (CBM)' },
+  { id: 'uom_5', uom_code: 'PCS', uom_name: 'Pieces (PCS)' }
+];
+
+export const parseWeightString = (str = '') => {
+  if (!str) return { val: '', uom: 'KG' };
+  const cleaned = String(str).trim();
+  const match = cleaned.match(/^([\d.,]+)\s*([A-Za-z]+)?$/);
+  if (match) {
+    return {
+      val: match[1] || '',
+      uom: (match[2] || 'KG').toUpperCase()
+    };
+  }
+  return { val: cleaned, uom: 'KG' };
+};
+
 const ShippingInquiryForm = ({ onCancel, onSuccess, initialData, existingCount = 0 }) => {
   const isEditMode = !!initialData;
   const [isLoading, setIsLoading] = useState(false);
@@ -64,6 +85,7 @@ const ShippingInquiryForm = ({ onCancel, onSuccess, initialData, existingCount =
   const [ports, setPorts] = useState(DEFAULT_PORTS);
   const [shippingLines, setShippingLines] = useState(DEFAULT_SHIPPING_LINES);
   const [containerTypes, setContainerTypes] = useState(DEFAULT_CONTAINER_TYPES);
+  const [uoms, setUoms] = useState(DEFAULT_UOMS);
 
   const [formData, setFormData] = useState({
     inquiry_no: '',
@@ -76,6 +98,8 @@ const ShippingInquiryForm = ({ onCancel, onSuccess, initialData, existingCount =
     hsn_code: '',
     cargo_type: 'General', // General | Hazardous | Reefer | OOG
     gross_weight: '',
+    weight_value: '',
+    weight_uom: 'KG',
     container_type: "20'", // 20' | 40' | 40' HC | Master Types
     no_of_containers: '1',
     shipment_terms: 'FOB', // FOB | CIF | CFR | EXW
@@ -94,11 +118,12 @@ const ShippingInquiryForm = ({ onCancel, onSuccess, initialData, existingCount =
     const fetchLiveMasterDropdowns = async () => {
       setIsDropdownsLoading(true);
       try {
-        const [custRes, portRes, shipLineRes, containerTypeRes] = await Promise.allSettled([
+        const [custRes, portRes, shipLineRes, containerTypeRes, uomRes] = await Promise.allSettled([
           businessService.getCustomers(),
           logisticsService.getPorts(),
           logisticsService.getShippingLines(),
-          commonService.getContainerTypes()
+          commonService.getContainerTypes(),
+          commonService.getUOMs()
         ]);
 
         const extractData = (res) => {
@@ -133,6 +158,12 @@ const ShippingInquiryForm = ({ onCancel, onSuccess, initialData, existingCount =
           setContainerTypes(contData);
         }
 
+        // 5. UOM Master
+        const uomData = extractData(uomRes);
+        if (uomData.length > 0) {
+          setUoms(uomData);
+        }
+
       } catch (err) {
         console.error('Error fetching master dropdowns:', err);
       } finally {
@@ -146,6 +177,8 @@ const ShippingInquiryForm = ({ onCancel, onSuccess, initialData, existingCount =
   // Initialize or populate form
   useEffect(() => {
     if (initialData) {
+      const rawWeight = initialData.gross_weight || initialData.weight || '';
+      const parsedWeight = parseWeightString(rawWeight);
       setFormData({
         inquiry_no: initialData.inquiry_no || generateInquiryNo(existingCount),
         exporter_id: initialData.exporter_id || initialData.customer_id || '',
@@ -156,7 +189,9 @@ const ShippingInquiryForm = ({ onCancel, onSuccess, initialData, existingCount =
         commodity: initialData.commodity || '',
         hsn_code: initialData.hsn_code || '',
         cargo_type: initialData.cargo_type || 'General',
-        gross_weight: initialData.gross_weight || initialData.weight || '',
+        gross_weight: rawWeight,
+        weight_value: parsedWeight.val,
+        weight_uom: parsedWeight.uom,
         container_type: initialData.container_type || "20'",
         no_of_containers: initialData.no_of_containers || initialData.quantity || '1',
         shipment_terms: initialData.shipment_terms || 'FOB',
@@ -207,6 +242,10 @@ const ShippingInquiryForm = ({ onCancel, onSuccess, initialData, existingCount =
     e.preventDefault();
     setGlobalError('');
 
+    const finalWeight = formData.weight_value 
+      ? `${formData.weight_value} ${formData.weight_uom || 'KG'}`.trim()
+      : formData.gross_weight;
+
     // --- Validation Rules ---
     if (!formData.exporter_id && !formData.exporter_name) {
       setGlobalError('Exporter is mandatory. Please select an Exporter.');
@@ -241,7 +280,7 @@ const ShippingInquiryForm = ({ onCancel, onSuccess, initialData, existingCount =
       setGlobalError('No. of Containers must be a positive integer greater than 0.');
       return;
     }
-    if (!formData.gross_weight.trim()) {
+    if (!finalWeight) {
       setGlobalError('Gross Weight per container is mandatory.');
       return;
     }
@@ -267,13 +306,13 @@ const ShippingInquiryForm = ({ onCancel, onSuccess, initialData, existingCount =
       // Build updated payload ensuring 100% backward compatibility for legacy list/search views
       const payload = {
         ...formData,
-        // Legacy aliases
+        gross_weight: finalWeight,
+        quantity: containerCount,
+        weight: finalWeight,
         customer_id: formData.exporter_id,
         customer_name: formData.exporter_name,
         origin: formData.pol,
         destination: formData.pod,
-        quantity: `${formData.no_of_containers} x ${formData.container_type}`,
-        weight: formData.gross_weight,
         remarks: formData.special_requirements,
         mode: 'Sea',
         id: isEditMode ? initialData.id : `inq_${Date.now()}`,
@@ -495,20 +534,43 @@ const ShippingInquiryForm = ({ onCancel, onSuccess, initialData, existingCount =
             </select>
           </div>
 
-          {/* Gross Weight */}
+          {/* Gross Weight with UOM Master Dropdown */}
           <div className="form-group">
-            <label className="text-sm font-medium" style={{ display: 'block', fontSize: '0.85rem', fontWeight: 500, marginBottom: '0.35rem' }}>Gross Weight (per container) <span style={{ color: '#d32f2f' }}>*</span></label>
-            <input
-              type="text"
-              name="gross_weight"
-              value={formData.gross_weight}
-              onChange={handleChange}
-              disabled={isLoading}
-              placeholder="e.g. 24,000 KG / 24 MT"
-              className="form-control form-control-sm"
-              style={{ width: '100%', padding: '0.45rem 0.65rem', borderRadius: '4px', border: '1px solid #d1d5db' }}
-              required
-            />
+            <label className="text-sm font-medium" style={{ display: 'block', fontSize: '0.85rem', fontWeight: 500, marginBottom: '0.35rem' }}>
+              Gross Weight (per container) <span style={{ color: '#d32f2f' }}>*</span>
+            </label>
+            <div style={{ display: 'flex', gap: '0.4rem' }}>
+              <input
+                type="text"
+                name="weight_value"
+                value={formData.weight_value || ''}
+                onChange={handleChange}
+                disabled={isLoading}
+                placeholder="e.g. 24000"
+                className="form-control form-control-sm"
+                style={{ width: '60%', padding: '0.45rem 0.65rem', borderRadius: '4px', border: '1px solid #d1d5db' }}
+                required
+              />
+              <select
+                name="weight_uom"
+                value={formData.weight_uom || 'KG'}
+                onChange={handleChange}
+                disabled={isLoading}
+                className="form-control form-control-sm"
+                style={{ width: '40%', padding: '0.45rem 0.5rem', borderRadius: '4px', border: '1px solid #d1d5db', fontWeight: 600, backgroundColor: '#f8fafc' }}
+                required
+              >
+                {uoms.map(u => {
+                  const code = u.uom_code || u.code || u.uom_name || u.name || 'KG';
+                  const label = u.uom_name || u.name || code;
+                  return (
+                    <option key={u.id || code} value={code}>
+                      {code} ({label})
+                    </option>
+                  );
+                })}
+              </select>
+            </div>
           </div>
         </div>
 
