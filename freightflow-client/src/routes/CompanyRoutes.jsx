@@ -35,6 +35,7 @@ import Vendors from '../modules/company/pages/Masters/Business/Vendor/Vendors';
 
 // Export Modules
 import ShippingInquiries from '../modules/company/pages/Export/ShippingInquiry/ShippingInquiries';
+import Quotations from '../modules/company/pages/Export/Quotation/Quotations';
 
 // Placeholders for unimplemented features
 const GenericPlaceholder = ({ title }) => (
@@ -144,6 +145,10 @@ const CompanyRoutes = [
   {
     path: 'export/shipping-inquiry',
     element: <ShippingInquiries />,
+  },
+  {
+    path: 'export/quotation',
+    element: <Quotations />,
   },
   {
     path: 'export/*',

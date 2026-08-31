@@ -22,6 +22,7 @@ export const getNavItems = (role) => {
       color: '#4CAF50',
       children: [
         { name: 'Shipping Inquiry', path: '/company/export/shipping-inquiry', icon: HelpCircle, color: '#009688' },
+        { name: 'Quotation', path: '/company/export/quotation', icon: FileText, color: '#1976D2' },
       ]
     },
     { 
