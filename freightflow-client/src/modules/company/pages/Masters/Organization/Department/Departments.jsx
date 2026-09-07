@@ -3,11 +3,13 @@ import Page from '../../../../../../shared/components/Page';
 import PageHeader from '../../../../../../shared/components/PageHeader';
 import MasterToolbar from '../../../../../../shared/components/Master/MasterToolbar';
 import ExpandableForm from '../../../../../../shared/components/Master/ExpandableForm';
+import BulkImportModal from '../../../../../../shared/components/BulkImportModal/BulkImportModal';
 import DepartmentList from './DepartmentList';
 import DepartmentForm from './DepartmentForm';
 
 const Departments = () => {
   const [isFormOpen, setIsFormOpen] = useState(false);
+  const [isBulkImportOpen, setIsBulkImportOpen] = useState(false);
   const [selectedDepartment, setSelectedDepartment] = useState(null);
   const [searchTerm, setSearchTerm] = useState('');
   const [totalRecords, setTotalRecords] = useState(0);
@@ -41,37 +43,46 @@ const Departments = () => {
     <Page>
       <PageHeader 
         title="Department Master"
-      
-        primaryAction={{ label: '+ Department', onClick: handleCreateNew }}/>
+        primaryAction={{ label: '+ Department', onClick: handleCreateNew }}
+      />
       
       <div className="mt-lg">
         <div className="bg-surface border-light rounded-lg shadow-sm">
-          <MasterToolbar entityName="Department" 
-          searchTerm={searchTerm}
-          onSearch={setSearchTerm}
+          <MasterToolbar 
+            entityName="Department" 
+            searchTerm={searchTerm}
+            onSearch={setSearchTerm}
             totalRecords={totalRecords}
             statusFilter={statusFilter}
             onStatusChange={setStatusFilter}
+            onBulkImport={() => setIsBulkImportOpen(true)}
           />
 
-        <ExpandableForm isOpen={isFormOpen}>
-          <DepartmentForm 
-            onCancel={handleCancel} 
-            onSuccess={handleSuccess} 
-            initialData={selectedDepartment} 
-          />
-        </ExpandableForm>
+          <ExpandableForm isOpen={isFormOpen}>
+            <DepartmentForm 
+              onCancel={handleCancel} 
+              onSuccess={handleSuccess} 
+              initialData={selectedDepartment} 
+            />
+          </ExpandableForm>
 
-        <DepartmentList 
-          onEdit={handleEdit} 
-          searchQuery={searchTerm}
-          viewMode={viewMode}
-          refreshTrigger={refreshTrigger}
+          <DepartmentList 
+            onEdit={handleEdit} 
+            searchQuery={searchTerm}
+            viewMode={viewMode}
+            refreshTrigger={refreshTrigger}
             onTotalCountChange={setTotalRecords}
             statusFilter={statusFilter}
           />
         </div>
       </div>
+
+      <BulkImportModal 
+        isOpen={isBulkImportOpen}
+        onClose={() => setIsBulkImportOpen(false)}
+        entityType="department"
+        onImportSuccess={() => setRefreshTrigger(prev => prev + 1)}
+      />
     </Page>
   );
 };

@@ -3,11 +3,13 @@ import Page from '../../../../../../shared/components/Page';
 import PageHeader from '../../../../../../shared/components/PageHeader';
 import MasterToolbar from '../../../../../../shared/components/Master/MasterToolbar';
 import ExpandableForm from '../../../../../../shared/components/Master/ExpandableForm';
+import BulkImportModal from '../../../../../../shared/components/BulkImportModal/BulkImportModal';
 import CommodityList from './CommodityList';
 import CommodityForm from './CommodityForm';
 
 const Commodities = () => {
   const [isFormOpen, setIsFormOpen] = useState(false);
+  const [isBulkImportOpen, setIsBulkImportOpen] = useState(false);
   const [selectedCommodity, setSelectedCommodity] = useState(null);
   const [searchTerm, setSearchTerm] = useState('');
   const [totalRecords, setTotalRecords] = useState(0);
@@ -41,37 +43,46 @@ const Commodities = () => {
     <Page>
       <PageHeader 
         title="Commodity Master"
-      
-        primaryAction={{ label: '+ Commodity', onClick: handleCreateNew }}/>
+        primaryAction={{ label: '+ Commodity', onClick: handleCreateNew }}
+      />
       
       <div className="mt-lg">
         <div className="bg-surface border-light rounded-lg shadow-sm">
-          <MasterToolbar entityName="Commodity" 
-          searchTerm={searchTerm}
-          onSearch={setSearchTerm}
+          <MasterToolbar 
+            entityName="Commodity" 
+            searchTerm={searchTerm}
+            onSearch={setSearchTerm}
             totalRecords={totalRecords}
             statusFilter={statusFilter}
             onStatusChange={setStatusFilter}
+            onBulkImport={() => setIsBulkImportOpen(true)}
           />
 
-        <ExpandableForm isOpen={isFormOpen}>
-          <CommodityForm 
-            onCancel={handleCancel} 
-            onSuccess={handleSuccess} 
-            initialData={selectedCommodity} 
-          />
-        </ExpandableForm>
+          <ExpandableForm isOpen={isFormOpen}>
+            <CommodityForm 
+              onCancel={handleCancel} 
+              onSuccess={handleSuccess} 
+              initialData={selectedCommodity} 
+            />
+          </ExpandableForm>
 
-        <CommodityList 
-          onEdit={handleEdit} 
-          searchQuery={searchTerm}
-          viewMode={viewMode}
-          refreshTrigger={refreshTrigger}
+          <CommodityList 
+            onEdit={handleEdit} 
+            searchQuery={searchTerm}
+            viewMode={viewMode}
+            refreshTrigger={refreshTrigger}
             onTotalCountChange={setTotalRecords}
             statusFilter={statusFilter}
           />
         </div>
       </div>
+
+      <BulkImportModal 
+        isOpen={isBulkImportOpen}
+        onClose={() => setIsBulkImportOpen(false)}
+        entityType="commodity"
+        onImportSuccess={() => setRefreshTrigger(prev => prev + 1)}
+      />
     </Page>
   );
 };

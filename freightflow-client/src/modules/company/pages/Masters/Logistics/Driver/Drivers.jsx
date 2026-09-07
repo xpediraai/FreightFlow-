@@ -3,11 +3,13 @@ import Page from '../../../../../../shared/components/Page';
 import PageHeader from '../../../../../../shared/components/PageHeader';
 import MasterToolbar from '../../../../../../shared/components/Master/MasterToolbar';
 import ExpandableForm from '../../../../../../shared/components/Master/ExpandableForm';
+import BulkImportModal from '../../../../../../shared/components/BulkImportModal/BulkImportModal';
 import DriverList from './DriverList';
 import DriverForm from './DriverForm';
 
 const Drivers = () => {
   const [isFormOpen, setIsFormOpen] = useState(false);
+  const [isBulkImportOpen, setIsBulkImportOpen] = useState(false);
   const [selectedDriver, setSelectedDriver] = useState(null);
   const [searchTerm, setSearchTerm] = useState('');
   const [totalRecords, setTotalRecords] = useState(0);
@@ -41,37 +43,46 @@ const Drivers = () => {
     <Page>
       <PageHeader 
         title="Driver Master"
-      
-        primaryAction={{ label: '+ Driver', onClick: handleCreateNew }}/>
+        primaryAction={{ label: '+ Driver', onClick: handleCreateNew }}
+      />
       
       <div className="mt-lg">
         <div className="bg-surface border-light rounded-lg shadow-sm">
-          <MasterToolbar entityName="Driver" 
-          searchTerm={searchTerm}
-          onSearch={setSearchTerm}
+          <MasterToolbar 
+            entityName="Driver" 
+            searchTerm={searchTerm}
+            onSearch={setSearchTerm}
             totalRecords={totalRecords}
             statusFilter={statusFilter}
             onStatusChange={setStatusFilter}
+            onBulkImport={() => setIsBulkImportOpen(true)}
           />
 
-        <ExpandableForm isOpen={isFormOpen}>
-          <DriverForm 
-            onCancel={handleCancel} 
-            onSuccess={handleSuccess} 
-            initialData={selectedDriver} 
-          />
-        </ExpandableForm>
+          <ExpandableForm isOpen={isFormOpen}>
+            <DriverForm 
+              onCancel={handleCancel} 
+              onSuccess={handleSuccess} 
+              initialData={selectedDriver} 
+            />
+          </ExpandableForm>
 
-        <DriverList 
-          onEdit={handleEdit} 
-          searchQuery={searchTerm}
-          viewMode={viewMode}
-          refreshTrigger={refreshTrigger}
+          <DriverList 
+            onEdit={handleEdit} 
+            searchQuery={searchTerm}
+            viewMode={viewMode}
+            refreshTrigger={refreshTrigger}
             onTotalCountChange={setTotalRecords}
             statusFilter={statusFilter}
           />
         </div>
       </div>
+
+      <BulkImportModal 
+        isOpen={isBulkImportOpen}
+        onClose={() => setIsBulkImportOpen(false)}
+        entityType="driver"
+        onImportSuccess={() => setRefreshTrigger(prev => prev + 1)}
+      />
     </Page>
   );
 };

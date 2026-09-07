@@ -41,8 +41,7 @@ const Dashboard = () => {
           box-shadow: 0 1px 3px rgba(0,0,0,0.1);
           padding: 1.5rem;
         }
-        .bg-primary-light { background-color: var(--color-primary-light, #e0e7ff); }
-        .text-primary { color: var(--color-primary, #4f46e5); }
+        .bg-primary-light { background-color: var(--color-primary-light, #fee2e2); }
       `}</style>
     </Page>
   );

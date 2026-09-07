@@ -1,5 +1,5 @@
 import React from 'react';
-import { Search, Filter, Plus } from 'lucide-react';
+import { Search, Filter, Plus, Upload } from 'lucide-react';
 import Input from '../Input';
 import Button from '../Button';
 import './ActionToolbar.css';
@@ -10,6 +10,8 @@ const ActionToolbar = ({
   onFilter, 
   onAdd, 
   addLabel = 'Add New',
+  onBulkImport,
+  bulkImportLabel = 'Bulk Import',
   customActions 
 }) => {
   return (
@@ -25,6 +27,11 @@ const ActionToolbar = ({
         {onFilter && (
           <Button variant="outline" leftIcon={Filter} onClick={onFilter}>
             Filters
+          </Button>
+        )}
+        {onBulkImport && (
+          <Button variant="outline" leftIcon={Upload} onClick={onBulkImport}>
+            {bulkImportLabel}
           </Button>
         )}
         {customActions}

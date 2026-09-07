@@ -11,9 +11,12 @@ const ConfirmDeleteModal = ({
   title = "Confirm Deletion", 
   message = "Are you sure you want to delete this item? This action cannot be undone.",
   itemName,
+  entityName,
   isDeleting = false 
 }) => {
   if (!isOpen) return null;
+
+  const displayItemName = entityName || itemName;
 
   return (
     <AnimatePresence>
@@ -28,7 +31,7 @@ const ConfirmDeleteModal = ({
         >
           <div className="confirm-delete-header">
             <div className="icon-circle">
-              <AlertTriangle size={24} color="var(--color-danger)" />
+              <AlertTriangle size={24} color="#dc2626" />
             </div>
             <button className="close-btn" onClick={onClose} disabled={isDeleting}>
               <X size={20} />
@@ -39,8 +42,8 @@ const ConfirmDeleteModal = ({
             <h3>{title}</h3>
             <p>
               {message}
-              {itemName && (
-                <span className="item-name"> "{itemName}"</span>
+              {displayItemName && (
+                <span className="item-name"> "{displayItemName}"</span>
               )}
             </p>
           </div>
