@@ -1,0 +1,14 @@
+{
+  "watch": [
+    "src",
+    "app.js",
+    "server.js",
+    ".env"
+  ],
+  "ext": "js,mjs,cjs,json",
+  "ignore": [
+    "logs/*",
+    "node_modules/*",
+    ".git/*"
+  ]
+}
