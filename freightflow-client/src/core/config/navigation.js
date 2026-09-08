@@ -1,6 +1,6 @@
-import { 
-  LayoutDashboard, Users, Building2, Truck, Package, Settings, Circle, 
-  Globe, Box, Briefcase, MapPin, Grid, Map, CreditCard, Ruler, PackageOpen, FileText, Plane, Anchor, Ship, 
+import {
+  LayoutDashboard, Users, Building2, Truck, Package, Settings, Circle,
+  Globe, Box, Briefcase, MapPin, Grid, Map, CreditCard, Ruler, PackageOpen, FileText, Plane, Anchor, Ship,
   Warehouse, Car, Award, Store, ShoppingBag, Receipt, DollarSign, FileOutput, HelpCircle
 } from 'lucide-react';
 
@@ -13,20 +13,12 @@ export const getNavItems = (role) => {
       { name: 'Settings', path: '/app/settings', icon: Settings, color: '#616161' },
     ];
   }
-  
+
   return [
     { name: 'Dashboard', path: '/company/dashboard', icon: LayoutDashboard, color: '#1976D2' },
-    { 
-      name: 'Export', 
-      icon: FileOutput, 
-      color: '#4CAF50',
-      children: [
-        { name: 'Shipping Inquiry', path: '/company/export/shipping-inquiry', icon: HelpCircle, color: '#009688' },
-        { name: 'Quotation', path: '/company/export/quotation', icon: FileText, color: '#1976D2' },
-      ]
-    },
-    { 
-      name: 'Masters', 
+
+    {
+      name: 'Masters',
       icon: Package,
       color: '#E91E63',
       children: [
@@ -88,6 +80,15 @@ export const getNavItems = (role) => {
             { name: 'Charge', path: '/company/masters/business/charge', icon: Receipt, color: '#D32F2F' },
           ]
         }
+      ]
+    },
+    {
+      name: 'Export',
+      icon: FileOutput,
+      color: '#4CAF50',
+      children: [
+        { name: 'Shipping Inquiry', path: '/company/export/shipping-inquiry', icon: HelpCircle, color: '#009688' },
+        { name: 'Quotation', path: '/company/export/quotation', icon: FileText, color: '#1976D2' },
       ]
     },
     { name: 'Settings', path: '/app/settings', icon: Settings, color: '#616161' },
