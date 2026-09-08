@@ -251,15 +251,7 @@ const ShippingInquiryForm = ({ onCancel, onSuccess, initialData, existingCount =
       setGlobalError('Exporter is mandatory. Please select an Exporter.');
       return;
     }
-    if (!formData.pol) {
-      setGlobalError('Port of Loading (POL) is mandatory.');
-      return;
-    }
-    if (!formData.pod) {
-      setGlobalError('Port of Discharge (POD) is mandatory.');
-      return;
-    }
-    if (formData.pol.trim().toLowerCase() === formData.pod.trim().toLowerCase()) {
+    if (formData.pol && formData.pod && formData.pol.trim().toLowerCase() === formData.pod.trim().toLowerCase()) {
       setGlobalError('Port of Loading (POL) and Port of Discharge (POD) cannot be identical.');
       return;
     }
@@ -415,7 +407,7 @@ const ShippingInquiryForm = ({ onCancel, onSuccess, initialData, existingCount =
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: '1rem' }}>
           {/* POL */}
           <div className="form-group">
-            <label className="text-sm font-medium" style={{ display: 'block', fontSize: '0.85rem', fontWeight: 500, marginBottom: '0.35rem' }}>Port of Loading (POL) <span style={{ color: '#d32f2f' }}>*</span></label>
+            <label className="text-sm font-medium" style={{ display: 'block', fontSize: '0.85rem', fontWeight: 500, marginBottom: '0.35rem' }}>Port of Loading (POL) <span style={{ color: '#6b7280', fontSize: '0.75rem' }}>(Optional)</span></label>
             <select
               name="pol"
               value={formData.pol}
@@ -423,14 +415,13 @@ const ShippingInquiryForm = ({ onCancel, onSuccess, initialData, existingCount =
               disabled={isLoading}
               className="form-control form-control-sm"
               style={{ width: '100%', padding: '0.45rem 0.65rem', borderRadius: '4px', border: '1px solid #d1d5db' }}
-              required
             >
               <option value="">Select Port of Loading (POL)...</option>
               {ports.map(p => {
                 const label = typeof p === 'object' ? (p.port_name || p.name || p.port_code) : p;
                 return (
-                  <option key={typeof p === 'object' ? (p.id || label) : p} value={label} disabled={label === formData.pod}>
-                    {label} {label === formData.pod ? ' (Selected as POD)' : ''}
+                  <option key={typeof p === 'object' ? (p.id || label) : p} value={label} disabled={formData.pod && label === formData.pod}>
+                    {label} {formData.pod && label === formData.pod ? ' (Selected as POD)' : ''}
                   </option>
                 );
               })}
@@ -439,7 +430,7 @@ const ShippingInquiryForm = ({ onCancel, onSuccess, initialData, existingCount =
 
           {/* POD */}
           <div className="form-group">
-            <label className="text-sm font-medium" style={{ display: 'block', fontSize: '0.85rem', fontWeight: 500, marginBottom: '0.35rem' }}>Port of Discharge (POD) <span style={{ color: '#d32f2f' }}>*</span></label>
+            <label className="text-sm font-medium" style={{ display: 'block', fontSize: '0.85rem', fontWeight: 500, marginBottom: '0.35rem' }}>Port of Discharge (POD) <span style={{ color: '#6b7280', fontSize: '0.75rem' }}>(Optional)</span></label>
             <select
               name="pod"
               value={formData.pod}
@@ -447,14 +438,13 @@ const ShippingInquiryForm = ({ onCancel, onSuccess, initialData, existingCount =
               disabled={isLoading}
               className="form-control form-control-sm"
               style={{ width: '100%', padding: '0.45rem 0.65rem', borderRadius: '4px', border: '1px solid #d1d5db' }}
-              required
             >
               <option value="">Select Port of Discharge (POD)...</option>
               {ports.map(p => {
                 const label = typeof p === 'object' ? (p.port_name || p.name || p.port_code) : p;
                 return (
-                  <option key={typeof p === 'object' ? (p.id || label) : p} value={label} disabled={label === formData.pol}>
-                    {label} {label === formData.pol ? ' (Selected as POL)' : ''}
+                  <option key={typeof p === 'object' ? (p.id || label) : p} value={label} disabled={formData.pol && label === formData.pol}>
+                    {label} {formData.pol && label === formData.pol ? ' (Selected as POL)' : ''}
                   </option>
                 );
               })}

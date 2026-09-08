@@ -336,14 +336,6 @@ const QuotationForm = ({ onCancel, onSuccess, initialData, existingCount = 0 }) 
       setGlobalError('Please select or specify an Exporter / Customer.');
       return;
     }
-    if (!formData.pol) {
-      setGlobalError('Port of Loading (POL) is mandatory.');
-      return;
-    }
-    if (!formData.pod) {
-      setGlobalError('Port of Discharge (POD) is mandatory.');
-      return;
-    }
     if (!formData.commodity) {
       setGlobalError('Commodity description is mandatory.');
       return;
@@ -498,7 +490,7 @@ const QuotationForm = ({ onCancel, onSuccess, initialData, existingCount = 0 }) 
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '1rem' }}>
           {/* POL */}
           <div className="form-group">
-            <label style={{ display: 'block', fontSize: '0.85rem', fontWeight: 500, marginBottom: '0.35rem' }}>Port of Loading (POL) <span style={{ color: '#d32f2f' }}>*</span></label>
+            <label style={{ display: 'block', fontSize: '0.85rem', fontWeight: 500, marginBottom: '0.35rem' }}>Port of Loading (POL) <span style={{ color: '#6b7280', fontSize: '0.75rem' }}>(Optional)</span></label>
             <input
               type="text"
               name="pol"
@@ -506,13 +498,12 @@ const QuotationForm = ({ onCancel, onSuccess, initialData, existingCount = 0 }) 
               onChange={handleChange}
               placeholder="e.g. Mundra Port (INMUN)"
               style={{ width: '100%', padding: '0.45rem 0.65rem', borderRadius: '4px', border: '1px solid #d1d5db' }}
-              required
             />
           </div>
 
           {/* POD */}
           <div className="form-group">
-            <label style={{ display: 'block', fontSize: '0.85rem', fontWeight: 500, marginBottom: '0.35rem' }}>Port of Discharge (POD) <span style={{ color: '#d32f2f' }}>*</span></label>
+            <label style={{ display: 'block', fontSize: '0.85rem', fontWeight: 500, marginBottom: '0.35rem' }}>Port of Discharge (POD) <span style={{ color: '#6b7280', fontSize: '0.75rem' }}>(Optional)</span></label>
             <input
               type="text"
               name="pod"
@@ -520,7 +511,6 @@ const QuotationForm = ({ onCancel, onSuccess, initialData, existingCount = 0 }) 
               onChange={handleChange}
               placeholder="e.g. Dubai / Jebel Ali (AEJEA)"
               style={{ width: '100%', padding: '0.45rem 0.65rem', borderRadius: '4px', border: '1px solid #d1d5db' }}
-              required
             />
           </div>
 
