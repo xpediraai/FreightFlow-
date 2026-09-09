@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { X, Check, FileText, Building2, MapPin, Package, Box, Calendar, Ship, ShieldCheck, DollarSign, Calculator, ChevronDown, ChevronUp, AlertCircle } from 'lucide-react';
+import { X, Check, FileText, Building2, MapPin, Package, Box, Calendar, Ship, ShieldCheck, DollarSign, Calculator, ChevronDown, ChevronUp, AlertCircle, Plus, Trash2, RotateCcw } from 'lucide-react';
 import Button from '../../../../../shared/components/Button';
 import { businessService } from '../../../../masters/services/business.service';
 import { logisticsService } from '../../../../masters/services/logistics.service';
@@ -13,32 +13,7 @@ export const generateQuotationNo = (existingCount = 0) => {
   return `EQUOT/SS/${month}-${year}/${seq}`;
 };
 
-export const INITIAL_CHARGE_HEADS = [
-  { id: 'ch1', name: 'Ocean Freight [POL to POD]', basis: 'Per Container', defaultApplicable: true, rate: 85000 },
-  { id: 'ch2', name: 'Origin Terminal Handling Charges (THC)', basis: 'Per Container', defaultApplicable: true, rate: 11500 },
-  { id: 'ch3', name: 'BL Charges', basis: 'Per BL Set', defaultApplicable: true, rate: 4500 },
-  { id: 'ch4', name: 'Seal Charges', basis: 'Per Container', defaultApplicable: true, rate: 500 },
-  { id: 'ch5', name: 'MUC Charges', basis: 'Per Container', defaultApplicable: false, rate: 1200 },
-  { id: 'ch6', name: 'Equipment Surcharges', basis: 'Per Container', defaultApplicable: false, rate: 2500 },
-  { id: 'ch7', name: 'AMS / ENS / ISF', basis: 'Per Container', defaultApplicable: false, rate: 2000 },
-  { id: 'ch8', name: 'Other Carrier Charges', basis: 'Per Container', defaultApplicable: false, rate: 0 },
-  { id: 'ch9', name: 'Agency Charges', basis: 'Per Container', defaultApplicable: true, rate: 3500 },
-  { id: 'ch10', name: 'Custom Docs Charges', basis: 'Per Container', defaultApplicable: true, rate: 2500 },
-  { id: 'ch11', name: 'Examination / Customs Attendance', basis: 'Per Container', defaultApplicable: false, rate: 3000 },
-  { id: 'ch12', name: 'Other Customs Expenses', basis: 'Flat / Lump sum', defaultApplicable: false, rate: 0 },
-  { id: 'ch13', name: 'CFS Handling Charges', basis: 'Per Container', defaultApplicable: false, rate: 4500 },
-  { id: 'ch14', name: 'Container Stuffing Charges', basis: 'Per Container', defaultApplicable: false, rate: 3500 },
-  { id: 'ch15', name: 'Cargo Unloading / Loading', basis: 'Flat / Lump sum', defaultApplicable: false, rate: 0 },
-  { id: 'ch16', name: 'Transportation Charges [Yard → Factory → Port]', basis: 'Per Container', defaultApplicable: true, rate: 28000 },
-  { id: 'ch17', name: 'Lift On/Off Charges', basis: 'Per Container', defaultApplicable: true, rate: 1800 },
-  { id: 'ch18', name: 'Vehicle Halting Charges', basis: 'Per Vehicle', defaultApplicable: false, rate: 1500 },
-  { id: 'ch19', name: '3rd Party Survey', basis: 'Flat / Lump sum', defaultApplicable: false, rate: 3500 },
-  { id: 'ch20', name: 'Fumigation', basis: 'Per Container', defaultApplicable: false, rate: 2200 },
-  { id: 'ch21', name: 'Cargo Insurance', basis: 'Flat / Lump sum', defaultApplicable: false, rate: 0 },
-  { id: 'ch22', name: 'Additional Certificate / Documentation', basis: 'Per Set', defaultApplicable: false, rate: 1500 },
-  { id: 'ch23', name: 'Palletization / Lashing / Choking', basis: 'Per Container', defaultApplicable: false, rate: 4000 },
-  { id: 'ch24', name: 'Other Services', basis: 'Flat / Lump sum', defaultApplicable: false, rate: 0 }
-];
+export const INITIAL_CHARGE_HEADS = [];
 
 const DEFAULT_CARRIER_A = { line: 'Maersk Line', freight: 85000, local: 16000, notes: 'Direct weekly service, 14 days transit' };
 const DEFAULT_CARRIER_B = { line: 'MSC Line', freight: 82000, local: 17500, notes: 'Transshipment via Colombo, 18 days transit' };
@@ -74,6 +49,7 @@ const QuotationForm = ({ onCancel, onSuccess, initialData, existingCount = 0 }) 
   const [savedInquiries, setSavedInquiries] = useState([]);
   const [shippingLinesMaster, setShippingLinesMaster] = useState([]);
   const [uoms, setUoms] = useState(DEFAULT_UOMS);
+  const [chargeMasters, setChargeMasters] = useState(INITIAL_CHARGE_HEADS);
 
   // Form State
   const [formData, setFormData] = useState({
@@ -122,18 +98,8 @@ const QuotationForm = ({ onCancel, onSuccess, initialData, existingCount = 0 }) 
     priority: 'Medium'
   });
 
-  // Line Item Charges State
-  const [charges, setCharges] = useState(() => {
-    return INITIAL_CHARGE_HEADS.map(ch => ({
-      id: ch.id,
-      name: ch.name,
-      basis: ch.basis,
-      applicable: ch.defaultApplicable,
-      quantity: ch.basis === 'Per Container' ? 1 : 1,
-      rate: ch.rate,
-      amount: ch.defaultApplicable ? (ch.basis === 'Per Container' ? 1 * ch.rate : 1 * ch.rate) : 0
-    }));
-  });
+  // Line Item Charges State (Loaded dynamically from Charge Master)
+  const [charges, setCharges] = useState([]);
 
   // Calculate Total Quotation Amount
   const totalAmount = charges.reduce((sum, item) => {
@@ -154,9 +120,10 @@ const QuotationForm = ({ onCancel, onSuccess, initialData, existingCount = 0 }) 
 
     const fetchMasters = async () => {
       try {
-        const [linesRes, uomRes] = await Promise.allSettled([
+        const [linesRes, uomRes, chargeRes] = await Promise.allSettled([
           logisticsService.getShippingLines(),
-          commonService.getUOMs()
+          commonService.getUOMs(),
+          businessService.getCharges()
         ]);
         if (linesRes.status === 'fulfilled' && linesRes.value) {
           const data = linesRes.value?.data?.data?.data || linesRes.value?.data?.data || linesRes.value?.data;
@@ -165,6 +132,40 @@ const QuotationForm = ({ onCancel, onSuccess, initialData, existingCount = 0 }) 
         if (uomRes.status === 'fulfilled' && uomRes.value) {
           const data = uomRes.value?.data?.data?.data || uomRes.value?.data?.data || uomRes.value?.data;
           if (Array.isArray(data)) setUoms(data);
+        }
+        let chargeData = [];
+        if (chargeRes.status === 'fulfilled' && chargeRes.value) {
+          chargeData = chargeRes.value?.data?.data?.data || chargeRes.value?.data?.data || chargeRes.value?.data || [];
+        }
+        if (!Array.isArray(chargeData) || chargeData.length === 0) {
+          try {
+            const localRaw = localStorage.getItem('freightflow_charge_masters');
+            if (localRaw) chargeData = JSON.parse(localRaw);
+          } catch (lErr) {}
+        }
+        if (Array.isArray(chargeData) && chargeData.length > 0) {
+          const activeMasters = chargeData.filter(c => c.status !== 'Inactive');
+          const mappedMasters = activeMasters.map((c, i) => ({
+            id: c.id || `cm_${i}`,
+            name: c.charge_name || c.name || c.description,
+            basis: c.basis || c.uom || 'Per Container',
+            defaultApplicable: c.default_applicable ?? true,
+            rate: Number(c.default_rate || c.rate || 0),
+            quantity: Number(c.default_qty || c.quantity || 1)
+          }));
+          setChargeMasters(mappedMasters);
+
+          if (!initialData) {
+            setCharges(mappedMasters.map(cm => ({
+              id: `ch_${cm.id}`,
+              name: cm.name,
+              basis: cm.basis,
+              applicable: cm.defaultApplicable,
+              quantity: cm.quantity,
+              rate: cm.rate,
+              amount: cm.defaultApplicable ? cm.quantity * cm.rate : 0
+            })));
+          }
         }
       } catch (err) {
         console.error('Failed to fetch masters:', err);
@@ -304,7 +305,7 @@ const QuotationForm = ({ onCancel, onSuccess, initialData, existingCount = 0 }) 
     );
   };
 
-  // Charge Line Item Toggle & Rate Change Handlers
+  // Charge Line Item Handlers
   const handleChargeToggle = (id) => {
     setCharges(prev => prev.map(c => {
       if (c.id === id) {
@@ -320,20 +321,63 @@ const QuotationForm = ({ onCancel, onSuccess, initialData, existingCount = 0 }) 
   };
 
   const handleChargeValueChange = (id, field, val) => {
-    const numVal = Number(val) || 0;
     setCharges(prev => prev.map(c => {
       if (c.id === id) {
-        const updatedQty = field === 'quantity' ? numVal : c.quantity;
-        const updatedRate = field === 'rate' ? numVal : c.rate;
-        const updatedAmt = c.applicable ? updatedQty * updatedRate : 0;
-        return {
-          ...c,
-          [field]: numVal,
-          amount: updatedAmt
-        };
+        const updated = { ...c, [field]: val };
+        
+        if (field === 'name' || field === 'basis') {
+          return updated;
+        }
+
+        const q = field === 'quantity' ? (Number(val) || 0) : (Number(c.quantity) || 0);
+        const r = field === 'rate' ? (Number(val) || 0) : (Number(c.rate) || 0);
+        
+        if (field === 'amount') {
+          updated.amount = Number(val) || 0;
+        } else {
+          updated.quantity = q;
+          updated.rate = r;
+          updated.amount = c.applicable ? q * r : 0;
+        }
+
+        return updated;
       }
       return c;
     }));
+  };
+
+  const handleAddChargeLine = (presetCharge = null) => {
+    const newId = `ch_${Date.now()}_${Math.random().toString(36).substr(2, 4)}`;
+    setCharges(prev => [
+      ...prev,
+      {
+        id: newId,
+        name: presetCharge?.name || presetCharge?.charge_name || '',
+        basis: presetCharge?.basis || presetCharge?.uom || 'Per Container',
+        applicable: true,
+        quantity: 1,
+        rate: Number(presetCharge?.rate || presetCharge?.default_rate || 0),
+        amount: Number(presetCharge?.rate || presetCharge?.default_rate || 0)
+      }
+    ]);
+  };
+
+  const handleRemoveChargeLine = (id) => {
+    setCharges(prev => prev.filter(c => c.id !== id));
+  };
+
+  const handleResetToMasterCharges = () => {
+    setCharges(
+      chargeMasters.map(ch => ({
+        id: `ch_${ch.id}`,
+        name: ch.name,
+        basis: ch.basis,
+        applicable: ch.defaultApplicable,
+        quantity: ch.quantity || 1,
+        rate: ch.rate || 0,
+        amount: ch.defaultApplicable ? (ch.quantity || 1) * (ch.rate || 0) : 0
+      }))
+    );
   };
 
   // Form Submit
@@ -884,10 +928,47 @@ const QuotationForm = ({ onCancel, onSuccess, initialData, existingCount = 0 }) 
           </div>
         </div>
 
-        {/* SECTION 5 — 24 CLIENT CHARGE LINE-ITEMS ENGINE */}
+        {/* SECTION 5 — CLIENT QUOTATION CHARGE LINE ITEMS (CHARGES ENGINE) */}
         <div style={sectionHeaderStyle}>
           <Calculator size={16} color="#1976D2" />
-          <span>Section 5 — Client Quotation Charge Line Items (24 Charge Heads Engine)</span>
+          <span>Section 5 — Client Quotation Charge Line Items (Charge Master Engine)</span>
+        </div>
+
+        {/* Master Quick Select Bar & Reset Button */}
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.75rem', gap: '0.5rem', flexWrap: 'wrap' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', flexWrap: 'wrap' }}>
+            <span style={{ fontSize: '0.8rem', fontWeight: 600, color: '#475569' }}>Quick Add From Charge Master:</span>
+            <select
+              style={{ padding: '0.35rem 0.6rem', borderRadius: '4px', border: '1px solid #cbd5e1', fontSize: '0.8rem', backgroundColor: '#f8fafc' }}
+              onChange={(e) => {
+                const val = e.target.value;
+                if (!val) return;
+                const found = chargeMasters.find(cm => String(cm.id) === String(val) || cm.name === val);
+                if (found) {
+                  handleAddChargeLine(found);
+                }
+                e.target.value = '';
+              }}
+            >
+              <option value="">-- Pick Charge Head to Add --</option>
+              {chargeMasters.map((cm, i) => (
+                <option key={cm.id || i} value={cm.id || cm.name}>
+                  {cm.name} ({cm.basis}) - ₹{cm.rate}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            onClick={handleResetToMasterCharges}
+            leftIcon={RotateCcw}
+            style={{ fontSize: '0.78rem' }}
+          >
+            Reset Default Charges
+          </Button>
         </div>
 
         <div style={{ overflowX: 'auto', border: '1px solid #e2e8f0', borderRadius: '8px', marginBottom: '1.5rem' }}>
@@ -897,9 +978,10 @@ const QuotationForm = ({ onCancel, onSuccess, initialData, existingCount = 0 }) 
                 <th style={{ padding: '0.6rem', textAlign: 'center', width: '50px' }}>Apply</th>
                 <th style={{ padding: '0.6rem', width: '35%' }}>Charge / Service Description</th>
                 <th style={{ padding: '0.6rem', width: '20%' }}>Basis / Unit</th>
-                <th style={{ padding: '0.6rem', textAlign: 'center', width: '12%' }}>Quantity</th>
-                <th style={{ padding: '0.6rem', textAlign: 'right', width: '15%' }}>Rate (₹)</th>
-                <th style={{ padding: '0.6rem', textAlign: 'right', width: '18%' }}>Amount (₹)</th>
+                <th style={{ padding: '0.6rem', textAlign: 'center', width: '10%' }}>Quantity</th>
+                <th style={{ padding: '0.6rem', textAlign: 'right', width: '14%' }}>Rate (₹)</th>
+                <th style={{ padding: '0.6rem', textAlign: 'right', width: '14%' }}>Amount (₹)</th>
+                <th style={{ padding: '0.6rem', textAlign: 'center', width: '50px' }}>Action</th>
               </tr>
             </thead>
             <tbody>
@@ -907,7 +989,7 @@ const QuotationForm = ({ onCancel, onSuccess, initialData, existingCount = 0 }) 
                 <tr key={item.id} style={{ borderBottom: '1px solid #f1f5f9', backgroundColor: item.applicable ? '#ffffff' : '#f8fafc' }}>
                   
                   {/* Applicable Checkbox */}
-                  <td style={{ padding: '0.5rem', textAlign: 'center' }}>
+                  <td style={{ padding: '0.4rem', textAlign: 'center' }}>
                     <input
                       type="checkbox"
                       checked={item.applicable}
@@ -916,43 +998,135 @@ const QuotationForm = ({ onCancel, onSuccess, initialData, existingCount = 0 }) 
                     />
                   </td>
 
-                  {/* Charge Name */}
-                  <td style={{ padding: '0.5rem', fontWeight: item.applicable ? 600 : 400, color: item.applicable ? '#0f172a' : '#94a3b8' }}>
-                    {idx + 1}. {item.name}
+                  {/* Charge Name (Editable Input) */}
+                  <td style={{ padding: '0.4rem' }}>
+                    <input
+                      type="text"
+                      disabled={!item.applicable}
+                      value={item.name || ''}
+                      onChange={(e) => handleChargeValueChange(item.id, 'name', e.target.value)}
+                      placeholder="e.g. Ocean Freight / THC / BL Charges"
+                      style={{
+                        width: '100%',
+                        padding: '0.3rem 0.5rem',
+                        borderRadius: '4px',
+                        border: '1px solid #cbd5e1',
+                        fontSize: '0.825rem',
+                        fontWeight: item.applicable ? 600 : 400,
+                        color: item.applicable ? '#0f172a' : '#94a3b8',
+                        backgroundColor: item.applicable ? '#ffffff' : '#f1f5f9'
+                      }}
+                    />
                   </td>
 
-                  {/* Basis */}
-                  <td style={{ padding: '0.5rem', color: '#64748b', fontSize: '0.8rem' }}>
-                    {item.basis}
+                  {/* Basis / Unit (Editable Select) */}
+                  <td style={{ padding: '0.4rem' }}>
+                    <select
+                      disabled={!item.applicable}
+                      value={item.basis || 'Per Container'}
+                      onChange={(e) => handleChargeValueChange(item.id, 'basis', e.target.value)}
+                      style={{
+                        width: '100%',
+                        padding: '0.3rem 0.5rem',
+                        borderRadius: '4px',
+                        border: '1px solid #cbd5e1',
+                        fontSize: '0.8rem',
+                        color: item.applicable ? '#334155' : '#94a3b8',
+                        backgroundColor: item.applicable ? '#ffffff' : '#f1f5f9'
+                      }}
+                    >
+                      <option value="Per Container">Per Container</option>
+                      <option value="Per BL Set">Per BL Set</option>
+                      <option value="Flat / Lump sum">Flat / Lump sum</option>
+                      <option value="Per Vehicle">Per Vehicle</option>
+                      <option value="Per Set">Per Set</option>
+                      <option value="Per CBM">Per CBM</option>
+                      <option value="Per MT">Per MT</option>
+                      <option value="Per KG">Per KG</option>
+                      <option value="Per Document">Per Document</option>
+                      <option value="Per Day">Per Day</option>
+                    </select>
                   </td>
 
                   {/* Quantity Input */}
-                  <td style={{ padding: '0.5rem', textAlign: 'center' }}>
+                  <td style={{ padding: '0.4rem', textAlign: 'center' }}>
                     <input
                       type="number"
                       min="0"
                       disabled={!item.applicable}
                       value={item.quantity}
                       onChange={(e) => handleChargeValueChange(item.id, 'quantity', e.target.value)}
-                      style={{ width: '70px', padding: '0.25rem', textAlign: 'center', borderRadius: '4px', border: '1px solid #cbd5e1' }}
+                      style={{
+                        width: '65px',
+                        padding: '0.3rem 0.25rem',
+                        textAlign: 'center',
+                        borderRadius: '4px',
+                        border: '1px solid #cbd5e1',
+                        fontSize: '0.825rem'
+                      }}
                     />
                   </td>
 
                   {/* Rate Input */}
-                  <td style={{ padding: '0.5rem', textAlign: 'right' }}>
+                  <td style={{ padding: '0.4rem', textAlign: 'right' }}>
                     <input
                       type="number"
                       min="0"
                       disabled={!item.applicable}
                       value={item.rate}
                       onChange={(e) => handleChargeValueChange(item.id, 'rate', e.target.value)}
-                      style={{ width: '100px', padding: '0.25rem', textAlign: 'right', borderRadius: '4px', border: '1px solid #cbd5e1' }}
+                      style={{
+                        width: '90px',
+                        padding: '0.3rem 0.4rem',
+                        textAlign: 'right',
+                        borderRadius: '4px',
+                        border: '1px solid #cbd5e1',
+                        fontSize: '0.825rem'
+                      }}
                     />
                   </td>
 
-                  {/* Amount Display */}
-                  <td style={{ padding: '0.5rem', textAlign: 'right', fontWeight: item.applicable ? 700 : 400, color: item.applicable ? '#2e7d32' : '#94a3b8' }}>
-                    ₹{Number(item.amount).toLocaleString('en-IN', { minimumFractionDigits: 2 })}
+                  {/* Amount Input */}
+                  <td style={{ padding: '0.4rem', textAlign: 'right' }}>
+                    <input
+                      type="number"
+                      min="0"
+                      disabled={!item.applicable}
+                      value={item.amount}
+                      onChange={(e) => handleChargeValueChange(item.id, 'amount', e.target.value)}
+                      style={{
+                        width: '105px',
+                        padding: '0.3rem 0.4rem',
+                        textAlign: 'right',
+                        borderRadius: '4px',
+                        border: '1px solid #cbd5e1',
+                        fontSize: '0.825rem',
+                        fontWeight: 700,
+                        color: item.applicable ? '#2e7d32' : '#94a3b8'
+                      }}
+                    />
+                  </td>
+
+                  {/* Remove Button */}
+                  <td style={{ padding: '0.4rem', textAlign: 'center' }}>
+                    <button
+                      type="button"
+                      onClick={() => handleRemoveChargeLine(item.id)}
+                      title="Remove Charge Line"
+                      style={{
+                        border: 'none',
+                        background: '#fee2e2',
+                        color: '#dc2626',
+                        padding: '0.35rem 0.45rem',
+                        borderRadius: '4px',
+                        cursor: 'pointer',
+                        display: 'inline-flex',
+                        alignItems: 'center',
+                        justifyContent: 'center'
+                      }}
+                    >
+                      <Trash2 size={14} />
+                    </button>
                   </td>
 
                 </tr>
@@ -963,12 +1137,26 @@ const QuotationForm = ({ onCancel, onSuccess, initialData, existingCount = 0 }) 
                 <td colSpan="5" style={{ padding: '0.75rem', textAlign: 'right', fontSize: '0.95rem' }}>
                   GRAND TOTAL ESTIMATED CHARGES:
                 </td>
-                <td style={{ padding: '0.75rem', textAlign: 'right', fontSize: '1.2rem', color: '#0288d1' }}>
+                <td colSpan="2" style={{ padding: '0.75rem', textAlign: 'right', fontSize: '1.2rem', color: '#0288d1' }}>
                   ₹{Number(totalAmount).toLocaleString('en-IN', { minimumFractionDigits: 2 })}
                 </td>
               </tr>
             </tfoot>
           </table>
+        </div>
+
+        {/* Bottom Action Bar for Adding New Custom Lines */}
+        <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: '-0.75rem', marginBottom: '1.5rem' }}>
+          <Button
+            type="button"
+            variant="primary"
+            size="sm"
+            onClick={() => handleAddChargeLine()}
+            leftIcon={Plus}
+            style={{ fontSize: '0.825rem' }}
+          >
+            Add Custom Charge Line
+          </Button>
         </div>
 
         {/* SECTION 6 — STATUS & REMARKS */}
