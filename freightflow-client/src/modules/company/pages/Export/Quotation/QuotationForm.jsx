@@ -345,14 +345,6 @@ const QuotationForm = ({ onCancel, onSuccess, initialData, existingCount = 0 }) 
       setGlobalError('Please select or specify an Exporter / Customer.');
       return;
     }
-    if (!formData.commodity) {
-      setGlobalError('Commodity description is mandatory.');
-      return;
-    }
-    if (!formData.hsn_code) {
-      setGlobalError('HSN Code is mandatory.');
-      return;
-    }
 
     const finalWeight = formData.weight_value 
       ? `${formData.weight_value} ${formData.weight_uom || 'KG'}`.trim()
@@ -525,7 +517,7 @@ const QuotationForm = ({ onCancel, onSuccess, initialData, existingCount = 0 }) 
 
           {/* FPOD */}
           <div className="form-group">
-            <label style={{ display: 'block', fontSize: '0.85rem', fontWeight: 500, marginBottom: '0.35rem' }}>Final Place of Delivery (FPOD)</label>
+            <label style={{ display: 'block', fontSize: '0.85rem', fontWeight: 500, marginBottom: '0.35rem' }}>Final Place of Delivery (FPOD) <span style={{ color: '#6b7280', fontSize: '0.75rem' }}>(Optional)</span></label>
             <input
               type="text"
               name="fpod"
@@ -538,7 +530,7 @@ const QuotationForm = ({ onCancel, onSuccess, initialData, existingCount = 0 }) 
 
           {/* Commodity */}
           <div className="form-group">
-            <label style={{ display: 'block', fontSize: '0.85rem', fontWeight: 500, marginBottom: '0.35rem' }}>Commodity <span style={{ color: '#d32f2f' }}>*</span></label>
+            <label style={{ display: 'block', fontSize: '0.85rem', fontWeight: 500, marginBottom: '0.35rem' }}>Commodity <span style={{ color: '#6b7280', fontSize: '0.75rem' }}>(Optional)</span></label>
             <input
               type="text"
               name="commodity"
@@ -546,13 +538,12 @@ const QuotationForm = ({ onCancel, onSuccess, initialData, existingCount = 0 }) 
               onChange={handleChange}
               placeholder="e.g. Cotton Textiles"
               style={{ width: '100%', padding: '0.45rem 0.65rem', borderRadius: '4px', border: '1px solid #d1d5db' }}
-              required
             />
           </div>
 
           {/* HSN Code */}
           <div className="form-group">
-            <label style={{ display: 'block', fontSize: '0.85rem', fontWeight: 500, marginBottom: '0.35rem' }}>HSN Code <span style={{ color: '#d32f2f' }}>*</span></label>
+            <label style={{ display: 'block', fontSize: '0.85rem', fontWeight: 500, marginBottom: '0.35rem' }}>HSN Code <span style={{ color: '#6b7280', fontSize: '0.75rem' }}>(Optional)</span></label>
             <input
               type="text"
               name="hsn_code"
@@ -560,13 +551,12 @@ const QuotationForm = ({ onCancel, onSuccess, initialData, existingCount = 0 }) 
               onChange={handleChange}
               placeholder="e.g. 5205.12"
               style={{ width: '100%', padding: '0.45rem 0.65rem', borderRadius: '4px', border: '1px solid #d1d5db' }}
-              required
             />
           </div>
 
           {/* Container Type */}
           <div className="form-group">
-            <label style={{ display: 'block', fontSize: '0.85rem', fontWeight: 500, marginBottom: '0.35rem' }}>Container Requirement</label>
+            <label style={{ display: 'block', fontSize: '0.85rem', fontWeight: 500, marginBottom: '0.35rem' }}>Container Requirement <span style={{ color: '#6b7280', fontSize: '0.75rem' }}>(Optional)</span></label>
             <input
               type="text"
               name="container_type"
@@ -579,7 +569,7 @@ const QuotationForm = ({ onCancel, onSuccess, initialData, existingCount = 0 }) 
 
           {/* No of Containers */}
           <div className="form-group">
-            <label style={{ display: 'block', fontSize: '0.85rem', fontWeight: 500, marginBottom: '0.35rem' }}>No. of Containers</label>
+            <label style={{ display: 'block', fontSize: '0.85rem', fontWeight: 500, marginBottom: '0.35rem' }}>No. of Containers <span style={{ color: '#6b7280', fontSize: '0.75rem' }}>(Optional)</span></label>
             <input
               type="number"
               min="1"
@@ -592,7 +582,7 @@ const QuotationForm = ({ onCancel, onSuccess, initialData, existingCount = 0 }) 
 
           {/* Gross Weight with UOM Master Dropdown */}
           <div className="form-group">
-            <label style={{ display: 'block', fontSize: '0.85rem', fontWeight: 500, marginBottom: '0.35rem' }}>Gross Weight</label>
+            <label style={{ display: 'block', fontSize: '0.85rem', fontWeight: 500, marginBottom: '0.35rem' }}>Gross Weight <span style={{ color: '#6b7280', fontSize: '0.75rem' }}>(Optional)</span></label>
             <div style={{ display: 'flex', gap: '0.4rem' }}>
               <input
                 type="text"
@@ -623,7 +613,7 @@ const QuotationForm = ({ onCancel, onSuccess, initialData, existingCount = 0 }) 
 
           {/* Shipment Terms */}
           <div className="form-group">
-            <label style={{ display: 'block', fontSize: '0.85rem', fontWeight: 500, marginBottom: '0.35rem' }}>Shipment Terms</label>
+            <label style={{ display: 'block', fontSize: '0.85rem', fontWeight: 500, marginBottom: '0.35rem' }}>Shipment Terms <span style={{ color: '#6b7280', fontSize: '0.75rem' }}>(Optional)</span></label>
             <select
               name="shipment_terms"
               value={formData.shipment_terms}
