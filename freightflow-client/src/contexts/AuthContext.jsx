@@ -43,6 +43,11 @@ export const AuthProvider = ({ children }) => {
     if (refreshToken) {
       tokenHelper.setRefreshToken(refreshToken);
     }
+
+    const defaultCompId = localStorage.getItem('freightflow_default_company_id');
+    if (defaultCompId && user) {
+      user = { ...user, company_id: defaultCompId };
+    }
     
     // Set user info
     localStorageHelper.set('freightflow_user', user);

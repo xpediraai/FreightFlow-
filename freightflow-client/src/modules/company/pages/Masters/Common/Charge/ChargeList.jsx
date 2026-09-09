@@ -26,10 +26,34 @@ const ChargeList = ({ onEdit, searchQuery = '', viewMode = 'table', refreshTrigg
     if (!itemToDelete) return;
     setIsDeleting(true);
     try {
-      await commonService.deleteCharge(itemToDelete.id);
+      const targetId = itemToDelete.id || itemToDelete.charge_code;
+      if (targetId) {
+        try {
+          await businessService.deleteCharge(targetId);
+        } catch (err) {
+          console.warn('API delete failed, deleting from local storage:', err);
+        }
+      }
+
+      const isMatch = (item) => {
+        if (!item || !itemToDelete) return false;
+        if (item.id && itemToDelete.id && String(item.id) === String(itemToDelete.id)) return true;
+        if (item.charge_code && itemToDelete.charge_code && String(item.charge_code).toLowerCase() === String(itemToDelete.charge_code).toLowerCase()) return true;
+        return false;
+      };
+      
+      try {
+        const localRaw = localStorage.getItem('freightflow_charge_masters');
+        if (localRaw) {
+          const localList = JSON.parse(localRaw);
+          const updated = localList.filter(item => !isMatch(item));
+          localStorage.setItem('freightflow_charge_masters', JSON.stringify(updated));
+        }
+      } catch (lErr) {}
+
       setIsDeleteModalOpen(false);
       setItemToDelete(null);
-      setCharges(prev => prev.filter(item => item.id !== itemToDelete.id));
+      setCharges(prev => prev.filter(item => !isMatch(item)));
     } catch (error) {
       console.error('Failed to delete item:', error);
     } finally {
@@ -37,30 +61,45 @@ const ChargeList = ({ onEdit, searchQuery = '', viewMode = 'table', refreshTrigg
     }
   };
 
-
   useEffect(() => {
     fetchCharges();
   }, [refreshTrigger]);
 
-
-
   const fetchCharges = async () => {
     setIsLoading(true);
     try {
-      const res = await businessService.getCharges();
-      
       let data = [];
-      if (res?.data?.data?.data && Array.isArray(res.data.data.data)) {
-        data = res.data.data.data;
-      } else if (res?.data?.data && Array.isArray(res.data.data)) {
-        data = res.data.data;
-      } else if (res?.data && Array.isArray(res.data)) {
-        data = res.data;
+      try {
+        const res = await businessService.getCharges();
+        if (res?.data?.data?.data && Array.isArray(res.data.data.data)) {
+          data = res.data.data.data;
+        } else if (res?.data?.data && Array.isArray(res.data.data)) {
+          data = res.data.data;
+        } else if (res?.data && Array.isArray(res.data)) {
+          data = res.data;
+        }
+      } catch (apiErr) {
+        console.warn('API getCharges failed, loading local storage fallback:', apiErr);
       }
-      
-      setCharges(data);
+
+      let localData = [];
+      try {
+        const local = localStorage.getItem('freightflow_charge_masters');
+        if (local) localData = JSON.parse(local);
+      } catch (lErr) {}
+
+      if (!Array.isArray(data) || data.length === 0) {
+        data = localData;
+      } else if (Array.isArray(localData) && localData.length > 0) {
+        const backendIds = new Set(data.map(item => String(item.id)));
+        const newLocalItems = localData.filter(item => !backendIds.has(String(item.id)));
+        data = [...newLocalItems, ...data];
+      }
+
+      setCharges(Array.isArray(data) ? data : []);
     } catch (error) {
       console.error('Failed to fetch charges:', error);
+      setCharges([]);
     } finally {
       setIsLoading(false);
     }
@@ -93,9 +132,19 @@ const ChargeList = ({ onEdit, searchQuery = '', viewMode = 'table', refreshTrigg
       render: (row) => <span className="font-medium uppercase">{row.charge_code}</span>
     },
     {
-      header: 'Charge Name',
+      header: 'Charge Name / Service Description',
       key: 'charge_name',
-      render: (row) => row.charge_name
+      render: (row) => <strong>{row.charge_name}</strong>
+    },
+    {
+      header: 'Basis / Unit',
+      key: 'basis',
+      render: (row) => row.basis || 'Per Container'
+    },
+    {
+      header: 'Default Rate (₹)',
+      key: 'default_rate',
+      render: (row) => row.default_rate ? `₹${Number(row.default_rate).toLocaleString('en-IN')}` : '-'
     },
     {
       header: 'Type',

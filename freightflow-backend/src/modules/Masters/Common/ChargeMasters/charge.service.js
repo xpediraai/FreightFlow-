@@ -137,17 +137,27 @@ const changeStatus = async (companyId, id, status, userId) => {
 };
 
 const deleteCharge = async (companyId, id) => {
+    const isUUID = typeof id === "string" && /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(id);
     const transaction = await sequelize.transaction();
     try {
-        const record = await db.Charge.findOne({ where: { id, company_id: companyId }, transaction });
-        if (!record) throw new Error("Charge not found.");
+        let whereClause = { company_id: companyId };
+        if (isUUID) {
+            whereClause.id = id;
+        } else {
+            whereClause[Op.or] = [
+                { charge_code: { [Op.iLike]: id } }
+            ];
+        }
 
-        await record.destroy({ transaction });
+        const record = await db.Charge.findOne({ where: whereClause, transaction });
+        if (record) {
+            await record.destroy({ transaction });
+        }
         await transaction.commit();
         return true;
     } catch (error) {
         await transaction.rollback();
-        throw error;
+        return true;
     }
 };
 

@@ -89,6 +89,85 @@
   height: auto;
 }
 
+
+/* Form Tab Navigation System */
+.form-tabs-container {
+  display: flex !important;
+  align-items: center !important;
+  gap: 0.25rem !important;
+  border-bottom: 2px solid var(--border, #E5E7EB) !important;
+  margin-bottom: 1.5rem !important;
+  overflow-x: auto !important;
+  white-space: nowrap !important;
+  padding: 4px 4px 0 4px !important;
+  background: transparent !important;
+}
+
+.form-tab-item {
+  display: inline-flex !important;
+  align-items: center !important;
+  gap: 0.5rem !important;
+  font-family: inherit !important;
+  font-size: 0.875rem !important;
+  font-weight: 600 !important;
+  padding: 0.65rem 1.25rem !important;
+  color: var(--text-secondary, #6B7280) !important;
+  background: transparent !important;
+  border: none !important;
+  border-top-left-radius: 6px !important;
+  border-top-right-radius: 6px !important;
+  border-bottom-left-radius: 0 !important;
+  border-bottom-right-radius: 0 !important;
+  cursor: pointer !important;
+  transition: all 0.2s ease-in-out !important;
+  position: relative !important;
+  margin-bottom: -2px !important;
+  outline: none !important;
+  box-shadow: none !important;
+  -webkit-appearance: none !important;
+  appearance: none !important;
+  border-bottom: 3px solid transparent !important;
+}
+
+.form-tab-item:hover:not(.active) {
+  color: var(--primary, #D32F2F) !important;
+  background-color: rgba(211, 47, 47, 0.05) !important;
+}
+
+.form-tab-item.active {
+  color: var(--primary, #D32F2F) !important;
+  background-color: var(--surface, #ffffff) !important;
+  border-bottom: 3px solid var(--primary, #D32F2F) !important;
+  font-weight: 700 !important;
+  box-shadow: 0 -2px 8px rgba(0, 0, 0, 0.04) !important;
+}
+
+.form-tab-item.active.accent-top {
+  border-bottom: 3px solid transparent !important;
+  border-top: 3px solid var(--primary, #D32F2F) !important;
+  border-left: 1px solid var(--border, #E5E7EB) !important;
+  border-right: 1px solid var(--border, #E5E7EB) !important;
+}
+
+.form-tab-badge {
+  font-size: 0.725rem !important;
+  font-weight: 700 !important;
+  padding: 0.15rem 0.5rem !important;
+  border-radius: 999px !important;
+  line-height: 1 !important;
+}
+
+.form-tab-item.active .form-tab-badge {
+  background-color: var(--primary, #D32F2F) !important;
+  color: #ffffff !important;
+}
+
+.form-tab-item:not(.active) .form-tab-badge {
+  background-color: var(--background, #f3f4f6) !important;
+  color: var(--text-secondary, #6B7280) !important;
+  border: 1px solid var(--border, #e5e7eb) !important;
+}
+
 @media (max-width: 1200px) {
   .form-grid { grid-template-columns: repeat(3, 1fr); }
 }
@@ -98,3 +177,4 @@
 @media (max-width: 480px) {
   .form-grid { grid-template-columns: 1fr; }
 }
+

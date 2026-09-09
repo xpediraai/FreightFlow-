@@ -13,7 +13,7 @@ const { successResponse, errorResponse } = require("../../../../utils/response")
 
 const create = async (req, res) => {
     try {
-        const { error, value } = createVendorSchema.validate(req.body);
+        const { error, value } = createVendorSchema.validate(req.body, { stripUnknown: true });
         if (error) {
             return res.status(400).json(errorResponse("VALIDATION_ERROR", error.details[0].message, error.details[0].message));
         }
@@ -59,7 +59,7 @@ const getById = async (req, res) => {
 
 const update = async (req, res) => {
     try {
-        const { error, value } = updateVendorSchema.validate(req.body);
+        const { error, value } = updateVendorSchema.validate(req.body, { stripUnknown: true });
         if (error) return res.status(400).json(errorResponse("VALIDATION_ERROR", error.details[0].message, error.details[0].message));
 
         const reqInfo = { ip: req.ip, userAgent: req.headers["user-agent"] };

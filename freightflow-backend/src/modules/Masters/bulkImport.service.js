@@ -106,6 +106,27 @@ const executeBulkImport = async (entityType, rows, user) => {
         updated_by: userId
       };
 
+      // Set model defaults for mandatory non-null database fields
+      if (entityType === 'charge') {
+        if (!recordData.charge_type) recordData.charge_type = 'Revenue';
+        if (!recordData.applicable_module) recordData.applicable_module = 'Quotation';
+        if (recordData.basis === undefined) recordData.basis = 'Per Container';
+        if (recordData.default_rate === undefined) recordData.default_rate = 0;
+        if (recordData.default_qty === undefined) recordData.default_qty = 1;
+        if (recordData.default_applicable === undefined) recordData.default_applicable = true;
+      }
+      if (entityType === 'containerType') {
+        if (!recordData.iso_code) recordData.iso_code = recordData.container_code || 'GEN';
+        if (!recordData.size) recordData.size = '20';
+        if (!recordData.category) recordData.category = 'Dry';
+      }
+      if (entityType === 'customer') {
+        if (!recordData.customer_type) recordData.customer_type = 'Shipper / Exporter';
+      }
+      if (entityType === 'vendor') {
+        if (!recordData.vendor_type) recordData.vendor_type = 'Shipping Line';
+      }
+
       // 1. Resolve & Auto-Create Foreign Keys (Country, State, City)
       if (entityType === 'state' || entityType === 'city' || entityType === 'port') {
         const countryVal = data.country_code || data.country_id || data.country;
