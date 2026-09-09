@@ -26,10 +26,35 @@ const TransportModeList = ({ onEdit, searchQuery = '', viewMode = 'table', refre
     if (!itemToDelete) return;
     setIsDeleting(true);
     try {
-      await commonService.deleteTransportMode(itemToDelete.id);
+      const targetId = itemToDelete.id || itemToDelete.mode_code;
+      if (targetId) {
+        try {
+          await commonService.deleteTransportMode(targetId);
+        } catch (err) {
+          console.warn('API delete failed, removing locally:', err);
+        }
+      }
+
+      const isMatch = (item) => {
+        if (!item || !itemToDelete) return false;
+        if (item.id && itemToDelete.id && String(item.id) === String(itemToDelete.id)) return true;
+        if (item.mode_code && itemToDelete.mode_code && String(item.mode_code).toLowerCase() === String(itemToDelete.mode_code).toLowerCase()) return true;
+        if (item.mode_name && itemToDelete.mode_name && String(item.mode_name).toLowerCase() === String(itemToDelete.mode_name).toLowerCase()) return true;
+        return false;
+      };
+
+      try {
+        const localRaw = localStorage.getItem('freightflow_transport_modes');
+        if (localRaw) {
+          const localList = JSON.parse(localRaw);
+          const updated = localList.filter(item => !isMatch(item));
+          localStorage.setItem('freightflow_transport_modes', JSON.stringify(updated));
+        }
+      } catch (lErr) {}
+
       setIsDeleteModalOpen(false);
       setItemToDelete(null);
-      setTransportModes(prev => prev.filter(item => item.id !== itemToDelete.id));
+      setModes(prev => prev.filter(item => !isMatch(item)));
     } catch (error) {
       console.error('Failed to delete item:', error);
     } finally {
@@ -37,25 +62,45 @@ const TransportModeList = ({ onEdit, searchQuery = '', viewMode = 'table', refre
     }
   };
 
-
   useEffect(() => {
     fetchModes();
   }, [refreshTrigger]);
+
   const fetchModes = async () => {
     setIsLoading(true);
     try {
-      const data = await commonService.getTransportModes();
       let modeData = [];
-      if (data?.data?.data && Array.isArray(data.data.data)) {
-        modeData = data.data.data;
-      } else if (data?.data && Array.isArray(data.data)) {
-        modeData = data.data;
-      } else if (Array.isArray(data)) {
-        modeData = data;
+      try {
+        const data = await commonService.getTransportModes();
+        if (data?.data?.data && Array.isArray(data.data.data)) {
+          modeData = data.data.data;
+        } else if (data?.data && Array.isArray(data.data)) {
+          modeData = data.data;
+        } else if (Array.isArray(data)) {
+          modeData = data;
+        }
+      } catch (apiErr) {
+        console.warn('API getTransportModes failed, loading local fallback:', apiErr);
       }
+
+      let localData = [];
+      try {
+        const local = localStorage.getItem('freightflow_transport_modes');
+        if (local) localData = JSON.parse(local);
+      } catch (lErr) {}
+
+      if (!Array.isArray(modeData) || modeData.length === 0) {
+        modeData = localData.length > 0 ? localData : [
+          { id: 'tm_1', mode_code: 'AIR', mode_name: 'Air Freight', description: 'Express International Air Cargo Transport', status: 'Active' },
+          { id: 'tm_2', mode_code: 'SEA', mode_name: 'Ocean Freight (FCL/LCL)', description: 'Containerized & Breakbulk Marine Shipping', status: 'Active' }
+        ];
+      } else if (Array.isArray(localData) && localData.length > 0) {
+        const backendCodes = new Set(modeData.map(m => String(m.mode_code || m.id).toLowerCase()));
+        const newLocalItems = localData.filter(m => !backendCodes.has(String(m.mode_code || m.id).toLowerCase()));
+        modeData = [...newLocalItems, ...modeData];
+      }
+
       setModes(modeData);
-      if (data?.data?.totalPages) setTotalPages(data.data.totalPages);
-      if (data?.data?.total) setTotalRecords(data.data.total);
     } catch (error) {
       console.error('Failed to fetch transport modes:', error);
     } finally {

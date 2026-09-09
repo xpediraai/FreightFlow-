@@ -397,6 +397,7 @@ const ShippingInquiryForm = ({
   const [shippingLines, setShippingLines] = useState(DEFAULT_SHIPPING_LINES);
   const [containerTypes, setContainerTypes] = useState(DEFAULT_CONTAINER_TYPES);
   const [uoms, setUoms] = useState(DEFAULT_UOMS);
+  const [transportModes, setTransportModes] = useState([]);
 
   const defaultValues = useMemo(
     () => buildDefaultValues(initialData, existingCount),
@@ -465,11 +466,12 @@ const ShippingInquiryForm = ({
           logisticsService.getShippingLines(),
           commonService.getContainerTypes(),
           commonService.getUOMs(),
+          commonService.getTransportModes(),
         ]);
 
         if (cancelled) return;
 
-        const [custRes, portRes, shipLineRes, containerTypeRes, uomRes] =
+        const [custRes, portRes, shipLineRes, containerTypeRes, uomRes, transportModeRes] =
           results;
 
         const custData = extractList(custRes);
@@ -486,6 +488,29 @@ const ShippingInquiryForm = ({
 
         const uomData = extractList(uomRes);
         if (uomData.length) setUoms(uomData);
+
+        let tmData = extractList(transportModeRes);
+        try {
+          const local = localStorage.getItem('freightflow_transport_modes');
+          if (local) {
+            const localList = JSON.parse(local);
+            if (Array.isArray(localList) && localList.length > 0) {
+              const backendCodes = new Set(tmData.map(m => String(m.mode_code || m.id).toLowerCase()));
+              const newLocal = localList.filter(m => !backendCodes.has(String(m.mode_code || m.id).toLowerCase()));
+              tmData = [...newLocal, ...tmData];
+            }
+          }
+        } catch (e) {}
+
+        if (!tmData || tmData.length === 0) {
+          tmData = [
+            { id: 'tm_1', mode_code: 'AIR', mode_name: 'Air Freight' },
+            { id: 'tm_2', mode_code: 'SEA', mode_name: 'Ocean Freight (FCL/LCL)' },
+            { id: 'tm_3', mode_code: 'ROAD', mode_name: 'Road / Land Transport' },
+            { id: 'tm_4', mode_code: 'RAIL', mode_name: 'Rail Freight' }
+          ];
+        }
+        setTransportModes(tmData);
       } catch (err) {
         console.error('Error fetching master dropdowns:', err);
       } finally {
@@ -1025,13 +1050,15 @@ const ShippingInquiryForm = ({
               disabled={disabled}
               {...register('shipment_type', { required: true })}
             >
-              <option value="Sea">Sea</option>
-              <option value="Air">Air</option>
-              <option value="Land">Land</option>
-              <option value="FCL">FCL</option>
-              <option value="LCL">LCL</option>
-              <option value="Bulk">Bulk</option>
-              <option value="Project Cargo">Project Cargo</option>
+              <option value="">-- Select Shipment Type --</option>
+              {transportModes.map((tm) => (
+                <option 
+                  key={tm.id || tm.mode_code} 
+                  value={tm.mode_name || tm.mode_code}
+                >
+                  {tm.mode_name} {tm.mode_code ? `(${tm.mode_code})` : ''}
+                </option>
+              ))}
             </select>
           </div>
           <div className="form-group">
