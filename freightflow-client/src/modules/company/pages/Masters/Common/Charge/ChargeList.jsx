@@ -26,24 +26,34 @@ const ChargeList = ({ onEdit, searchQuery = '', viewMode = 'table', refreshTrigg
     if (!itemToDelete) return;
     setIsDeleting(true);
     try {
-      try {
-        await businessService.deleteCharge(itemToDelete.id);
-      } catch (err) {
-        console.warn('API delete failed, deleting from local storage:', err);
+      const targetId = itemToDelete.id || itemToDelete.charge_code;
+      if (targetId) {
+        try {
+          await businessService.deleteCharge(targetId);
+        } catch (err) {
+          console.warn('API delete failed, deleting from local storage:', err);
+        }
       }
+
+      const isMatch = (item) => {
+        if (!item || !itemToDelete) return false;
+        if (item.id && itemToDelete.id && String(item.id) === String(itemToDelete.id)) return true;
+        if (item.charge_code && itemToDelete.charge_code && String(item.charge_code).toLowerCase() === String(itemToDelete.charge_code).toLowerCase()) return true;
+        return false;
+      };
       
       try {
         const localRaw = localStorage.getItem('freightflow_charge_masters');
         if (localRaw) {
           const localList = JSON.parse(localRaw);
-          const updated = localList.filter(item => String(item.id) !== String(itemToDelete.id));
+          const updated = localList.filter(item => !isMatch(item));
           localStorage.setItem('freightflow_charge_masters', JSON.stringify(updated));
         }
       } catch (lErr) {}
 
       setIsDeleteModalOpen(false);
       setItemToDelete(null);
-      setCharges(prev => prev.filter(item => String(item.id) !== String(itemToDelete.id)));
+      setCharges(prev => prev.filter(item => !isMatch(item)));
     } catch (error) {
       console.error('Failed to delete item:', error);
     } finally {
