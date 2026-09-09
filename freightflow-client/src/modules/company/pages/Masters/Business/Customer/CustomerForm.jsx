@@ -852,8 +852,8 @@ const CustomerForm = ({ onCancel, onSuccess, initialData }) => {
         </div>
       )}
 
-      {/* Modern Tabs Navigation with Badge Counters */}
-      <div className="border-b border-light flex gap-sm mb-lg overflow-x-auto whitespace-nowrap scrollbar-none">
+      {/* Tabs Navigation in FreightFlow theme */}
+      <div className="form-tabs-container">
         {TABS.map(tab => {
           const Icon = tab.icon;
           const badgeCount = getTabBadgeCount(tab.id);
@@ -863,19 +863,26 @@ const CustomerForm = ({ onCancel, onSuccess, initialData }) => {
             <button
               key={tab.id}
               type="button"
-              className={`flex items-center gap-xs font-medium text-xs py-2 px-3 transition-all rounded-t-md relative ${
-                isActive 
-                  ? 'text-primary border-b-2 border-primary bg-surface-hover font-semibold' 
-                  : 'text-secondary-light hover:text-primary hover:bg-surface-hover'
-              }`}
+              className={`form-tab-item ${isActive ? 'active accent-top' : ''}`}
+              style={{
+                background: isActive ? 'var(--surface, #ffffff)' : 'transparent',
+                outline: 'none',
+                boxShadow: isActive ? '0 -2px 8px rgba(0,0,0,0.04)' : 'none',
+                borderTop: isActive ? '3px solid var(--primary)' : '3px solid transparent',
+                borderLeft: isActive ? '1px solid var(--border)' : '1px solid transparent',
+                borderRight: isActive ? '1px solid var(--border)' : '1px solid transparent',
+                borderBottom: '3px solid transparent',
+                borderRadius: '6px 6px 0 0',
+                cursor: 'pointer',
+                padding: '0.65rem 1.25rem',
+                color: isActive ? 'var(--primary)' : 'var(--text-secondary)'
+              }}
               onClick={() => setActiveTab(tab.id)}
             >
-              <Icon size={14} />
+              <Icon size={15} />
               <span>{tab.label}</span>
               {badgeCount > 0 && (
-                <span className={`text-[10px] px-1.5 py-0.2 rounded-full font-bold ${
-                  isActive ? 'bg-primary text-white' : 'bg-surface-hover text-secondary border border-light'
-                }`}>
+                <span className="form-tab-badge">
                   {badgeCount}
                 </span>
               )}
