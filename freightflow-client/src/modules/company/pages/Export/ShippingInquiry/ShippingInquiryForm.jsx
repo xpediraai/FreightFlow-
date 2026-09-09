@@ -18,6 +18,7 @@ import Button from '../../../../../shared/components/Button';
 import { businessService } from '../../../../masters/services/business.service';
 import { logisticsService } from '../../../../masters/services/logistics.service';
 import { commonService } from '../../../../masters/services/common.service';
+import FactorySelectionModal from './FactorySelectionModal';
 
 // ============================================================
 // Helpers
@@ -138,6 +139,9 @@ const buildDefaultValues = (initialData, existingCount) => {
       cargo_ready_date: '',
       stuffing_location: 'Factory',
       stuffing_location_other: '',
+      factory_name: '',
+      factory_address: '',
+      factory_contact_person: '',
       shipping_line_preference: '',
       free_days_required: '',
       special_requirements: '',
@@ -205,6 +209,9 @@ const buildDefaultValues = (initialData, existingCount) => {
       : '',
     stuffing_location: initialData.stuffing_location || 'Factory',
     stuffing_location_other: initialData.stuffing_location_other || '',
+    factory_name: initialData.factory_name || initialData.factory_details?.factory_name || '',
+    factory_address: initialData.factory_address || initialData.factory_details?.factory_address || '',
+    factory_contact_person: initialData.factory_contact_person || initialData.factory_details?.contact_person || '',
     shipping_line_preference: initialData.shipping_line_preference || '',
     free_days_required:
       initialData.free_days_required !== undefined &&
@@ -371,6 +378,19 @@ const ShippingInquiryForm = ({
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isDropdownsLoading, setIsDropdownsLoading] = useState(true);
   const [submitError, setSubmitError] = useState('');
+  const [isFactoryModalOpen, setIsFactoryModalOpen] = useState(false);
+  const [factoryDetails, setFactoryDetails] = useState(() => {
+    return initialData?.factory_details || (initialData?.factory_name ? {
+      factory_name: initialData.factory_name || '',
+      factory_address: initialData.factory_address || '',
+      city: initialData.factory_city || initialData.city || '',
+      state: initialData.factory_state || initialData.state || 'Gujarat',
+      pincode: initialData.factory_pincode || initialData.pincode || '',
+      contact_person: initialData.factory_contact_person || initialData.contact_person || '',
+      contact_phone: initialData.factory_contact_phone || initialData.contact_phone || '',
+      gstin: initialData.factory_gstin || initialData.gstin || ''
+    } : null);
+  });
 
   const [exporters, setExporters] = useState(DEFAULT_EXPORTERS);
   const [ports, setPorts] = useState(DEFAULT_PORTS);
@@ -500,7 +520,7 @@ const ShippingInquiryForm = ({
       const payload = {
         ...values,
         cargoDetails: values.cargoDetails,
-          containerDetails: containers,
+        containerDetails: containers,
         gross_weight: finalWeight,
         quantity: containerCount,
         weight: finalWeight,
@@ -509,6 +529,14 @@ const ShippingInquiryForm = ({
         origin: values.pol,
         destination: values.pod,
         remarks: values.special_requirements,
+        factory_name: values.factory_name || factoryDetails?.factory_name || '',
+        factory_address: values.factory_address || factoryDetails?.factory_address || '',
+        factory_contact_person: values.factory_contact_person || factoryDetails?.contact_person || '',
+        factory_details: {
+          factory_name: values.factory_name || factoryDetails?.factory_name || '',
+          factory_address: values.factory_address || factoryDetails?.factory_address || '',
+          contact_person: values.factory_contact_person || factoryDetails?.contact_person || '',
+        },
         mode: 'Sea',
         id: isEditMode ? initialData.id : `inq_${Date.now()}`,
         created_at: isEditMode
@@ -1074,16 +1102,26 @@ const ShippingInquiryForm = ({
             <label className="text-sm font-medium" style={styles.label}>
               Stuffing Type <span style={styles.required}>*</span>
             </label>
-            <select
-              className="form-control form-control-sm"
-              style={styles.input}
-              disabled={disabled}
-              {...register('stuffing_location', { required: true })}
-            >
-              <option value="Factory">Factory Stuffing</option>
-              <option value="CFS">CFS Stuffing (Container Freight Station)</option>
-              <option value="Other">Other</option>
-            </select>
+            <Controller
+              name="stuffing_location"
+              control={control}
+              rules={{ required: true }}
+              render={({ field }) => (
+                <select
+                  className="form-control form-control-sm"
+                  style={styles.input}
+                  disabled={disabled}
+                  {...field}
+                  onChange={(e) => {
+                    field.onChange(e.target.value);
+                  }}
+                >
+                  <option value="Factory">Factory Stuffing</option>
+                  <option value="CFS">CFS Stuffing (Container Freight Station)</option>
+                  <option value="Other">Other</option>
+                </select>
+              )}
+            />
           </div>
 
           {stuffingLocation === 'Other' && (
@@ -1114,6 +1152,65 @@ const ShippingInquiryForm = ({
             </div>
           )}
         </div>
+
+        {/* Simple Input & Textarea Fields for Factory Stuffing */}
+        {stuffingLocation === 'Factory' && (
+          <div style={{ marginTop: '1rem', padding: '1rem', backgroundColor: '#f8fafc', border: '1px solid #e2e8f0', borderRadius: '6px' }}>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: '1rem', marginBottom: '1rem' }}>
+              <div className="form-group">
+                <label className="text-sm font-medium" style={styles.label}>
+                  Factory / Plant Name <span style={styles.required}>*</span>
+                </label>
+                <input
+                  type="text"
+                  placeholder="e.g. Apex Global Textiles - Factory Unit 1"
+                  className="form-control form-control-sm"
+                  style={styles.input}
+                  disabled={disabled}
+                  {...register('factory_name', {
+                    required: stuffingLocation === 'Factory' ? 'Factory Name is required for Factory Stuffing.' : false,
+                  })}
+                />
+                {errors.factory_name && (
+                  <div style={styles.error}>{errors.factory_name.message}</div>
+                )}
+              </div>
+
+              <div className="form-group">
+                <label className="text-sm font-medium" style={styles.label}>
+                  Contact Person & Phone <span style={styles.optional}>(Optional)</span>
+                </label>
+                <input
+                  type="text"
+                  placeholder="e.g. Mr. Rajesh Mehta (+91 98765 43210)"
+                  className="form-control form-control-sm"
+                  style={styles.input}
+                  disabled={disabled}
+                  {...register('factory_contact_person')}
+                />
+              </div>
+            </div>
+
+            <div className="form-group">
+              <label className="text-sm font-medium" style={styles.label}>
+                Factory Stuffing Address <span style={styles.required}>*</span>
+              </label>
+              <textarea
+                placeholder="Enter complete factory stuffing address, GIDC plot no, city, state & pincode..."
+                rows={3}
+                className="form-control form-control-sm"
+                style={{ ...styles.input, height: 'auto', padding: '0.5rem' }}
+                disabled={disabled}
+                {...register('factory_address', {
+                  required: stuffingLocation === 'Factory' ? 'Factory Stuffing Address is required.' : false,
+                })}
+              />
+              {errors.factory_address && (
+                <div style={styles.error}>{errors.factory_address.message}</div>
+              )}
+            </div>
+          </div>
+        )}
 
         {/* SECTION 7 — CARRIER & FREE DAYS */}
         <div style={styles.sectionHeader}>
@@ -1338,6 +1435,24 @@ const ShippingInquiryForm = ({
           </Button>
         </div>
       </form>
+
+      <FactorySelectionModal
+        isOpen={isFactoryModalOpen}
+        onClose={() => setIsFactoryModalOpen(false)}
+        onSave={(data) => {
+          setFactoryDetails(data);
+          setValue('factory_name', data.factory_name);
+          setValue('factory_address', data.factory_address);
+          setValue('factory_city', data.city);
+          setValue('factory_state', data.state);
+          setValue('factory_pincode', data.pincode);
+          setValue('factory_contact_person', data.contact_person);
+          setValue('factory_contact_phone', data.contact_phone);
+          setValue('factory_gstin', data.gstin);
+        }}
+        initialFactory={factoryDetails || {}}
+        exporterName={watch('exporter_name')}
+      />
     </div>
   );
 };

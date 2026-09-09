@@ -356,7 +356,18 @@ const ShippingInquiryList = ({
               <div><strong>Gross Weight (per cont.):</strong> {viewDetailsModal.gross_weight || viewDetailsModal.weight}</div>
               <div><strong>Shipment Terms:</strong> {viewDetailsModal.shipment_terms || 'FOB'}</div>
               <div><strong>Expected Cargo Ready Date:</strong> {viewDetailsModal.cargo_ready_date ? new Date(viewDetailsModal.cargo_ready_date).toLocaleDateString() : 'N/A'}</div>
-              <div><strong>Stuffing Location:</strong> {viewDetailsModal.stuffing_location} {viewDetailsModal.stuffing_location === 'Other' && viewDetailsModal.stuffing_location_other ? `(${viewDetailsModal.stuffing_location_other})` : ''}</div>
+              <div>
+                <strong>Stuffing Location:</strong> {viewDetailsModal.stuffing_location} {viewDetailsModal.stuffing_location === 'Other' && viewDetailsModal.stuffing_location_other ? `(${viewDetailsModal.stuffing_location_other})` : ''}
+                {(viewDetailsModal.factory_name || viewDetailsModal.factory_details?.factory_name) && (
+                  <div style={{ fontSize: '0.8rem', color: '#0288d1', marginTop: '0.25rem', backgroundColor: '#f0f9ff', padding: '0.35rem 0.5rem', borderRadius: '4px', border: '1px solid #bae6fd' }}>
+                    🏭 <strong>{viewDetailsModal.factory_name || viewDetailsModal.factory_details?.factory_name}</strong>
+                    <div style={{ color: '#334155', marginTop: '1px' }}>
+                      📍 {viewDetailsModal.factory_address || viewDetailsModal.factory_details?.factory_address}
+                      {(viewDetailsModal.factory_city || viewDetailsModal.factory_details?.city) ? `, ${viewDetailsModal.factory_city || viewDetailsModal.factory_details?.city}` : ''}
+                    </div>
+                  </div>
+                )}
+              </div>
               <div><strong>Shipping Line Preference:</strong> {viewDetailsModal.shipping_line_preference || 'Any Line'}</div>
               <div><strong>Free Days Required:</strong> {viewDetailsModal.free_days_required ? `${viewDetailsModal.free_days_required} Days` : 'Standard'}</div>
               <div style={{ gridColumn: '1 / -1' }}><strong>Created Date:</strong> {new Date(viewDetailsModal.created_at || Date.now()).toLocaleString()}</div>

@@ -256,7 +256,12 @@ const QuotationPreviewModal = ({ quotation, onClose }) => {
                   </div>
                   <div>
                     <span style={{ color: '#6b7280', fontSize: '0.72rem', display: 'block' }}>Stuffing Location</span>
-                    <strong>{quotation.stuffing_location}</strong>
+                    <strong>{quotation.stuffing_location || 'Factory'}</strong>
+                    {(quotation.factory_name || quotation.factory_details?.factory_name) && (
+                      <div style={{ fontSize: '0.72rem', color: '#0288d1', marginTop: '1px', fontWeight: 600 }}>
+                        🏭 {quotation.factory_name || quotation.factory_details?.factory_name}
+                      </div>
+                    )}
                   </div>
                   {quotation.fpod && (
                     <div>
