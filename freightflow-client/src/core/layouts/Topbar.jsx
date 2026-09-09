@@ -15,28 +15,49 @@ const Topbar = ({ onToggleSidebar, onOpenLauncher, navMode = 'both', isSidebarOp
   const dropdownRef = useRef(null);
 
   useEffect(() => {
-    authService.getUserCompanies().then(res => {
-      let companyData = [];
-      if (res?.data?.data && Array.isArray(res.data.data)) {
-        companyData = res.data.data;
-      } else if (res?.data && Array.isArray(res.data)) {
-        companyData = res.data;
-      } else if (Array.isArray(res)) {
-        companyData = res;
-      }
-      setCompanies(companyData);
-
-      // Auto-select if there is exactly one company and we don't have one selected
-      if (companyData.length === 1 && !currentUser?.company_name) {
-        setSelectedCompany(companyData[0].company_name);
-        // Note: we don't switch context if there's only one, as the login context should already match it
-      } else if (currentUser?.company_id) {
-        const matchingCompany = companyData.find(c => c.id === currentUser.company_id);
-        if (matchingCompany) {
-          setSelectedCompany(matchingCompany.company_name);
+    const loadUserCompanies = () => {
+      authService.getUserCompanies().then(res => {
+        let companyData = [];
+        if (res?.data?.data && Array.isArray(res.data.data)) {
+          companyData = res.data.data;
+        } else if (res?.data && Array.isArray(res.data)) {
+          companyData = res.data;
+        } else if (Array.isArray(res)) {
+          companyData = res;
         }
-      }
-    }).catch(console.error);
+        setCompanies(companyData);
+
+        const defaultCompId = localStorage.getItem('freightflow_default_company_id');
+
+        // Auto-select starred default company if configured
+        if (defaultCompId) {
+          const matchingDefault = companyData.find(c => String(c.id || c.company_code) === String(defaultCompId));
+          if (matchingDefault) {
+            setSelectedCompany(matchingDefault.company_name);
+            if (currentUser?.company_id !== matchingDefault.id) {
+              switchCompany(matchingDefault.id);
+            }
+            return;
+          }
+        }
+
+        // Fallback auto-select
+        if (companyData.length === 1 && !currentUser?.company_name) {
+          setSelectedCompany(companyData[0].company_name);
+        } else if (currentUser?.company_id) {
+          const matchingCompany = companyData.find(c => c.id === currentUser.company_id);
+          if (matchingCompany) {
+            setSelectedCompany(matchingCompany.company_name);
+          }
+        }
+      }).catch(console.error);
+    };
+
+    loadUserCompanies();
+    window.addEventListener('default_company_changed', loadUserCompanies);
+    return () => {
+      window.removeEventListener('default_company_changed', loadUserCompanies);
+    };
   }, [currentUser?.company_id]);
 
   useEffect(() => {
@@ -118,16 +139,25 @@ const Topbar = ({ onToggleSidebar, onOpenLauncher, navMode = 'both', isSidebarOp
                 display: 'flex', flexDirection: 'column'
               }}
             >
-              {companies.map(company => (
-                <div
-                  key={company.id}
-                  style={{ padding: '10px 16px', cursor: 'pointer', fontSize: '13px', borderBottom: '1px solid var(--color-light)' }}
-                  className={`hover:bg-surface text-secondary font-medium transition-colors ${company.id === currentUser?.company_id ? 'bg-primary-light text-primary' : ''}`}
-                  onClick={() => handleCompanySelect(company)}
-                >
-                  {company.company_name} {company.is_default ? '(Default)' : ''}
-                </div>
-              ))}
+              {companies.map(company => {
+                const defaultCompId = localStorage.getItem('freightflow_default_company_id');
+                const isDefault = String(company.id || company.company_code) === String(defaultCompId) || company.is_default || (!defaultCompId && (company.company_name === 'Shanti' || company.name === 'Shanti'));
+                return (
+                  <div
+                    key={company.id}
+                    style={{ padding: '10px 16px', cursor: 'pointer', fontSize: '13px', borderBottom: '1px solid var(--color-light)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}
+                    className={`hover:bg-surface text-secondary font-medium transition-colors ${company.id === currentUser?.company_id ? 'bg-primary-light text-primary' : ''}`}
+                    onClick={() => handleCompanySelect(company)}
+                  >
+                    <span>{company.company_name}</span>
+                    {isDefault && (
+                      <span style={{ fontSize: '0.75rem', color: '#d97706', display: 'flex', alignItems: 'center', gap: '2px', fontWeight: 600 }}>
+                        ★ Default
+                      </span>
+                    )}
+                  </div>
+                );
+              })}
               {companies.length === 0 && (
                 <div style={{ padding: '10px 16px', fontSize: '13px' }} className="text-secondary-light text-center">
                   No companies found
