@@ -1,15 +1,15 @@
 import React, { useState, useEffect } from 'react';
-import { X, Plus, Trash2 } from 'lucide-react';
+import { X, Plus, Trash2, MapPin, Landmark, User, FileText, Building2, AlertCircle } from 'lucide-react';
 import Button from '../../../../../../shared/components/Button';
 import { businessService } from '../../../../../masters/services/business.service';
 import { foundationService } from '../../../../../masters/services/foundation.service';
 import StatusToggle from '../../../../../../shared/components/Input/StatusToggle';
 
 const TABS = [
-  { id: 'personal', label: 'Personal Info' },
-  { id: 'address', label: 'Address' },
-  { id: 'bank', label: 'Bank Details' },
-  { id: 'contact_docs', label: 'Contact Info & Documents' }
+  { id: 'personal', label: 'Personal Info', icon: User },
+  { id: 'address', label: 'Address', icon: MapPin },
+  { id: 'bank', label: 'Bank Details', icon: Landmark },
+  { id: 'contact_docs', label: 'Contact & Documents', icon: FileText }
 ];
 
 const CustomerForm = ({ onCancel, onSuccess, initialData }) => {
@@ -23,7 +23,6 @@ const CustomerForm = ({ onCancel, onSuccess, initialData }) => {
   const [states, setStates] = useState([]);
   const [cities, setCities] = useState([]);
   
-  // State matching backend Joi validator
   const [formData, setFormData] = useState({
     customer_name: '',
     customer_type: '',
@@ -38,21 +37,21 @@ const CustomerForm = ({ onCancel, onSuccess, initialData }) => {
     currency_id: '',
     status: 'Active',
     
-    // Arrays
     addresses: [],
     banks: [],
     contacts: [],
     documents: []
   });
 
+  // Fetch Dropdown Master Data with high limit to avoid missing options
   useEffect(() => {
     const fetchDropdowns = async () => {
       try {
         const [currRes, countRes, stateRes, cityRes] = await Promise.all([
-          foundationService.getCurrencies(),
-          foundationService.getCountries(),
-          foundationService.getStates(),
-          foundationService.getCities()
+          foundationService.getCurrencies({ limit: 1000 }),
+          foundationService.getCountries({ limit: 1000 }),
+          foundationService.getStates({ limit: 1000 }),
+          foundationService.getCities({ limit: 1000 })
         ]);
         
         const extractData = (res) => {
@@ -74,15 +73,65 @@ const CustomerForm = ({ onCancel, onSuccess, initialData }) => {
     fetchDropdowns();
   }, []);
 
+  // Fetch full details when editing
   useEffect(() => {
-    if (initialData) {
+    if (initialData && initialData.id) {
+      const fetchFullCustomer = async () => {
+        setIsLoading(true);
+        try {
+          const res = await businessService.getCustomerById(initialData.id);
+          const fullData = res.data?.data || res.data || initialData;
+          setFormData({
+            customer_name: fullData.customer_name || '',
+            customer_type: fullData.customer_type || '',
+            customer_category: fullData.customer_category || '',
+            gst_number: fullData.gst_number || '',
+            pan_number: fullData.pan_number || '',
+            iec_code: fullData.iec_code || '',
+            cin_number: fullData.cin_number || '',
+            tan_number: fullData.tan_number || '',
+            credit_limit: fullData.credit_limit ?? '',
+            payment_terms: fullData.payment_terms || '',
+            currency_id: fullData.currency_id || '',
+            status: fullData.status || 'Active',
+            addresses: fullData.addresses || [],
+            banks: fullData.banks || [],
+            contacts: fullData.contacts || [],
+            documents: fullData.documents || []
+          });
+        } catch (err) {
+          console.error("Failed to fetch full customer details:", err);
+          setFormData(prev => ({
+            ...prev,
+            ...initialData,
+            addresses: initialData.addresses || [],
+            banks: initialData.banks || [],
+            contacts: initialData.contacts || [],
+            documents: initialData.documents || []
+          }));
+        } finally {
+          setIsLoading(false);
+        }
+      };
+      fetchFullCustomer();
+    } else {
       setFormData({
-        ...formData, // defaults
-        ...initialData,
-        addresses: initialData.addresses || [],
-        banks: initialData.banks || [],
-        contacts: initialData.contacts || [],
-        documents: initialData.documents || []
+        customer_name: '',
+        customer_type: '',
+        customer_category: '',
+        gst_number: '',
+        pan_number: '',
+        iec_code: '',
+        cin_number: '',
+        tan_number: '',
+        credit_limit: '',
+        payment_terms: '',
+        currency_id: '',
+        status: 'Active',
+        addresses: [],
+        banks: [],
+        contacts: [],
+        documents: []
       });
     }
   }, [initialData]);
@@ -94,15 +143,15 @@ const CustomerForm = ({ onCancel, onSuccess, initialData }) => {
   };
 
   const handleArrayChange = (arrayName, index, field, value) => {
-    const newArray = [...formData[arrayName]];
-    newArray[index] = { ...newArray[index], [field]: value };
-    setFormData(prev => ({ ...prev, [arrayName]: newArray }));
+    setFormData(prev => {
+      const newArray = [...prev[arrayName]];
+      newArray[index] = { ...newArray[index], [field]: value };
+      return { ...prev, [arrayName]: newArray };
+    });
   };
 
   const handleFileUpload = async (index, file) => {
     if (!file) return;
-    
-    // Set a temporary uploading state if needed, here we'll just block submit with isLoading
     setIsLoading(true);
     try {
       const uploadData = new FormData();
@@ -125,9 +174,11 @@ const CustomerForm = ({ onCancel, onSuccess, initialData }) => {
   };
 
   const removeArrayItem = (arrayName, index) => {
-    const newArray = [...formData[arrayName]];
-    newArray.splice(index, 1);
-    setFormData(prev => ({ ...prev, [arrayName]: newArray }));
+    setFormData(prev => {
+      const newArray = [...prev[arrayName]];
+      newArray.splice(index, 1);
+      return { ...prev, [arrayName]: newArray };
+    });
   };
 
   const handleSubmit = async (e) => {
@@ -143,17 +194,56 @@ const CustomerForm = ({ onCancel, onSuccess, initialData }) => {
     setIsLoading(true);
     
     try {
-      const payload = { ...formData };
-      if (!payload.credit_limit) payload.credit_limit = null; // Fix number parsing
-      if (!payload.currency_id) payload.currency_id = null;
-
-      // Clean up empty UUIDs inside array items to be null
-      payload.addresses = (payload.addresses || []).map(addr => ({
-        ...addr,
-        country_id: addr.country_id || null,
-        state_id: addr.state_id || null,
-        city_id: addr.city_id || null
-      }));
+      // Clean payload without top-level database metadata
+      const payload = {
+        customer_name: formData.customer_name.trim(),
+        customer_type: formData.customer_type || null,
+        customer_category: formData.customer_category || null,
+        gst_number: formData.gst_number ? formData.gst_number.trim().toUpperCase() : null,
+        pan_number: formData.pan_number ? formData.pan_number.trim().toUpperCase() : null,
+        iec_code: formData.iec_code ? formData.iec_code.trim().toUpperCase() : null,
+        cin_number: formData.cin_number ? formData.cin_number.trim().toUpperCase() : null,
+        tan_number: formData.tan_number ? formData.tan_number.trim().toUpperCase() : null,
+        credit_limit: formData.credit_limit !== '' && formData.credit_limit !== null ? parseFloat(formData.credit_limit) : null,
+        payment_terms: formData.payment_terms || null,
+        currency_id: formData.currency_id || null,
+        status: formData.status || 'Active',
+        
+        addresses: (formData.addresses || []).map(addr => ({
+          ...(addr.id ? { id: addr.id } : {}),
+          address_type: addr.address_type || 'Billing',
+          address_line_1: addr.address_line_1 || null,
+          address_line_2: addr.address_line_2 || null,
+          pincode: addr.pincode || null,
+          country_id: addr.country_id || null,
+          state_id: addr.state_id || null,
+          city_id: addr.city_id || null
+        })),
+        banks: (formData.banks || []).map(bank => ({
+          ...(bank.id ? { id: bank.id } : {}),
+          bank_name: bank.bank_name,
+          branch: bank.branch || null,
+          account_holder: bank.account_holder || null,
+          account_number: bank.account_number || null,
+          ifsc_code: bank.ifsc_code ? bank.ifsc_code.trim().toUpperCase() : null,
+          swift_code: bank.swift_code ? bank.swift_code.trim().toUpperCase() : null
+        })),
+        contacts: (formData.contacts || []).map(contact => ({
+          ...(contact.id ? { id: contact.id } : {}),
+          name: contact.name,
+          designation: contact.designation || null,
+          mobile: contact.mobile || null,
+          alternate_mobile: contact.alternate_mobile || null,
+          email: contact.email || null,
+          whatsapp: contact.whatsapp || null,
+          is_primary: !!contact.is_primary
+        })),
+        documents: (formData.documents || []).map(doc => ({
+          ...(doc.id ? { id: doc.id } : {}),
+          document_type: doc.document_type,
+          file_url: doc.file_url
+        }))
+      };
 
       if (isEditMode) {
         await businessService.updateCustomer(initialData.id, payload);
@@ -168,16 +258,41 @@ const CustomerForm = ({ onCancel, onSuccess, initialData }) => {
     }
   };
 
-  // --- Renders ---
+  // Badge count calculator for tabs
+  const getTabBadgeCount = (tabId) => {
+    switch (tabId) {
+      case 'address': return formData.addresses.length;
+      case 'bank': return formData.banks.length;
+      case 'contact_docs': return formData.contacts.length + formData.documents.length;
+      default: return null;
+    }
+  };
+
+  // --- Render Sections ---
   const renderPersonalInfo = () => (
-    <div className="form-grid pt-md">
-      <div className="form-group">
-        <label>Customer Name <span className="text-danger">*</span></label>
-        <input disabled={isLoading} required type="text" name="customer_name" value={formData.customer_name} onChange={handleMainChange} className="form-control form-control-sm" />
+    <div className="form-grid pt-sm">
+      <div className="form-group col-span-2 md:col-span-1">
+        <label className="font-medium text-xs text-secondary mb-1 block">Customer Name <span className="text-danger">*</span></label>
+        <input 
+          disabled={isLoading} 
+          required 
+          type="text" 
+          name="customer_name" 
+          value={formData.customer_name} 
+          onChange={handleMainChange} 
+          className="form-control form-control-sm"
+          placeholder="e.g. Acme Global Freight Ltd."
+        />
       </div>
       <div className="form-group">
-        <label>Customer Type</label>
-        <select disabled={isLoading} name="customer_type" value={formData.customer_type || ''} onChange={handleMainChange} className="form-control form-control-sm">
+        <label className="font-medium text-xs text-secondary mb-1 block">Customer Type</label>
+        <select 
+          disabled={isLoading} 
+          name="customer_type" 
+          value={formData.customer_type || ''} 
+          onChange={handleMainChange} 
+          className="form-control form-control-sm"
+        >
           <option value="">Select Type...</option>
           <option value="Exporter">Exporter</option>
           <option value="Importer">Importer</option>
@@ -186,40 +301,114 @@ const CustomerForm = ({ onCancel, onSuccess, initialData }) => {
         </select>
       </div>
       <div className="form-group">
-        <label>Customer Category</label>
-        <input disabled={isLoading} type="text" name="customer_category" value={formData.customer_category || ''} onChange={handleMainChange} className="form-control form-control-sm" placeholder="e.g. Premium, Regular" />
+        <label className="font-medium text-xs text-secondary mb-1 block">Customer Category</label>
+        <input 
+          disabled={isLoading} 
+          type="text" 
+          name="customer_category" 
+          value={formData.customer_category || ''} 
+          onChange={handleMainChange} 
+          className="form-control form-control-sm" 
+          placeholder="e.g. Premium, Regular" 
+        />
+      </div>
+
+      <div className="form-group">
+        <label className="font-medium text-xs text-secondary mb-1 block">GST Number</label>
+        <input 
+          disabled={isLoading} 
+          type="text" 
+          name="gst_number" 
+          value={formData.gst_number || ''} 
+          onChange={handleMainChange} 
+          className="form-control form-control-sm uppercase" 
+          placeholder="22AAAAA0000A1Z5"
+        />
       </div>
       <div className="form-group">
-        <label>GST Number</label>
-        <input disabled={isLoading} type="text" name="gst_number" value={formData.gst_number || ''} onChange={handleMainChange} className="form-control form-control-sm uppercase" />
+        <label className="font-medium text-xs text-secondary mb-1 block">PAN Number</label>
+        <input 
+          disabled={isLoading} 
+          type="text" 
+          name="pan_number" 
+          value={formData.pan_number || ''} 
+          onChange={handleMainChange} 
+          className="form-control form-control-sm uppercase" 
+          placeholder="ABCDE1234F"
+        />
       </div>
       <div className="form-group">
-        <label>PAN Number</label>
-        <input disabled={isLoading} type="text" name="pan_number" value={formData.pan_number || ''} onChange={handleMainChange} className="form-control form-control-sm uppercase" />
+        <label className="font-medium text-xs text-secondary mb-1 block">IEC Code</label>
+        <input 
+          disabled={isLoading} 
+          type="text" 
+          name="iec_code" 
+          value={formData.iec_code || ''} 
+          onChange={handleMainChange} 
+          className="form-control form-control-sm uppercase" 
+          placeholder="0123456789"
+        />
+      </div>
+
+      <div className="form-group">
+        <label className="font-medium text-xs text-secondary mb-1 block">CIN Number</label>
+        <input 
+          disabled={isLoading} 
+          type="text" 
+          name="cin_number" 
+          value={formData.cin_number || ''} 
+          onChange={handleMainChange} 
+          className="form-control form-control-sm uppercase" 
+          placeholder="U12345MH2020PTC123456"
+        />
       </div>
       <div className="form-group">
-        <label>IEC Code</label>
-        <input disabled={isLoading} type="text" name="iec_code" value={formData.iec_code || ''} onChange={handleMainChange} className="form-control form-control-sm uppercase" />
+        <label className="font-medium text-xs text-secondary mb-1 block">TAN Number</label>
+        <input 
+          disabled={isLoading} 
+          type="text" 
+          name="tan_number" 
+          value={formData.tan_number || ''} 
+          onChange={handleMainChange} 
+          className="form-control form-control-sm uppercase" 
+          placeholder="ABCD12345E"
+        />
       </div>
       <div className="form-group">
-        <label>CIN Number</label>
-        <input disabled={isLoading} type="text" name="cin_number" value={formData.cin_number || ''} onChange={handleMainChange} className="form-control form-control-sm uppercase" />
+        <label className="font-medium text-xs text-secondary mb-1 block">Credit Limit ($ / ₹)</label>
+        <input 
+          disabled={isLoading} 
+          type="number" 
+          step="0.01" 
+          name="credit_limit" 
+          value={formData.credit_limit || ''} 
+          onChange={handleMainChange} 
+          className="form-control form-control-sm" 
+          placeholder="e.g. 50000"
+        />
+      </div>
+
+      <div className="form-group">
+        <label className="font-medium text-xs text-secondary mb-1 block">Payment Terms</label>
+        <input 
+          disabled={isLoading} 
+          type="text" 
+          name="payment_terms" 
+          value={formData.payment_terms || ''} 
+          onChange={handleMainChange} 
+          className="form-control form-control-sm" 
+          placeholder="e.g. Net 30, COD" 
+        />
       </div>
       <div className="form-group">
-        <label>TAN Number</label>
-        <input disabled={isLoading} type="text" name="tan_number" value={formData.tan_number || ''} onChange={handleMainChange} className="form-control form-control-sm uppercase" />
-      </div>
-      <div className="form-group">
-        <label>Credit Limit</label>
-        <input disabled={isLoading} type="number" step="0.01" name="credit_limit" value={formData.credit_limit || ''} onChange={handleMainChange} className="form-control form-control-sm" />
-      </div>
-      <div className="form-group">
-        <label>Payment Terms</label>
-        <input disabled={isLoading} type="text" name="payment_terms" value={formData.payment_terms || ''} onChange={handleMainChange} className="form-control form-control-sm" placeholder="e.g. Net 30, COD" />
-      </div>
-      <div className="form-group">
-        <label>Currency</label>
-        <select disabled={isLoading} name="currency_id" value={formData.currency_id || ''} onChange={handleMainChange} className="form-control form-control-sm">
+        <label className="font-medium text-xs text-secondary mb-1 block">Default Currency</label>
+        <select 
+          disabled={isLoading} 
+          name="currency_id" 
+          value={formData.currency_id || ''} 
+          onChange={handleMainChange} 
+          className="form-control form-control-sm"
+        >
           <option value="">Select Currency...</option>
           {currencies.map(c => (
             <option key={c.id} value={c.id}>{c.currency_code} ({c.currency_name})</option>
@@ -227,7 +416,7 @@ const CustomerForm = ({ onCancel, onSuccess, initialData }) => {
         </select>
       </div>
       <div className="form-group">
-        <label>Status</label>
+        <label className="font-medium text-xs text-secondary mb-1 block">Status</label>
         <StatusToggle 
           value={formData.status} 
           onChange={(val) => handleMainChange({ target: { name: 'status', value: val } })}
@@ -238,125 +427,253 @@ const CustomerForm = ({ onCancel, onSuccess, initialData }) => {
   );
 
   const renderAddress = () => (
-    <div className="pt-md">
-      <div className="flex justify-end mb-sm">
-        <Button type="button" size="sm" variant="outline" leftIcon={Plus} onClick={() => addArrayItem('addresses', { address_type: 'Billing', address_line_1: '', address_line_2: '', pincode: '', country_id: null, state_id: null, city_id: null })}>Add Address</Button>
+    <div className="pt-sm space-y-4">
+      <div className="flex justify-between items-center mb-sm">
+        <div>
+          <h3 className="text-sm font-semibold text-primary m-0">Customer Addresses</h3>
+          <p className="text-xs text-secondary-light m-0">Manage billing, shipping, and registered addresses.</p>
+        </div>
+        <Button 
+          type="button" 
+          size="sm" 
+          variant="outline" 
+          leftIcon={Plus} 
+          onClick={() => addArrayItem('addresses', { address_type: 'Billing', address_line_1: '', address_line_2: '', pincode: '', country_id: null, state_id: null, city_id: null })}
+        >
+          Add Address
+        </Button>
       </div>
-      {formData.addresses.length === 0 && <div className="text-center p-md text-tertiary">No addresses added yet.</div>}
-      {formData.addresses.map((addr, index) => (
-        <div key={index} className="bg-surface-hover p-sm rounded border-light mb-sm relative">
-          <button type="button" className="absolute top-2 right-2 text-danger hover:bg-danger-light p-xs rounded" onClick={() => removeArrayItem('addresses', index)}><Trash2 size={16}/></button>
-          <h4 className="m-0 mb-sm text-sm">Address {index + 1}</h4>
-          <div className="form-grid">
-            <div className="form-group">
-              <label>Address Type</label>
-              <select className="form-control form-control-sm" value={addr.address_type} onChange={(e) => handleArrayChange('addresses', index, 'address_type', e.target.value)}>
-                <option value="Billing">Billing</option>
-                <option value="Shipping">Shipping</option>
-                <option value="Registered">Registered</option>
-              </select>
-            </div>
-            <div className="form-group">
-              <label>Address Line 1</label>
-              <input type="text" className="form-control form-control-sm" value={addr.address_line_1} onChange={(e) => handleArrayChange('addresses', index, 'address_line_1', e.target.value)} />
-            </div>
-            <div className="form-group">
-              <label>Pincode</label>
-              <input type="text" className="form-control form-control-sm" value={addr.pincode} onChange={(e) => handleArrayChange('addresses', index, 'pincode', e.target.value)} />
-            </div>
-            <div className="form-group">
-              <label>Country</label>
-              <select 
-                className="form-control form-control-sm" 
-                value={addr.country_id || ''} 
-                onChange={(e) => {
-                  const val = e.target.value || null;
-                  handleArrayChange('addresses', index, 'country_id', val);
-                  handleArrayChange('addresses', index, 'state_id', null);
-                  handleArrayChange('addresses', index, 'city_id', null);
-                }}
+
+      {formData.addresses.length === 0 && (
+        <div className="text-center p-xl border border-dashed rounded-lg text-tertiary bg-surface-hover">
+          <MapPin size={24} className="mx-auto mb-xs opacity-40 text-primary" />
+          <p className="text-sm font-medium mb-1">No addresses added yet</p>
+          <p className="text-xs text-secondary-light">Click "Add Address" to add billing or shipping addresses.</p>
+        </div>
+      )}
+
+      {formData.addresses.map((addr, index) => {
+        const availableStates = states.filter(s => s.country_id === addr.country_id && (s.status === 'Active' || s.id === addr.state_id));
+        const availableCities = cities.filter(c => c.state_id === addr.state_id && (c.status === 'Active' || c.id === addr.city_id));
+
+        return (
+          <div key={index} className="bg-surface p-md rounded-lg border border-light shadow-xs mb-md transition-all">
+            {/* Header row fixing overlap issue completely */}
+            <div className="flex justify-between items-center pb-xs mb-sm border-b border-light">
+              <div className="flex items-center gap-xs">
+                <span className="font-semibold text-xs uppercase text-primary">Address #{index + 1}</span>
+                <span className="text-xs px-2 py-0.5 rounded bg-surface-hover border border-light font-medium text-secondary">
+                  {addr.address_type || 'Billing'}
+                </span>
+              </div>
+              <button 
+                type="button" 
+                className="text-danger hover:bg-danger-light p-xs rounded flex items-center gap-1 text-xs font-medium border border-transparent hover:border-danger-light transition-all" 
+                onClick={() => removeArrayItem('addresses', index)}
+                title="Remove Address"
               >
-                <option value="">Select Country...</option>
-                {countries
-                  .filter(c => c.status === 'Active' || c.id === addr.country_id)
-                  .map(c => (
+                <Trash2 size={14}/> Remove
+              </button>
+            </div>
+
+            <div className="form-grid">
+              <div className="form-group">
+                <label className="font-medium text-xs text-secondary mb-1 block">Address Type</label>
+                <select 
+                  className="form-control form-control-sm" 
+                  value={addr.address_type} 
+                  onChange={(e) => handleArrayChange('addresses', index, 'address_type', e.target.value)}
+                >
+                  <option value="Billing">Billing</option>
+                  <option value="Shipping">Shipping</option>
+                  <option value="Registered">Registered</option>
+                </select>
+              </div>
+
+              <div className="form-group col-span-2 md:col-span-1">
+                <label className="font-medium text-xs text-secondary mb-1 block">Address Line 1</label>
+                <input 
+                  type="text" 
+                  className="form-control form-control-sm" 
+                  value={addr.address_line_1 || ''} 
+                  onChange={(e) => handleArrayChange('addresses', index, 'address_line_1', e.target.value)} 
+                  placeholder="Street address, building, suite"
+                />
+              </div>
+
+              <div className="form-group">
+                <label className="font-medium text-xs text-secondary mb-1 block">Pincode / Zip Code</label>
+                <input 
+                  type="text" 
+                  className="form-control form-control-sm" 
+                  value={addr.pincode || ''} 
+                  onChange={(e) => handleArrayChange('addresses', index, 'pincode', e.target.value)} 
+                  placeholder="e.g. 400001"
+                />
+              </div>
+
+              {/* Country Selection */}
+              <div className="form-group">
+                <label className="font-medium text-xs text-secondary mb-1 block">Country</label>
+                <select 
+                  className="form-control form-control-sm" 
+                  value={addr.country_id || ''} 
+                  onChange={(e) => {
+                    const val = e.target.value || null;
+                    handleArrayChange('addresses', index, 'country_id', val);
+                    handleArrayChange('addresses', index, 'state_id', null);
+                    handleArrayChange('addresses', index, 'city_id', null);
+                  }}
+                >
+                  <option value="">Select Country...</option>
+                  {countries.map(c => (
                     <option key={c.id} value={c.id}>{c.country_name}</option>
-                ))}
-              </select>
-            </div>
-            <div className="form-group">
-              <label>State</label>
-              <select 
-                className="form-control form-control-sm" 
-                value={addr.state_id || ''} 
-                onChange={(e) => {
-                  const val = e.target.value || null;
-                  handleArrayChange('addresses', index, 'state_id', val);
-                  handleArrayChange('addresses', index, 'city_id', null);
-                }}
-                disabled={!addr.country_id}
-              >
-                <option value="">Select State...</option>
-                {states
-                  .filter(s => s.country_id === addr.country_id)
-                  .filter(s => s.status === 'Active' || s.id === addr.state_id)
-                  .map(s => (
-                    <option key={s.id} value={s.id}>{s.state_name}</option>
-                ))}
-              </select>
-            </div>
-            <div className="form-group">
-              <label>City</label>
-              <select 
-                className="form-control form-control-sm" 
-                value={addr.city_id || ''} 
-                onChange={(e) => {
-                  const val = e.target.value || null;
-                  handleArrayChange('addresses', index, 'city_id', val);
-                }}
-                disabled={!addr.state_id}
-              >
-                <option value="">Select City...</option>
-                {cities
-                  .filter(c => c.state_id === addr.state_id)
-                  .filter(c => c.status === 'Active' || c.id === addr.city_id)
-                  .map(c => (
-                    <option key={c.id} value={c.id}>{c.city_name}</option>
-                ))}
-              </select>
+                  ))}
+                </select>
+              </div>
+
+              {/* State Selection (Cascading: Visible after Country Selection) */}
+              {addr.country_id ? (
+                <div className="form-group">
+                  <label className="font-medium text-xs text-secondary mb-1 block">State</label>
+                  <select 
+                    className="form-control form-control-sm" 
+                    value={addr.state_id || ''} 
+                    onChange={(e) => {
+                      const val = e.target.value || null;
+                      handleArrayChange('addresses', index, 'state_id', val);
+                      handleArrayChange('addresses', index, 'city_id', null);
+                    }}
+                  >
+                    <option value="">Select State...</option>
+                    {availableStates.map(s => (
+                      <option key={s.id} value={s.id}>{s.state_name}</option>
+                    ))}
+                  </select>
+                </div>
+              ) : (
+                <div className="form-group opacity-60">
+                  <label className="font-medium text-xs text-secondary mb-1 block">State</label>
+                  <div className="p-xs text-xs border border-light rounded bg-surface-hover text-tertiary flex items-center gap-1">
+                    <AlertCircle size={12} /> Select Country first
+                  </div>
+                </div>
+              )}
+
+              {/* City Selection (Cascading: Visible after State Selection) */}
+              {addr.state_id ? (
+                <div className="form-group">
+                  <label className="font-medium text-xs text-secondary mb-1 block">City</label>
+                  <select 
+                    className="form-control form-control-sm" 
+                    value={addr.city_id || ''} 
+                    onChange={(e) => {
+                      const val = e.target.value || null;
+                      handleArrayChange('addresses', index, 'city_id', val);
+                    }}
+                  >
+                    <option value="">Select City...</option>
+                    {availableCities.map(c => (
+                      <option key={c.id} value={c.id}>{c.city_name}</option>
+                    ))}
+                  </select>
+                </div>
+              ) : (
+                <div className="form-group opacity-60">
+                  <label className="font-medium text-xs text-secondary mb-1 block">City</label>
+                  <div className="p-xs text-xs border border-light rounded bg-surface-hover text-tertiary flex items-center gap-1">
+                    <AlertCircle size={12} /> Select State first
+                  </div>
+                </div>
+              )}
             </div>
           </div>
-        </div>
-      ))}
+        );
+      })}
     </div>
   );
 
   const renderBankDetails = () => (
-    <div className="pt-md">
-      <div className="flex justify-end mb-sm">
-        <Button type="button" size="sm" variant="outline" leftIcon={Plus} onClick={() => addArrayItem('banks', { bank_name: '', branch: '', account_holder: '', account_number: '', ifsc_code: '', swift_code: '' })}>Add Bank</Button>
+    <div className="pt-sm space-y-4">
+      <div className="flex justify-between items-center mb-sm">
+        <div>
+          <h3 className="text-sm font-semibold text-primary m-0">Bank Account Details</h3>
+          <p className="text-xs text-secondary-light m-0">Banking info for payments and invoicing.</p>
+        </div>
+        <Button 
+          type="button" 
+          size="sm" 
+          variant="outline" 
+          leftIcon={Plus} 
+          onClick={() => addArrayItem('banks', { bank_name: '', branch: '', account_holder: '', account_number: '', ifsc_code: '', swift_code: '' })}
+        >
+          Add Bank Account
+        </Button>
       </div>
-      {formData.banks.length === 0 && <div className="text-center p-md text-tertiary">No bank details added yet.</div>}
+
+      {formData.banks.length === 0 && (
+        <div className="text-center p-xl border border-dashed rounded-lg text-tertiary bg-surface-hover">
+          <Landmark size={24} className="mx-auto mb-xs opacity-40 text-primary" />
+          <p className="text-sm font-medium mb-1">No bank details added yet</p>
+          <p className="text-xs text-secondary-light">Click "Add Bank Account" to record bank account details.</p>
+        </div>
+      )}
+
       {formData.banks.map((bank, index) => (
-        <div key={index} className="bg-surface-hover p-sm rounded border-light mb-sm relative">
-          <button type="button" className="absolute top-2 right-2 text-danger hover:bg-danger-light p-xs rounded" onClick={() => removeArrayItem('banks', index)}><Trash2 size={16}/></button>
-          <h4 className="m-0 mb-sm text-sm">Bank {index + 1}</h4>
+        <div key={index} className="bg-surface p-md rounded-lg border border-light shadow-xs mb-md">
+          <div className="flex justify-between items-center pb-xs mb-sm border-b border-light">
+            <span className="font-semibold text-xs uppercase text-primary">Bank Account #{index + 1}</span>
+            <button 
+              type="button" 
+              className="text-danger hover:bg-danger-light p-xs rounded flex items-center gap-1 text-xs font-medium transition-all" 
+              onClick={() => removeArrayItem('banks', index)}
+              title="Remove Bank Account"
+            >
+              <Trash2 size={14}/> Remove
+            </button>
+          </div>
+
           <div className="form-grid">
             <div className="form-group">
-              <label>Bank Name *</label>
-              <input type="text" className="form-control form-control-sm" required value={bank.bank_name} onChange={(e) => handleArrayChange('banks', index, 'bank_name', e.target.value)} />
+              <label className="font-medium text-xs text-secondary mb-1 block">Bank Name <span className="text-danger">*</span></label>
+              <input 
+                type="text" 
+                className="form-control form-control-sm" 
+                required 
+                value={bank.bank_name || ''} 
+                onChange={(e) => handleArrayChange('banks', index, 'bank_name', e.target.value)} 
+                placeholder="e.g. HDFC Bank, HSBC"
+              />
             </div>
             <div className="form-group">
-              <label>Account Number</label>
-              <input type="text" className="form-control form-control-sm" value={bank.account_number} onChange={(e) => handleArrayChange('banks', index, 'account_number', e.target.value)} />
+              <label className="font-medium text-xs text-secondary mb-1 block">Account Number</label>
+              <input 
+                type="text" 
+                className="form-control form-control-sm" 
+                value={bank.account_number || ''} 
+                onChange={(e) => handleArrayChange('banks', index, 'account_number', e.target.value)} 
+                placeholder="e.g. 50100028491823"
+              />
             </div>
             <div className="form-group">
-              <label>IFSC Code</label>
-              <input type="text" className="form-control form-control-sm uppercase" value={bank.ifsc_code} onChange={(e) => handleArrayChange('banks', index, 'ifsc_code', e.target.value)} />
+              <label className="font-medium text-xs text-secondary mb-1 block">IFSC Code</label>
+              <input 
+                type="text" 
+                className="form-control form-control-sm uppercase" 
+                value={bank.ifsc_code || ''} 
+                onChange={(e) => handleArrayChange('banks', index, 'ifsc_code', e.target.value)} 
+                placeholder="e.g. HDFC0000123"
+              />
             </div>
             <div className="form-group">
-              <label>Swift Code</label>
-              <input type="text" className="form-control form-control-sm uppercase" value={bank.swift_code} onChange={(e) => handleArrayChange('banks', index, 'swift_code', e.target.value)} />
+              <label className="font-medium text-xs text-secondary mb-1 block">Swift Code</label>
+              <input 
+                type="text" 
+                className="form-control form-control-sm uppercase" 
+                value={bank.swift_code || ''} 
+                onChange={(e) => handleArrayChange('banks', index, 'swift_code', e.target.value)} 
+                placeholder="e.g. HDFCINBBXXX"
+              />
             </div>
           </div>
         </div>
@@ -365,104 +682,218 @@ const CustomerForm = ({ onCancel, onSuccess, initialData }) => {
   );
 
   const renderContactDocs = () => (
-    <div className="pt-md">
-      <h3 className="text-md font-semibold mb-sm">Contacts</h3>
-      <div className="flex justify-end mb-sm mt-[-40px]">
-        <Button type="button" size="sm" variant="outline" leftIcon={Plus} onClick={() => addArrayItem('contacts', { name: '', designation: '', mobile: '', email: '', is_primary: false })}>Add Contact</Button>
-      </div>
-      {formData.contacts.length === 0 && <div className="text-center p-md text-tertiary">No contacts added.</div>}
-      {formData.contacts.map((contact, index) => (
-        <div key={index} className="bg-surface-hover p-sm rounded border-light mb-sm relative">
-          <button type="button" className="absolute top-2 right-2 text-danger hover:bg-danger-light p-xs rounded" onClick={() => removeArrayItem('contacts', index)}><Trash2 size={16}/></button>
-          <div className="form-grid">
-            <div className="form-group">
-              <label>Contact Name *</label>
-              <input type="text" className="form-control form-control-sm" required value={contact.name} onChange={(e) => handleArrayChange('contacts', index, 'name', e.target.value)} />
-            </div>
-            <div className="form-group">
-              <label>Mobile</label>
-              <input type="text" className="form-control form-control-sm" value={contact.mobile} onChange={(e) => handleArrayChange('contacts', index, 'mobile', e.target.value)} />
-            </div>
-            <div className="form-group">
-              <label>Email</label>
-              <input type="email" className="form-control form-control-sm" value={contact.email} onChange={(e) => handleArrayChange('contacts', index, 'email', e.target.value)} />
-            </div>
+    <div className="pt-sm space-y-6">
+      {/* Contacts Section */}
+      <div>
+        <div className="flex justify-between items-center mb-sm">
+          <div>
+            <h3 className="text-sm font-semibold text-primary m-0">Contact Persons</h3>
+            <p className="text-xs text-secondary-light m-0">Key contact representatives for this customer.</p>
           </div>
+          <Button 
+            type="button" 
+            size="sm" 
+            variant="outline" 
+            leftIcon={Plus} 
+            onClick={() => addArrayItem('contacts', { name: '', designation: '', mobile: '', email: '', is_primary: false })}
+          >
+            Add Contact
+          </Button>
         </div>
-      ))}
 
-      <hr className="my-md" />
+        {formData.contacts.length === 0 && (
+          <div className="text-center p-md border border-dashed rounded-lg text-tertiary bg-surface-hover mb-md">
+            <p className="text-xs text-secondary-light m-0">No contacts added. Click "Add Contact" to add one.</p>
+          </div>
+        )}
 
-      <h3 className="text-md font-semibold mb-sm">Documents</h3>
-      <div className="flex justify-end mb-sm mt-[-40px]">
-        <Button type="button" size="sm" variant="outline" leftIcon={Plus} onClick={() => addArrayItem('documents', { document_type: '', file_url: '' })}>Add Document</Button>
-      </div>
-      {formData.documents.length === 0 && <div className="text-center p-md text-tertiary">No documents added.</div>}
-      {formData.documents.map((doc, index) => (
-        <div key={index} className="bg-surface-hover p-sm rounded border-light mb-sm relative">
-          <button type="button" className="absolute top-2 right-2 text-danger hover:bg-danger-light p-xs rounded" onClick={() => removeArrayItem('documents', index)}><Trash2 size={16}/></button>
-          <div className="form-grid">
-            <div className="form-group">
-              <label>Document Type *</label>
-              <input type="text" className="form-control form-control-sm" required value={doc.document_type} onChange={(e) => handleArrayChange('documents', index, 'document_type', e.target.value)} placeholder="e.g. GST Certificate" />
+        {formData.contacts.map((contact, index) => (
+          <div key={index} className="bg-surface p-md rounded-lg border border-light shadow-xs mb-sm">
+            <div className="flex justify-between items-center pb-xs mb-sm border-b border-light">
+              <span className="font-semibold text-xs uppercase text-primary">Contact #{index + 1}</span>
+              <button 
+                type="button" 
+                className="text-danger hover:bg-danger-light p-xs rounded flex items-center gap-1 text-xs font-medium transition-all" 
+                onClick={() => removeArrayItem('contacts', index)}
+              >
+                <Trash2 size={14}/> Remove
+              </button>
             </div>
-            <div className="form-group">
-              <label>File Upload *</label>
-              <div className="flex gap-sm align-center">
-                <input type="file" disabled={isLoading} className="form-control form-control-sm" onChange={(e) => handleFileUpload(index, e.target.files[0])} />
-                {doc.file_url && <a href={doc.file_url} target="_blank" rel="noreferrer" className="text-primary text-sm whitespace-nowrap">View File</a>}
+            <div className="form-grid">
+              <div className="form-group">
+                <label className="font-medium text-xs text-secondary mb-1 block">Contact Name <span className="text-danger">*</span></label>
+                <input 
+                  type="text" 
+                  className="form-control form-control-sm" 
+                  required 
+                  value={contact.name || ''} 
+                  onChange={(e) => handleArrayChange('contacts', index, 'name', e.target.value)} 
+                  placeholder="e.g. John Doe"
+                />
+              </div>
+              <div className="form-group">
+                <label className="font-medium text-xs text-secondary mb-1 block">Mobile</label>
+                <input 
+                  type="text" 
+                  className="form-control form-control-sm" 
+                  value={contact.mobile || ''} 
+                  onChange={(e) => handleArrayChange('contacts', index, 'mobile', e.target.value)} 
+                  placeholder="+91 9876543210"
+                />
+              </div>
+              <div className="form-group">
+                <label className="font-medium text-xs text-secondary mb-1 block">Email</label>
+                <input 
+                  type="email" 
+                  className="form-control form-control-sm" 
+                  value={contact.email || ''} 
+                  onChange={(e) => handleArrayChange('contacts', index, 'email', e.target.value)} 
+                  placeholder="john@example.com"
+                />
               </div>
             </div>
           </div>
+        ))}
+      </div>
+
+      <hr className="my-md border-light" />
+
+      {/* Documents Section */}
+      <div>
+        <div className="flex justify-between items-center mb-sm">
+          <div>
+            <h3 className="text-sm font-semibold text-primary m-0">Documents & Certificates</h3>
+            <p className="text-xs text-secondary-light m-0">Attach GST certificates, PAN cards, or registration files.</p>
+          </div>
+          <Button 
+            type="button" 
+            size="sm" 
+            variant="outline" 
+            leftIcon={Plus} 
+            onClick={() => addArrayItem('documents', { document_type: '', file_url: '' })}
+          >
+            Add Document
+          </Button>
         </div>
-      ))}
+
+        {formData.documents.length === 0 && (
+          <div className="text-center p-md border border-dashed rounded-lg text-tertiary bg-surface-hover">
+            <p className="text-xs text-secondary-light m-0">No documents uploaded. Click "Add Document" to attach files.</p>
+          </div>
+        )}
+
+        {formData.documents.map((doc, index) => (
+          <div key={index} className="bg-surface p-md rounded-lg border border-light shadow-xs mb-sm">
+            <div className="flex justify-between items-center pb-xs mb-sm border-b border-light">
+              <span className="font-semibold text-xs uppercase text-primary">Document #{index + 1}</span>
+              <button 
+                type="button" 
+                className="text-danger hover:bg-danger-light p-xs rounded flex items-center gap-1 text-xs font-medium transition-all" 
+                onClick={() => removeArrayItem('documents', index)}
+              >
+                <Trash2 size={14}/> Remove
+              </button>
+            </div>
+            <div className="form-grid">
+              <div className="form-group">
+                <label className="font-medium text-xs text-secondary mb-1 block">Document Type <span className="text-danger">*</span></label>
+                <input 
+                  type="text" 
+                  className="form-control form-control-sm" 
+                  required 
+                  value={doc.document_type || ''} 
+                  onChange={(e) => handleArrayChange('documents', index, 'document_type', e.target.value)} 
+                  placeholder="e.g. GST Certificate, PAN Copy" 
+                />
+              </div>
+              <div className="form-group">
+                <label className="font-medium text-xs text-secondary mb-1 block">File Upload <span className="text-danger">*</span></label>
+                <div className="flex gap-sm items-center">
+                  <input 
+                    type="file" 
+                    disabled={isLoading} 
+                    className="form-control form-control-sm" 
+                    onChange={(e) => handleFileUpload(index, e.target.files[0])} 
+                  />
+                  {doc.file_url && (
+                    <a href={doc.file_url} target="_blank" rel="noreferrer" className="text-primary text-xs font-semibold underline whitespace-nowrap">
+                      View File
+                    </a>
+                  )}
+                </div>
+              </div>
+            </div>
+          </div>
+        ))}
+      </div>
     </div>
   );
 
   return (
-    <div className="bg-surface border-light rounded-lg shadow-sm p-lg">
-      <div className="flex justify-between align-center mb-md">
-        <h2 className="text-lg font-semibold m-0">{isEditMode ? 'Edit Customer' : 'Create New Customer'}</h2>
+    <div className="bg-surface border border-light rounded-xl shadow-md p-lg transition-all">
+      {/* Top Title Bar */}
+      <div className="flex justify-between items-center mb-md pb-xs border-b border-light">
+        <div className="flex items-center gap-sm">
+          <div className="p-2 rounded-lg bg-surface-hover text-primary border border-light">
+            <Building2 size={20} />
+          </div>
+          <div>
+            <h2 className="text-base font-bold text-primary m-0">{isEditMode ? 'Edit Customer Details' : 'Create New Customer'}</h2>
+            <p className="text-xs text-secondary-light m-0">Fill in company details, addresses, and banking contacts.</p>
+          </div>
+        </div>
         <Button variant="ghost" onClick={onCancel} leftIcon={X} size="sm">Close</Button>
       </div>
 
-      {globalError && <div className="alert alert-danger mb-md p-sm">{globalError}</div>}
+      {globalError && (
+        <div className="alert alert-danger mb-md p-sm rounded-lg flex items-center gap-sm text-xs font-medium">
+          <AlertCircle size={16} />
+          <span>{globalError}</span>
+        </div>
+      )}
 
-      {/* Tabs Header */}
-      <div className="border-b-light flex gap-md mb-lg relative" style={{ overflowX: 'auto', whiteSpace: 'nowrap' }}>
-        {TABS.map(tab => (
-          <button
-            key={tab.id}
-            type="button"
-            className={`font-medium transition-colors relative ${activeTab === tab.id ? 'text-primary' : 'text-secondary-light hover:text-primary'}`}
-            style={{ 
-              marginBottom: '-1px', 
-              background: 'transparent', 
-              border: 'none', 
-              cursor: 'pointer', 
-              outline: 'none', 
-              padding: '0 8px 8px 8px',
-              fontSize: '0.875rem',
-              borderBottom: activeTab === tab.id ? '2px solid var(--color-primary)' : '2px solid transparent'
-            }}
-            onClick={() => setActiveTab(tab.id)}
-          >
-            {tab.label}
-          </button>
-        ))}
+      {/* Modern Tabs Navigation with Badge Counters */}
+      <div className="border-b border-light flex gap-sm mb-lg overflow-x-auto whitespace-nowrap scrollbar-none">
+        {TABS.map(tab => {
+          const Icon = tab.icon;
+          const badgeCount = getTabBadgeCount(tab.id);
+          const isActive = activeTab === tab.id;
+
+          return (
+            <button
+              key={tab.id}
+              type="button"
+              className={`flex items-center gap-xs font-medium text-xs py-2 px-3 transition-all rounded-t-md relative ${
+                isActive 
+                  ? 'text-primary border-b-2 border-primary bg-surface-hover font-semibold' 
+                  : 'text-secondary-light hover:text-primary hover:bg-surface-hover'
+              }`}
+              onClick={() => setActiveTab(tab.id)}
+            >
+              <Icon size={14} />
+              <span>{tab.label}</span>
+              {badgeCount > 0 && (
+                <span className={`text-[10px] px-1.5 py-0.2 rounded-full font-bold ${
+                  isActive ? 'bg-primary text-white' : 'bg-surface-hover text-secondary border border-light'
+                }`}>
+                  {badgeCount}
+                </span>
+              )}
+            </button>
+          );
+        })}
       </div>
 
       <form onSubmit={handleSubmit} className="dense-form">
-        
-        {/* Tab Content */}
-        <div style={{ minHeight: '300px' }}>
+        <div style={{ minHeight: '320px' }}>
           {activeTab === 'personal' && renderPersonalInfo()}
           {activeTab === 'address' && renderAddress()}
           {activeTab === 'bank' && renderBankDetails()}
           {activeTab === 'contact_docs' && renderContactDocs()}
         </div>
 
-        <div className="form-actions mt-xl flex justify-end gap-sm pt-md border-t-light">
+        {/* Footer Actions */}
+        <div className="form-actions mt-xl flex justify-end gap-sm pt-md border-t border-light">
           <Button variant="outline" type="button" onClick={onCancel} disabled={isLoading}>Cancel</Button>
           <Button variant="primary" type="submit" disabled={isLoading} isLoading={isLoading}>
             {isEditMode ? 'Update Customer' : 'Create Customer'}

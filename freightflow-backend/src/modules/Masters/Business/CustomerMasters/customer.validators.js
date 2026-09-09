@@ -5,7 +5,7 @@
 const Joi = require("joi");
 
 const contactSchema = Joi.object({
-    id: Joi.string().uuid().optional(),
+    id: Joi.string().uuid().allow("", null).optional(),
     name: Joi.string().required(),
     designation: Joi.string().allow("", null).optional(),
     mobile: Joi.string().allow("", null).optional(),
@@ -13,34 +13,34 @@ const contactSchema = Joi.object({
     email: Joi.string().email().allow("", null).optional(),
     whatsapp: Joi.string().allow("", null).optional(),
     is_primary: Joi.boolean().default(false)
-});
+}).unknown(true);
 
 const addressSchema = Joi.object({
-    id: Joi.string().uuid().optional(),
+    id: Joi.string().uuid().allow("", null).optional(),
     address_type: Joi.string().allow("", null).optional(),
-    country_id: Joi.string().uuid().allow(null).optional(),
-    state_id: Joi.string().uuid().allow(null).optional(),
-    city_id: Joi.string().uuid().allow(null).optional(),
+    country_id: Joi.string().uuid().allow("", null).optional(),
+    state_id: Joi.string().uuid().allow("", null).optional(),
+    city_id: Joi.string().uuid().allow("", null).optional(),
     address_line_1: Joi.string().allow("", null).optional(),
     address_line_2: Joi.string().allow("", null).optional(),
     pincode: Joi.string().allow("", null).optional()
-});
+}).unknown(true);
 
 const bankSchema = Joi.object({
-    id: Joi.string().uuid().optional(),
+    id: Joi.string().uuid().allow("", null).optional(),
     bank_name: Joi.string().required(),
     branch: Joi.string().allow("", null).optional(),
     account_holder: Joi.string().allow("", null).optional(),
     account_number: Joi.string().allow("", null).optional(),
     ifsc_code: Joi.string().allow("", null).optional(),
     swift_code: Joi.string().allow("", null).optional()
-});
+}).unknown(true);
 
 const documentSchema = Joi.object({
-    id: Joi.string().uuid().optional(),
+    id: Joi.string().uuid().allow("", null).optional(),
     document_type: Joi.string().required(),
     file_url: Joi.string().uri().required()
-});
+}).unknown(true);
 
 const createCustomerSchema = Joi.object({
     customer_name: Joi.string().required(),
