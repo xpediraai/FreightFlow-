@@ -242,85 +242,87 @@ const styles = {
     backgroundColor: '#ffffff',
     borderRadius: '8px',
     border: '1px solid #e5e7eb',
-    padding: '1.5rem',
+    padding: '0.85rem 1.15rem',
   },
   header: {
     display: 'flex',
     justifyContent: 'space-between',
     alignItems: 'center',
-    marginBottom: '1rem',
+    marginBottom: '0.65rem',
     borderBottom: '1px solid #f3f4f6',
-    paddingBottom: '0.75rem',
+    paddingBottom: '0.45rem',
   },
-  title: { margin: 0, fontSize: '1.25rem', color: '#111827', fontWeight: 600 },
+  title: { margin: 0, fontSize: '1.15rem', color: '#111827', fontWeight: 600 },
   subtitle: {
     margin: 0,
-    fontSize: '0.85rem',
+    fontSize: '0.8rem',
     color: '#6b7280',
-    marginTop: '0.25rem',
+    marginTop: '0.15rem',
   },
   sectionHeader: {
-    fontSize: '0.875rem',
+    fontSize: '0.825rem',
     fontWeight: 700,
-    letterSpacing: '0.05em',
+    letterSpacing: '0.04em',
     textTransform: 'uppercase',
     color: 'var(--primary, #1976D2)',
     borderBottom: '2px solid #e3f2fd',
-    paddingBottom: '0.4rem',
-    marginBottom: '0.85rem',
-    marginTop: '1.25rem',
+    paddingBottom: '0.25rem',
+    marginBottom: '0.5rem',
+    marginTop: '0.75rem',
     display: 'flex',
     alignItems: 'center',
-    gap: '0.5rem',
+    gap: '0.4rem',
   },
   grid: {
     display: 'grid',
     gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))',
-    gap: '1rem',
+    gap: '0.75rem',
   },
   gridSm: {
     display: 'grid',
     gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))',
-    gap: '1rem',
+    gap: '0.75rem',
   },
   label: {
     display: 'block',
-    fontSize: '0.85rem',
+    fontSize: '0.8rem',
     fontWeight: 500,
-    marginBottom: '0.35rem',
+    marginBottom: '0.2rem',
   },
   input: {
     width: '100%',
-    padding: '0.45rem 0.65rem',
+    padding: '0.35rem 0.55rem',
+    fontSize: '0.85rem',
     borderRadius: '4px',
     border: '1px solid #d1d5db',
   },
   inputReadonly: {
     width: '100%',
-    padding: '0.45rem 0.65rem',
+    padding: '0.35rem 0.55rem',
+    fontSize: '0.85rem',
     borderRadius: '4px',
     border: '1px solid #d1d5db',
     backgroundColor: '#f9fafb',
     fontWeight: 600,
     color: '#1976D2',
   },
-  error: { color: '#d32f2f', fontSize: '0.75rem', marginTop: '0.25rem' },
+  error: { color: '#d32f2f', fontSize: '0.72rem', marginTop: '0.15rem' },
   required: { color: '#d32f2f' },
-  optional: { color: '#6b7280', fontSize: '0.75rem' },
+  optional: { color: '#6b7280', fontSize: '0.72rem' },
   alert: {
     backgroundColor: '#ffebee',
     color: '#c62828',
-    padding: '0.75rem 1rem',
+    padding: '0.5rem 0.85rem',
     borderRadius: '6px',
     borderLeft: '4px solid #ef5350',
-    marginBottom: '1rem',
+    marginBottom: '0.75rem',
     display: 'flex',
     alignItems: 'center',
-    gap: '0.5rem',
+    gap: '0.4rem',
   },
   cargoCard: {
-    marginBottom: '1rem',
-    padding: '1rem',
+    marginBottom: '0.65rem',
+    padding: '0.65rem 0.85rem',
     border: '1px solid #e5e7eb',
     borderRadius: '6px',
     backgroundColor: '#fafafa',
@@ -329,7 +331,7 @@ const styles = {
     display: 'flex',
     justifyContent: 'space-between',
     alignItems: 'center',
-    marginBottom: '1rem',
+    marginBottom: '0.4rem',
   },
   removeBtn: {
     border: 'none',
@@ -478,13 +480,60 @@ const ShippingInquiryForm = ({
         if (custData.length) setExporters(custData);
 
         const portData = extractList(portRes);
-        if (portData.length) setPorts(portData);
+        let localPorts = [];
+        try {
+          const local = localStorage.getItem('freightflow_ports');
+          if (local) localPorts = JSON.parse(local);
+        } catch (e) {}
+
+        let mergedPorts = [];
+        if (portData.length > 0) {
+          mergedPorts = portData;
+          if (localPorts.length > 0) {
+            const existingNames = new Set(portData.map(p => portLabel(p).toLowerCase()));
+            const newLocal = localPorts.filter(p => !existingNames.has(portLabel(p).toLowerCase()));
+            mergedPorts = [...mergedPorts, ...newLocal];
+          }
+        } else if (localPorts.length > 0) {
+          mergedPorts = localPorts;
+        } else {
+          mergedPorts = DEFAULT_PORTS;
+        }
+
+        const existingPortLabels = new Set(mergedPorts.map(p => portLabel(p).toLowerCase()));
+        const missingDefaultPorts = DEFAULT_PORTS.filter(p => !existingPortLabels.has(portLabel(p).toLowerCase()));
+        mergedPorts = [...mergedPorts, ...missingDefaultPorts];
+        setPorts(mergedPorts);
 
         const lineData = extractList(shipLineRes);
         if (lineData.length) setShippingLines(lineData);
 
         const contData = extractList(containerTypeRes);
-        if (contData.length) setContainerTypes(contData);
+        let localContTypes = [];
+        try {
+          const local = localStorage.getItem('freightflow_container_types');
+          if (local) localContTypes = JSON.parse(local);
+        } catch (e) {}
+
+        let mergedContainerTypes = [];
+        if (contData.length > 0) {
+          mergedContainerTypes = contData;
+          if (localContTypes.length > 0) {
+            const existingCodes = new Set(contData.map(c => String(c.container_code || c.code || c.container_name || '').toLowerCase()));
+            const newLocal = localContTypes.filter(c => !existingCodes.has(String(c.container_code || c.code || c.container_name || '').toLowerCase()));
+            mergedContainerTypes = [...mergedContainerTypes, ...newLocal];
+          }
+        } else if (localContTypes.length > 0) {
+          mergedContainerTypes = localContTypes;
+        } else {
+          mergedContainerTypes = DEFAULT_CONTAINER_TYPES;
+        }
+
+        const existingContainerCodes = new Set(mergedContainerTypes.map(c => String(c.container_code || c.code || c.container_name || '').toLowerCase()));
+        const missingContainerDefaults = DEFAULT_CONTAINER_TYPES.filter(c => !existingContainerCodes.has(String(c.container_code || c.code || c.container_name || '').toLowerCase()));
+        mergedContainerTypes = [...mergedContainerTypes, ...missingContainerDefaults];
+
+        setContainerTypes(mergedContainerTypes);
 
         const uomData = extractList(uomRes);
         if (uomData.length) setUoms(uomData);

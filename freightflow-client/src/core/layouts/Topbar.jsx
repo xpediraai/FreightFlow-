@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Menu, Building2, ChevronDown, Mail, LogOut, Grip, Loader2 } from 'lucide-react';
+import { Menu, Building2, ChevronDown, Mail, LogOut, Grip, Loader2, Star } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useAuth } from '../../contexts/AuthContext';
 import { useNavigate } from 'react-router-dom';
@@ -14,6 +14,20 @@ const Topbar = ({ onToggleSidebar, onOpenLauncher, navMode = 'both', isSidebarOp
   const [selectedCompany, setSelectedCompany] = useState(currentUser?.company_name || 'Select Company');
   const dropdownRef = useRef(null);
 
+  const resolveDefaultCompanyId = (companyData) => {
+    const storedId = localStorage.getItem('freightflow_default_company_id');
+    if (storedId) {
+      const found = companyData.find(c => String(c.id || c.company_code) === String(storedId));
+      if (found) return String(found.id || found.company_code);
+    }
+    const dbDefault = companyData.find(c => c.is_default);
+    if (dbDefault) return String(dbDefault.id || dbDefault.company_code);
+    const shanti = companyData.find(c => (c.company_name || c.name) === 'Shanti');
+    if (shanti) return String(shanti.id || shanti.company_code);
+    if (companyData.length > 0) return String(companyData[0].id || companyData[0].company_code);
+    return null;
+  };
+
   useEffect(() => {
     const loadUserCompanies = () => {
       authService.getUserCompanies().then(res => {
@@ -27,11 +41,11 @@ const Topbar = ({ onToggleSidebar, onOpenLauncher, navMode = 'both', isSidebarOp
         }
         setCompanies(companyData);
 
-        const defaultCompId = localStorage.getItem('freightflow_default_company_id');
+        const effectiveDefaultId = resolveDefaultCompanyId(companyData);
 
         // Auto-select starred default company if configured
-        if (defaultCompId) {
-          const matchingDefault = companyData.find(c => String(c.id || c.company_code) === String(defaultCompId));
+        if (effectiveDefaultId) {
+          const matchingDefault = companyData.find(c => String(c.id || c.company_code) === String(effectiveDefaultId));
           if (matchingDefault) {
             setSelectedCompany(matchingDefault.company_name);
             if (currentUser?.company_id !== matchingDefault.id) {
@@ -76,6 +90,14 @@ const Topbar = ({ onToggleSidebar, onOpenLauncher, navMode = 'both', isSidebarOp
   };
 
   const handleCompanySelect = async (company) => {
+    const compId = company.id || company.company_code;
+    const compName = company.company_name || company.name;
+
+    // Automatically set selected company as default login company and trigger star update
+    localStorage.setItem('freightflow_default_company_id', compId);
+    localStorage.setItem('freightflow_default_company_name', compName);
+    window.dispatchEvent(new Event('default_company_changed'));
+
     if (company.id === currentUser?.company_id) {
       setIsDropdownOpen(false);
       return;
@@ -139,25 +161,27 @@ const Topbar = ({ onToggleSidebar, onOpenLauncher, navMode = 'both', isSidebarOp
                 display: 'flex', flexDirection: 'column'
               }}
             >
-              {companies.map(company => {
-                const defaultCompId = localStorage.getItem('freightflow_default_company_id');
-                const isDefault = String(company.id || company.company_code) === String(defaultCompId) || company.is_default || (!defaultCompId && (company.company_name === 'Shanti' || company.name === 'Shanti'));
-                return (
-                  <div
-                    key={company.id}
-                    style={{ padding: '10px 16px', cursor: 'pointer', fontSize: '13px', borderBottom: '1px solid var(--color-light)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}
-                    className={`hover:bg-surface text-secondary font-medium transition-colors ${company.id === currentUser?.company_id ? 'bg-primary-light text-primary' : ''}`}
-                    onClick={() => handleCompanySelect(company)}
-                  >
-                    <span>{company.company_name}</span>
-                    {isDefault && (
-                      <span style={{ fontSize: '0.75rem', color: '#d97706', display: 'flex', alignItems: 'center', gap: '2px', fontWeight: 600 }}>
-                        ★ Default
-                      </span>
-                    )}
-                  </div>
-                );
-              })}
+              {(() => {
+                const effectiveDefaultId = resolveDefaultCompanyId(companies);
+                return companies.map(company => {
+                  const isDefault = String(company.id || company.company_code) === String(effectiveDefaultId);
+                  return (
+                    <div
+                      key={company.id}
+                      style={{ padding: '10px 16px', cursor: 'pointer', fontSize: '13px', borderBottom: '1px solid var(--color-light)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}
+                      className={`hover:bg-surface text-secondary font-medium transition-colors ${company.id === currentUser?.company_id ? 'bg-primary-light text-primary' : ''}`}
+                      onClick={() => handleCompanySelect(company)}
+                    >
+                      <span>{company.company_name}</span>
+                      {isDefault && (
+                        <span style={{ fontSize: '0.75rem', color: '#d97706', display: 'flex', alignItems: 'center', gap: '3px', fontWeight: 600 }}>
+                          <Star size={12} fill="#d97706" color="#d97706" /> Default
+                        </span>
+                      )}
+                    </div>
+                  );
+                });
+              })()}
               {companies.length === 0 && (
                 <div style={{ padding: '10px 16px', fontSize: '13px' }} className="text-secondary-light text-center">
                   No companies found
