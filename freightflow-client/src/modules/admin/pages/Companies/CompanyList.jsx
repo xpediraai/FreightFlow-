@@ -57,6 +57,14 @@ const CompanyList = ({ onEdit, searchQuery = '', viewMode = 'table', refreshTrig
     fetchCompanies();
   }, [refreshTrigger]);
 
+  useEffect(() => {
+    const handleDefaultChange = () => {
+      setDefaultCompanyId(localStorage.getItem('freightflow_default_company_id') || '');
+    };
+    window.addEventListener('default_company_changed', handleDefaultChange);
+    return () => window.removeEventListener('default_company_changed', handleDefaultChange);
+  }, []);
+
   const fetchCompanies = async () => {
     setIsLoading(true);
     try {
@@ -92,13 +100,29 @@ const CompanyList = ({ onEdit, searchQuery = '', viewMode = 'table', refreshTrig
     }
   }, [calculatedTotalRecords, onTotalCountChange]);
 
+  const resolveDefaultCompanyId = (companyList) => {
+    const storedId = localStorage.getItem('freightflow_default_company_id');
+    if (storedId) {
+      const found = companyList.find(c => String(c.id || c.company_code) === String(storedId));
+      if (found) return String(found.id || found.company_code);
+    }
+    const dbDefault = companyList.find(c => c.is_default);
+    if (dbDefault) return String(dbDefault.id || dbDefault.company_code);
+    const shanti = companyList.find(c => (c.company_name || c.name) === 'Shanti');
+    if (shanti) return String(shanti.id || shanti.company_code);
+    if (companyList.length > 0) return String(companyList[0].id || companyList[0].company_code);
+    return null;
+  };
+
+  const effectiveDefaultId = resolveDefaultCompanyId(companies);
+
   const columns = [
     {
       header: 'Company Name',
       key: 'name',
       render: (row) => {
         const rowId = String(row.id || row.company_code);
-        const isDefault = rowId === String(defaultCompanyId) || (!defaultCompanyId && (row.company_name === 'Shanti' || row.name === 'Shanti'));
+        const isDefault = rowId === String(effectiveDefaultId);
         return (
           <div>
             <div style={{ fontWeight: 600, display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
