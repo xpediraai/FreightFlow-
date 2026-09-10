@@ -98,8 +98,8 @@ const CompanyForm = ({ onCancel, onSuccess, initialData }) => {
 
     try {
       if (isEditMode) {
-        const { owner_name, owner_email, owner_password, owner_id, ...updatePayload } = formData;
-        await adminService.updateCompany(initialData.id, updatePayload);
+        const { id, owner_name, owner_email, owner_password, owner_id, created_at, updated_at, is_default, deleted_at, ...updatePayload } = formData;
+        await adminService.updateCompany(initialData.id || id, updatePayload);
       } else {
         const { owner_name, owner_email, owner_password, ...companyPayload } = formData;
 
