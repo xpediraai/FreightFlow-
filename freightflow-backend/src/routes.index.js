@@ -27,7 +27,7 @@ const chargeRoutes = require('./modules/Masters/Common/ChargeMasters/charge.rout
 const paymentTermRoutes = require('./modules/Masters/Foundation/PaymentTermMasters/paymentTerm.routes');
 const bulkImportRoutes = require('./modules/Masters/bulkImport.routes');
 const trackingRoutes = require('./modules/Operations/Tracking/tracking.routes');
-
+const shippingInquiryRoutes = require('./modules/Operations/ShippingInquiry/shippingInquiry.routes');
 
 // Mount routes
 router.use('/auth', authRoutes);
@@ -56,5 +56,6 @@ router.use('/charge', chargeRoutes);
 router.use('/payment-term', paymentTermRoutes);
 router.use('/masters/bulk-import', bulkImportRoutes);
 router.use('/tracking', trackingRoutes);
+router.use('/shipping-inquiry', shippingInquiryRoutes);
 
 module.exports = router;

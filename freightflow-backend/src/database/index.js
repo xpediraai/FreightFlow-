@@ -51,12 +51,17 @@ db.Incoterm = require("../modules/Masters/Common/IncotermMasters/incoterm.model"
 db.Charge = require("../modules/Masters/Common/ChargeMasters/charge.model");
 db.PaymentTerm = require("../modules/Masters/Foundation/PaymentTermMasters/paymentTerm.model");
 
-// Operations / Tracking Models
+// Operations / Tracking & Shipping Inquiry Models
 const trackingModels = require("../modules/Operations/Tracking/tracking.model");
 db.ShipmentTracking = trackingModels.ShipmentTracking;
 db.ShipmentTrackingContainer = trackingModels.ShipmentTrackingContainer;
 db.ShipmentTrackingHistory = trackingModels.ShipmentTrackingHistory;
 db.ShipmentTrackingSourceLog = trackingModels.ShipmentTrackingSourceLog;
+
+const shippingInquiryModels = require("../modules/Operations/ShippingInquiry/shippingInquiry.model");
+db.ShippingInquiry = shippingInquiryModels.ShippingInquiry;
+db.ShippingInquiryCargo = shippingInquiryModels.ShippingInquiryCargo;
+db.ShippingInquiryContainer = shippingInquiryModels.ShippingInquiryContainer;
 
 // Define Associations
 db.Users.hasMany(db.RefreshTokens, { foreignKey: "user_id" });
@@ -74,6 +79,13 @@ db.ShipmentTracking.hasMany(db.ShipmentTrackingHistory, { foreignKey: "tracking_
 db.ShipmentTrackingHistory.belongsTo(db.ShipmentTracking, { foreignKey: "tracking_id" });
 db.ShipmentTracking.hasMany(db.ShipmentTrackingSourceLog, { foreignKey: "tracking_id", as: "source_logs" });
 db.ShipmentTrackingSourceLog.belongsTo(db.ShipmentTracking, { foreignKey: "tracking_id" });
+
+// Shipping Inquiry Associations
+db.ShippingInquiry.hasMany(db.ShippingInquiryCargo, { foreignKey: "inquiry_id", as: "cargoDetails" });
+db.ShippingInquiryCargo.belongsTo(db.ShippingInquiry, { foreignKey: "inquiry_id" });
+
+db.ShippingInquiry.hasMany(db.ShippingInquiryContainer, { foreignKey: "inquiry_id", as: "containerDetails" });
+db.ShippingInquiryContainer.belongsTo(db.ShippingInquiry, { foreignKey: "inquiry_id" });
 
 // Master Associations
 db.State.belongsTo(db.Country, { foreignKey: 'country_id', as: 'country' });

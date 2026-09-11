@@ -19,6 +19,7 @@ import { businessService } from '../../../../masters/services/business.service';
 import { logisticsService } from '../../../../masters/services/logistics.service';
 import { commonService } from '../../../../masters/services/common.service';
 import FactorySelectionModal from './FactorySelectionModal';
+import { shippingInquiryService } from './shippingInquiry.service';
 
 // ============================================================
 // Helpers
@@ -480,77 +481,18 @@ const ShippingInquiryForm = ({
         if (custData.length) setExporters(custData);
 
         const portData = extractList(portRes);
-        let localPorts = [];
-        try {
-          const local = localStorage.getItem('freightflow_ports');
-          if (local) localPorts = JSON.parse(local);
-        } catch (e) {}
-
-        let mergedPorts = [];
-        if (portData.length > 0) {
-          mergedPorts = portData;
-          if (localPorts.length > 0) {
-            const existingNames = new Set(portData.map(p => portLabel(p).toLowerCase()));
-            const newLocal = localPorts.filter(p => !existingNames.has(portLabel(p).toLowerCase()));
-            mergedPorts = [...mergedPorts, ...newLocal];
-          }
-        } else if (localPorts.length > 0) {
-          mergedPorts = localPorts;
-        } else {
-          mergedPorts = DEFAULT_PORTS;
-        }
-
-        const existingPortLabels = new Set(mergedPorts.map(p => portLabel(p).toLowerCase()));
-        const missingDefaultPorts = DEFAULT_PORTS.filter(p => !existingPortLabels.has(portLabel(p).toLowerCase()));
-        mergedPorts = [...mergedPorts, ...missingDefaultPorts];
-        setPorts(mergedPorts);
+        if (portData.length) setPorts(portData);
 
         const lineData = extractList(shipLineRes);
         if (lineData.length) setShippingLines(lineData);
 
         const contData = extractList(containerTypeRes);
-        let localContTypes = [];
-        try {
-          const local = localStorage.getItem('freightflow_container_types');
-          if (local) localContTypes = JSON.parse(local);
-        } catch (e) {}
-
-        let mergedContainerTypes = [];
-        if (contData.length > 0) {
-          mergedContainerTypes = contData;
-          if (localContTypes.length > 0) {
-            const existingCodes = new Set(contData.map(c => String(c.container_code || c.code || c.container_name || '').toLowerCase()));
-            const newLocal = localContTypes.filter(c => !existingCodes.has(String(c.container_code || c.code || c.container_name || '').toLowerCase()));
-            mergedContainerTypes = [...mergedContainerTypes, ...newLocal];
-          }
-        } else if (localContTypes.length > 0) {
-          mergedContainerTypes = localContTypes;
-        } else {
-          mergedContainerTypes = DEFAULT_CONTAINER_TYPES;
-        }
-
-        const existingContainerCodes = new Set(mergedContainerTypes.map(c => String(c.container_code || c.code || c.container_name || '').toLowerCase()));
-        const missingContainerDefaults = DEFAULT_CONTAINER_TYPES.filter(c => !existingContainerCodes.has(String(c.container_code || c.code || c.container_name || '').toLowerCase()));
-        mergedContainerTypes = [...mergedContainerTypes, ...missingContainerDefaults];
-
-        setContainerTypes(mergedContainerTypes);
+        if (contData.length) setContainerTypes(contData);
 
         const uomData = extractList(uomRes);
         if (uomData.length) setUoms(uomData);
 
         let tmData = extractList(transportModeRes);
-        try {
-          const local = localStorage.getItem('freightflow_transport_modes');
-          if (local) {
-            const localList = JSON.parse(local);
-            if (Array.isArray(localList) && localList.length > 0) {
-              const backendCodes = new Set(tmData.map(m => String(m.mode_code || m.id).toLowerCase()));
-              const newLocal = localList.filter(m => !backendCodes.has(String(m.mode_code || m.id).toLowerCase()));
-              tmData = [...newLocal, ...tmData];
-            }
-          }
-        } catch (e) {}
-
         if (!tmData || tmData.length === 0) {
           tmData = [
             { id: 'tm_1', mode_code: 'AIR', mode_name: 'Air Freight' },
@@ -578,14 +520,13 @@ const ShippingInquiryForm = ({
     setIsSubmitting(true);
 
     try {
-      const containerCount = parseInt(values.no_of_containers, 10);
- const containers = values.containerDetails || [];
+      const containers = values.containerDetails || [];
       const totalContainers = containers.reduce((sum, row) => {
         const n = parseInt(row.no_of_containers, 10);
         return sum + (isNaN(n) ? 0 : n);
       }, 0);
 
-      // Aggregate weight string for legacy consumers (first cargo line)
+      // Aggregate weight string & primary cargo for legacy consumers
       const primaryCargo = values.cargoDetails?.[0];
       const finalWeight = primaryCargo?.weight_value
         ? `${primaryCargo.weight_value} ${primaryCargo.weight_uom || 'KG'}`.trim()
@@ -596,7 +537,7 @@ const ShippingInquiryForm = ({
         cargoDetails: values.cargoDetails,
         containerDetails: containers,
         gross_weight: finalWeight,
-        quantity: containerCount,
+        quantity: totalContainers || 1,
         weight: finalWeight,
         customer_id: values.exporter_id,
         customer_name: values.exporter_name,
@@ -611,16 +552,32 @@ const ShippingInquiryForm = ({
           factory_address: values.factory_address || factoryDetails?.factory_address || '',
           contact_person: values.factory_contact_person || factoryDetails?.contact_person || '',
         },
-        mode: 'Sea',
-        id: isEditMode ? initialData.id : `inq_${Date.now()}`,
-        created_at: isEditMode
-          ? initialData.created_at
-          : new Date().toISOString(),
       };
 
-      onSuccess?.(payload);
+      let response;
+      if (isEditMode && initialData?.id) {
+        response = await shippingInquiryService.updateInquiry(initialData.id, payload);
+      } else {
+        response = await shippingInquiryService.createInquiry(payload);
+      }
+
+      const savedData = response?.data?.data || response?.data || payload;
+      onSuccess?.(savedData);
     } catch (err) {
-      setSubmitError(err?.message || 'Failed to save Shipping Inquiry');
+      const respData = err?.response?.data;
+      let errMsg = 'Failed to save Shipping Inquiry';
+      if (typeof respData === 'string') {
+        if (respData.includes('Cannot POST') || respData.includes('Cannot GET')) {
+          errMsg = 'Backend route not found. Please restart your backend server (server.js / nodemon).';
+        } else {
+          errMsg = respData;
+        }
+      } else if (respData?.message) {
+        errMsg = respData.message;
+      } else if (err?.message) {
+        errMsg = err.message;
+      }
+      setSubmitError(errMsg);
     } finally {
       setIsSubmitting(false);
     }

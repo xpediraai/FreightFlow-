@@ -7,6 +7,7 @@ import ConfirmDeleteModal from '../../../../../shared/components/ConfirmDeleteMo
 
 const ShippingInquiryList = ({
   inquiries = [],
+  isLoading = false,
   onEdit,
   onDelete,
   searchQuery = '',
@@ -323,7 +324,7 @@ const ShippingInquiryList = ({
       <TableView
         columns={columns}
         data={filteredInquiries}
-        isLoading={false}
+        isLoading={isLoading}
         emptyStateMsg="No export shipping inquiries found. Click '+ Shipping Inquiry' to get started."
         onRowClick={(row) => onEdit && onEdit(row)}
       />
