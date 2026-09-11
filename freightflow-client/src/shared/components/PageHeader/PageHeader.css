@@ -4,7 +4,8 @@
   align-items: flex-start;
   flex-wrap: wrap;
   gap: var(--spacing-md);
-  margin-bottom: var(--spacing-sm);
+  border-bottom: 1px solid lightgray;
+  padding-bottom: var(--spacing-sm);
 }
 
 .page-header-title-section {

@@ -6,6 +6,7 @@ import ExpandableForm from '../../../../../../shared/components/Master/Expandabl
 import BulkImportModal from '../../../../../../shared/components/BulkImportModal/BulkImportModal';
 import ContainerTypeList from './ContainerTypeList';
 import ContainerTypeForm from './ContainerTypeForm';
+import FloatingWrapper from '../../../../../../shared/components/FloattingWrapper/FloatingWrapper';
 
 const ContainerTypes = () => {
   const [isFormOpen, setIsFormOpen] = useState(false);
@@ -41,43 +42,44 @@ const ContainerTypes = () => {
 
   return (
     <Page>
-      <PageHeader 
+      <PageHeader
         title="Container Type Master"
+        className={'text-primary'}
         primaryAction={{ label: '+ Container Type', onClick: handleCreateNew }}
       />
-      
+
       <div className="mt-lg">
         <div className="bg-surface border-light rounded-lg shadow-sm">
-          <MasterToolbar 
-            entityName="Container Types" 
-            searchTerm={searchTerm}
-            onSearch={setSearchTerm}
-            totalRecords={totalRecords}
-            statusFilter={statusFilter}
-            onStatusChange={setStatusFilter}
-            onBulkImport={() => setIsBulkImportOpen(true)}
-          />
-
           <ExpandableForm isOpen={isFormOpen}>
-            <ContainerTypeForm 
-              onCancel={handleCancel} 
-              onSuccess={handleSuccess} 
-              initialData={selectedContainer} 
+            <ContainerTypeForm
+              onCancel={handleCancel}
+              onSuccess={handleSuccess}
+              initialData={selectedContainer}
             />
           </ExpandableForm>
-
-          <ContainerTypeList 
-            onEdit={handleEdit} 
-            searchQuery={searchTerm}
-            viewMode={viewMode}
-            refreshTrigger={refreshTrigger}
-            onTotalCountChange={setTotalRecords}
-            statusFilter={statusFilter}
-          />
+          <FloatingWrapper>
+            <MasterToolbar
+              entityName="Container Types"
+              searchTerm={searchTerm}
+              onSearch={setSearchTerm}
+              totalRecords={totalRecords}
+              statusFilter={statusFilter}
+              onStatusChange={setStatusFilter}
+              onBulkImport={() => setIsBulkImportOpen(true)}
+            />
+            <ContainerTypeList
+              onEdit={handleEdit}
+              searchQuery={searchTerm}
+              viewMode={viewMode}
+              refreshTrigger={refreshTrigger}
+              onTotalCountChange={setTotalRecords}
+              statusFilter={statusFilter}
+            />
+          </FloatingWrapper>
         </div>
       </div>
 
-      <BulkImportModal 
+      <BulkImportModal
         isOpen={isBulkImportOpen}
         onClose={() => setIsBulkImportOpen(false)}
         entityType="containerType"

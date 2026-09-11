@@ -17,12 +17,12 @@ const CustomerForm = ({ onCancel, onSuccess, initialData }) => {
   const [activeTab, setActiveTab] = useState('personal');
   const [isLoading, setIsLoading] = useState(false);
   const [globalError, setGlobalError] = useState('');
-  
+
   const [currencies, setCurrencies] = useState([]);
   const [countries, setCountries] = useState([]);
   const [states, setStates] = useState([]);
   const [cities, setCities] = useState([]);
-  
+
   const [formData, setFormData] = useState({
     customer_name: '',
     customer_type: '',
@@ -36,7 +36,7 @@ const CustomerForm = ({ onCancel, onSuccess, initialData }) => {
     payment_terms: '',
     currency_id: '',
     status: 'Active',
-    
+
     addresses: [],
     banks: [],
     contacts: [],
@@ -53,7 +53,7 @@ const CustomerForm = ({ onCancel, onSuccess, initialData }) => {
           foundationService.getStates({ limit: 1000 }),
           foundationService.getCities({ limit: 1000 })
         ]);
-        
+
         const extractData = (res) => {
           if (res?.data?.data?.data && Array.isArray(res.data.data.data)) return res.data.data.data;
           if (res?.data?.data && Array.isArray(res.data.data)) return res.data.data;
@@ -156,7 +156,7 @@ const CustomerForm = ({ onCancel, onSuccess, initialData }) => {
     try {
       const uploadData = new FormData();
       uploadData.append('document', file);
-      
+
       const res = await businessService.uploadDocument(uploadData);
       if (res.data?.data?.file_url) {
         handleArrayChange('documents', index, 'file_url', res.data.data.file_url);
@@ -184,7 +184,7 @@ const CustomerForm = ({ onCancel, onSuccess, initialData }) => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     setGlobalError('');
-    
+
     if (!formData.customer_name.trim()) {
       setGlobalError('Customer Name is required in Personal Info tab.');
       setActiveTab('personal');
@@ -192,7 +192,7 @@ const CustomerForm = ({ onCancel, onSuccess, initialData }) => {
     }
 
     setIsLoading(true);
-    
+
     try {
       // Clean payload without top-level database metadata
       const payload = {
@@ -208,7 +208,7 @@ const CustomerForm = ({ onCancel, onSuccess, initialData }) => {
         payment_terms: formData.payment_terms || null,
         currency_id: formData.currency_id || null,
         status: formData.status || 'Active',
-        
+
         addresses: (formData.addresses || []).map(addr => ({
           ...(addr.id ? { id: addr.id } : {}),
           address_type: addr.address_type || 'Billing',
@@ -273,24 +273,24 @@ const CustomerForm = ({ onCancel, onSuccess, initialData }) => {
     <div className="form-grid pt-sm">
       <div className="form-group col-span-2 md:col-span-1">
         <label className="font-medium text-xs text-secondary mb-1 block">Customer Name <span className="text-danger">*</span></label>
-        <input 
-          disabled={isLoading} 
-          required 
-          type="text" 
-          name="customer_name" 
-          value={formData.customer_name} 
-          onChange={handleMainChange} 
+        <input
+          disabled={isLoading}
+          required
+          type="text"
+          name="customer_name"
+          value={formData.customer_name}
+          onChange={handleMainChange}
           className="form-control form-control-sm"
           placeholder="e.g. Acme Global Freight Ltd."
         />
       </div>
       <div className="form-group">
         <label className="font-medium text-xs text-secondary mb-1 block">Customer Type</label>
-        <select 
-          disabled={isLoading} 
-          name="customer_type" 
-          value={formData.customer_type || ''} 
-          onChange={handleMainChange} 
+        <select
+          disabled={isLoading}
+          name="customer_type"
+          value={formData.customer_type || ''}
+          onChange={handleMainChange}
           className="form-control form-control-sm"
         >
           <option value="">Select Type...</option>
@@ -302,111 +302,111 @@ const CustomerForm = ({ onCancel, onSuccess, initialData }) => {
       </div>
       <div className="form-group">
         <label className="font-medium text-xs text-secondary mb-1 block">Customer Category</label>
-        <input 
-          disabled={isLoading} 
-          type="text" 
-          name="customer_category" 
-          value={formData.customer_category || ''} 
-          onChange={handleMainChange} 
-          className="form-control form-control-sm" 
-          placeholder="e.g. Premium, Regular" 
+        <input
+          disabled={isLoading}
+          type="text"
+          name="customer_category"
+          value={formData.customer_category || ''}
+          onChange={handleMainChange}
+          className="form-control form-control-sm"
+          placeholder="e.g. Premium, Regular"
         />
       </div>
 
       <div className="form-group">
         <label className="font-medium text-xs text-secondary mb-1 block">GST Number</label>
-        <input 
-          disabled={isLoading} 
-          type="text" 
-          name="gst_number" 
-          value={formData.gst_number || ''} 
-          onChange={handleMainChange} 
-          className="form-control form-control-sm uppercase" 
+        <input
+          disabled={isLoading}
+          type="text"
+          name="gst_number"
+          value={formData.gst_number || ''}
+          onChange={handleMainChange}
+          className="form-control form-control-sm uppercase"
           placeholder="22AAAAA0000A1Z5"
         />
       </div>
       <div className="form-group">
         <label className="font-medium text-xs text-secondary mb-1 block">PAN Number</label>
-        <input 
-          disabled={isLoading} 
-          type="text" 
-          name="pan_number" 
-          value={formData.pan_number || ''} 
-          onChange={handleMainChange} 
-          className="form-control form-control-sm uppercase" 
+        <input
+          disabled={isLoading}
+          type="text"
+          name="pan_number"
+          value={formData.pan_number || ''}
+          onChange={handleMainChange}
+          className="form-control form-control-sm uppercase"
           placeholder="ABCDE1234F"
         />
       </div>
       <div className="form-group">
         <label className="font-medium text-xs text-secondary mb-1 block">IEC Code</label>
-        <input 
-          disabled={isLoading} 
-          type="text" 
-          name="iec_code" 
-          value={formData.iec_code || ''} 
-          onChange={handleMainChange} 
-          className="form-control form-control-sm uppercase" 
+        <input
+          disabled={isLoading}
+          type="text"
+          name="iec_code"
+          value={formData.iec_code || ''}
+          onChange={handleMainChange}
+          className="form-control form-control-sm uppercase"
           placeholder="0123456789"
         />
       </div>
 
       <div className="form-group">
         <label className="font-medium text-xs text-secondary mb-1 block">CIN Number</label>
-        <input 
-          disabled={isLoading} 
-          type="text" 
-          name="cin_number" 
-          value={formData.cin_number || ''} 
-          onChange={handleMainChange} 
-          className="form-control form-control-sm uppercase" 
+        <input
+          disabled={isLoading}
+          type="text"
+          name="cin_number"
+          value={formData.cin_number || ''}
+          onChange={handleMainChange}
+          className="form-control form-control-sm uppercase"
           placeholder="U12345MH2020PTC123456"
         />
       </div>
       <div className="form-group">
         <label className="font-medium text-xs text-secondary mb-1 block">TAN Number</label>
-        <input 
-          disabled={isLoading} 
-          type="text" 
-          name="tan_number" 
-          value={formData.tan_number || ''} 
-          onChange={handleMainChange} 
-          className="form-control form-control-sm uppercase" 
+        <input
+          disabled={isLoading}
+          type="text"
+          name="tan_number"
+          value={formData.tan_number || ''}
+          onChange={handleMainChange}
+          className="form-control form-control-sm uppercase"
           placeholder="ABCD12345E"
         />
       </div>
       <div className="form-group">
         <label className="font-medium text-xs text-secondary mb-1 block">Credit Limit ($ / ₹)</label>
-        <input 
-          disabled={isLoading} 
-          type="number" 
-          step="0.01" 
-          name="credit_limit" 
-          value={formData.credit_limit || ''} 
-          onChange={handleMainChange} 
-          className="form-control form-control-sm" 
+        <input
+          disabled={isLoading}
+          type="number"
+          step="0.01"
+          name="credit_limit"
+          value={formData.credit_limit || ''}
+          onChange={handleMainChange}
+          className="form-control form-control-sm"
           placeholder="e.g. 50000"
         />
       </div>
 
       <div className="form-group">
         <label className="font-medium text-xs text-secondary mb-1 block">Payment Terms</label>
-        <input 
-          disabled={isLoading} 
-          type="text" 
-          name="payment_terms" 
-          value={formData.payment_terms || ''} 
-          onChange={handleMainChange} 
-          className="form-control form-control-sm" 
-          placeholder="e.g. Net 30, COD" 
+        <input
+          disabled={isLoading}
+          type="text"
+          name="payment_terms"
+          value={formData.payment_terms || ''}
+          onChange={handleMainChange}
+          className="form-control form-control-sm"
+          placeholder="e.g. Net 30, COD"
         />
       </div>
       <div className="form-group">
         <label className="font-medium text-xs text-secondary mb-1 block">Default Currency</label>
-        <select 
-          disabled={isLoading} 
-          name="currency_id" 
-          value={formData.currency_id || ''} 
-          onChange={handleMainChange} 
+        <select
+          disabled={isLoading}
+          name="currency_id"
+          value={formData.currency_id || ''}
+          onChange={handleMainChange}
           className="form-control form-control-sm"
         >
           <option value="">Select Currency...</option>
@@ -417,8 +417,8 @@ const CustomerForm = ({ onCancel, onSuccess, initialData }) => {
       </div>
       <div className="form-group">
         <label className="font-medium text-xs text-secondary mb-1 block">Status</label>
-        <StatusToggle 
-          value={formData.status} 
+        <StatusToggle
+          value={formData.status}
           onChange={(val) => handleMainChange({ target: { name: 'status', value: val } })}
           disabled={isLoading}
         />
@@ -430,14 +430,14 @@ const CustomerForm = ({ onCancel, onSuccess, initialData }) => {
     <div className="pt-sm space-y-4">
       <div className="flex justify-between items-center mb-sm">
         <div>
-          <h3 className="text-sm font-semibold text-primary m-0">Customer Addresses</h3>
+          <h3 className="text-sm font-semibold text-text-primary m-0">Customer Addresses</h3>
           <p className="text-xs text-secondary-light m-0">Manage billing, shipping, and registered addresses.</p>
         </div>
-        <Button 
-          type="button" 
-          size="sm" 
-          variant="outline" 
-          leftIcon={Plus} 
+        <Button
+          type="button"
+          size="sm"
+          variant="outline"
+          leftIcon={Plus}
           onClick={() => addArrayItem('addresses', { address_type: 'Billing', address_line_1: '', address_line_2: '', pincode: '', country_id: null, state_id: null, city_id: null })}
         >
           Add Address
@@ -446,7 +446,7 @@ const CustomerForm = ({ onCancel, onSuccess, initialData }) => {
 
       {formData.addresses.length === 0 && (
         <div className="text-center p-xl border border-dashed rounded-lg text-tertiary bg-surface-hover">
-          <MapPin size={24} className="mx-auto mb-xs opacity-40 text-primary" />
+          <MapPin size={24} className="mx-auto mb-xs opacity-40 text-text-primary" />
           <p className="text-sm font-medium mb-1">No addresses added yet</p>
           <p className="text-xs text-secondary-light">Click "Add Address" to add billing or shipping addresses.</p>
         </div>
@@ -461,27 +461,27 @@ const CustomerForm = ({ onCancel, onSuccess, initialData }) => {
             {/* Header row fixing overlap issue completely */}
             <div className="flex justify-between items-center pb-xs mb-sm border-b border-light">
               <div className="flex items-center gap-xs">
-                <span className="font-semibold text-xs uppercase text-primary">Address #{index + 1}</span>
+                <span className="font-semibold text-xs uppercase text-text-primary">Address #{index + 1}</span>
                 <span className="text-xs px-2 py-0.5 rounded bg-surface-hover border border-light font-medium text-secondary">
                   {addr.address_type || 'Billing'}
                 </span>
               </div>
-              <button 
-                type="button" 
-                className="text-danger hover:bg-danger-light p-xs rounded flex items-center gap-1 text-xs font-medium border border-transparent hover:border-danger-light transition-all" 
+              <button
+                type="button"
+                className="text-danger hover:bg-danger-light p-xs rounded flex items-center gap-1 text-xs font-medium border border-transparent hover:border-danger-light transition-all"
                 onClick={() => removeArrayItem('addresses', index)}
                 title="Remove Address"
               >
-                <Trash2 size={14}/> Remove
+                <Trash2 size={14} /> Remove
               </button>
             </div>
 
             <div className="form-grid">
               <div className="form-group">
                 <label className="font-medium text-xs text-secondary mb-1 block">Address Type</label>
-                <select 
-                  className="form-control form-control-sm" 
-                  value={addr.address_type} 
+                <select
+                  className="form-control form-control-sm"
+                  value={addr.address_type}
                   onChange={(e) => handleArrayChange('addresses', index, 'address_type', e.target.value)}
                 >
                   <option value="Billing">Billing</option>
@@ -492,22 +492,22 @@ const CustomerForm = ({ onCancel, onSuccess, initialData }) => {
 
               <div className="form-group col-span-2 md:col-span-1">
                 <label className="font-medium text-xs text-secondary mb-1 block">Address Line 1</label>
-                <input 
-                  type="text" 
-                  className="form-control form-control-sm" 
-                  value={addr.address_line_1 || ''} 
-                  onChange={(e) => handleArrayChange('addresses', index, 'address_line_1', e.target.value)} 
+                <input
+                  type="text"
+                  className="form-control form-control-sm"
+                  value={addr.address_line_1 || ''}
+                  onChange={(e) => handleArrayChange('addresses', index, 'address_line_1', e.target.value)}
                   placeholder="Street address, building, suite"
                 />
               </div>
 
               <div className="form-group">
                 <label className="font-medium text-xs text-secondary mb-1 block">Pincode / Zip Code</label>
-                <input 
-                  type="text" 
-                  className="form-control form-control-sm" 
-                  value={addr.pincode || ''} 
-                  onChange={(e) => handleArrayChange('addresses', index, 'pincode', e.target.value)} 
+                <input
+                  type="text"
+                  className="form-control form-control-sm"
+                  value={addr.pincode || ''}
+                  onChange={(e) => handleArrayChange('addresses', index, 'pincode', e.target.value)}
                   placeholder="e.g. 400001"
                 />
               </div>
@@ -515,9 +515,9 @@ const CustomerForm = ({ onCancel, onSuccess, initialData }) => {
               {/* Country Selection */}
               <div className="form-group">
                 <label className="font-medium text-xs text-secondary mb-1 block">Country</label>
-                <select 
-                  className="form-control form-control-sm" 
-                  value={addr.country_id || ''} 
+                <select
+                  className="form-control form-control-sm"
+                  value={addr.country_id || ''}
                   onChange={(e) => {
                     const val = e.target.value || null;
                     handleArrayChange('addresses', index, 'country_id', val);
@@ -536,9 +536,9 @@ const CustomerForm = ({ onCancel, onSuccess, initialData }) => {
               {addr.country_id ? (
                 <div className="form-group">
                   <label className="font-medium text-xs text-secondary mb-1 block">State</label>
-                  <select 
-                    className="form-control form-control-sm" 
-                    value={addr.state_id || ''} 
+                  <select
+                    className="form-control form-control-sm"
+                    value={addr.state_id || ''}
                     onChange={(e) => {
                       const val = e.target.value || null;
                       handleArrayChange('addresses', index, 'state_id', val);
@@ -564,9 +564,9 @@ const CustomerForm = ({ onCancel, onSuccess, initialData }) => {
               {addr.state_id ? (
                 <div className="form-group">
                   <label className="font-medium text-xs text-secondary mb-1 block">City</label>
-                  <select 
-                    className="form-control form-control-sm" 
-                    value={addr.city_id || ''} 
+                  <select
+                    className="form-control form-control-sm"
+                    value={addr.city_id || ''}
                     onChange={(e) => {
                       const val = e.target.value || null;
                       handleArrayChange('addresses', index, 'city_id', val);
@@ -597,14 +597,14 @@ const CustomerForm = ({ onCancel, onSuccess, initialData }) => {
     <div className="pt-sm space-y-4">
       <div className="flex justify-between items-center mb-sm">
         <div>
-          <h3 className="text-sm font-semibold text-primary m-0">Bank Account Details</h3>
+          <h3 className="text-sm font-semibold text-text-primary m-0">Bank Account Details</h3>
           <p className="text-xs text-secondary-light m-0">Banking info for payments and invoicing.</p>
         </div>
-        <Button 
-          type="button" 
-          size="sm" 
-          variant="outline" 
-          leftIcon={Plus} 
+        <Button
+          type="button"
+          size="sm"
+          variant="outline"
+          leftIcon={Plus}
           onClick={() => addArrayItem('banks', { bank_name: '', branch: '', account_holder: '', account_number: '', ifsc_code: '', swift_code: '' })}
         >
           Add Bank Account
@@ -613,7 +613,7 @@ const CustomerForm = ({ onCancel, onSuccess, initialData }) => {
 
       {formData.banks.length === 0 && (
         <div className="text-center p-xl border border-dashed rounded-lg text-tertiary bg-surface-hover">
-          <Landmark size={24} className="mx-auto mb-xs opacity-40 text-primary" />
+          <Landmark size={24} className="mx-auto mb-xs opacity-40 text-text-primary" />
           <p className="text-sm font-medium mb-1">No bank details added yet</p>
           <p className="text-xs text-secondary-light">Click "Add Bank Account" to record bank account details.</p>
         </div>
@@ -622,56 +622,56 @@ const CustomerForm = ({ onCancel, onSuccess, initialData }) => {
       {formData.banks.map((bank, index) => (
         <div key={index} className="bg-surface p-md rounded-lg border border-light shadow-xs mb-md">
           <div className="flex justify-between items-center pb-xs mb-sm border-b border-light">
-            <span className="font-semibold text-xs uppercase text-primary">Bank Account #{index + 1}</span>
-            <button 
-              type="button" 
-              className="text-danger hover:bg-danger-light p-xs rounded flex items-center gap-1 text-xs font-medium transition-all" 
+            <span className="font-semibold text-xs uppercase text-text-primary">Bank Account #{index + 1}</span>
+            <button
+              type="button"
+              className="text-danger hover:bg-danger-light p-xs rounded flex items-center gap-1 text-xs font-medium transition-all"
               onClick={() => removeArrayItem('banks', index)}
               title="Remove Bank Account"
             >
-              <Trash2 size={14}/> Remove
+              <Trash2 size={14} /> Remove
             </button>
           </div>
 
           <div className="form-grid">
             <div className="form-group">
               <label className="font-medium text-xs text-secondary mb-1 block">Bank Name <span className="text-danger">*</span></label>
-              <input 
-                type="text" 
-                className="form-control form-control-sm" 
-                required 
-                value={bank.bank_name || ''} 
-                onChange={(e) => handleArrayChange('banks', index, 'bank_name', e.target.value)} 
+              <input
+                type="text"
+                className="form-control form-control-sm"
+                required
+                value={bank.bank_name || ''}
+                onChange={(e) => handleArrayChange('banks', index, 'bank_name', e.target.value)}
                 placeholder="e.g. HDFC Bank, HSBC"
               />
             </div>
             <div className="form-group">
               <label className="font-medium text-xs text-secondary mb-1 block">Account Number</label>
-              <input 
-                type="text" 
-                className="form-control form-control-sm" 
-                value={bank.account_number || ''} 
-                onChange={(e) => handleArrayChange('banks', index, 'account_number', e.target.value)} 
+              <input
+                type="text"
+                className="form-control form-control-sm"
+                value={bank.account_number || ''}
+                onChange={(e) => handleArrayChange('banks', index, 'account_number', e.target.value)}
                 placeholder="e.g. 50100028491823"
               />
             </div>
             <div className="form-group">
               <label className="font-medium text-xs text-secondary mb-1 block">IFSC Code</label>
-              <input 
-                type="text" 
-                className="form-control form-control-sm uppercase" 
-                value={bank.ifsc_code || ''} 
-                onChange={(e) => handleArrayChange('banks', index, 'ifsc_code', e.target.value)} 
+              <input
+                type="text"
+                className="form-control form-control-sm uppercase"
+                value={bank.ifsc_code || ''}
+                onChange={(e) => handleArrayChange('banks', index, 'ifsc_code', e.target.value)}
                 placeholder="e.g. HDFC0000123"
               />
             </div>
             <div className="form-group">
               <label className="font-medium text-xs text-secondary mb-1 block">Swift Code</label>
-              <input 
-                type="text" 
-                className="form-control form-control-sm uppercase" 
-                value={bank.swift_code || ''} 
-                onChange={(e) => handleArrayChange('banks', index, 'swift_code', e.target.value)} 
+              <input
+                type="text"
+                className="form-control form-control-sm uppercase"
+                value={bank.swift_code || ''}
+                onChange={(e) => handleArrayChange('banks', index, 'swift_code', e.target.value)}
                 placeholder="e.g. HDFCINBBXXX"
               />
             </div>
@@ -687,14 +687,14 @@ const CustomerForm = ({ onCancel, onSuccess, initialData }) => {
       <div>
         <div className="flex justify-between items-center mb-sm">
           <div>
-            <h3 className="text-sm font-semibold text-primary m-0">Contact Persons</h3>
+            <h3 className="text-sm font-semibold text-text-primary m-0">Contact Persons</h3>
             <p className="text-xs text-secondary-light m-0">Key contact representatives for this customer.</p>
           </div>
-          <Button 
-            type="button" 
-            size="sm" 
-            variant="outline" 
-            leftIcon={Plus} 
+          <Button
+            type="button"
+            size="sm"
+            variant="outline"
+            leftIcon={Plus}
             onClick={() => addArrayItem('contacts', { name: '', designation: '', mobile: '', email: '', is_primary: false })}
           >
             Add Contact
@@ -710,44 +710,44 @@ const CustomerForm = ({ onCancel, onSuccess, initialData }) => {
         {formData.contacts.map((contact, index) => (
           <div key={index} className="bg-surface p-md rounded-lg border border-light shadow-xs mb-sm">
             <div className="flex justify-between items-center pb-xs mb-sm border-b border-light">
-              <span className="font-semibold text-xs uppercase text-primary">Contact #{index + 1}</span>
-              <button 
-                type="button" 
-                className="text-danger hover:bg-danger-light p-xs rounded flex items-center gap-1 text-xs font-medium transition-all" 
+              <span className="font-semibold text-xs uppercase text-text-primary">Contact #{index + 1}</span>
+              <button
+                type="button"
+                className="text-danger hover:bg-danger-light p-xs rounded flex items-center gap-1 text-xs font-medium transition-all"
                 onClick={() => removeArrayItem('contacts', index)}
               >
-                <Trash2 size={14}/> Remove
+                <Trash2 size={14} /> Remove
               </button>
             </div>
             <div className="form-grid">
               <div className="form-group">
                 <label className="font-medium text-xs text-secondary mb-1 block">Contact Name <span className="text-danger">*</span></label>
-                <input 
-                  type="text" 
-                  className="form-control form-control-sm" 
-                  required 
-                  value={contact.name || ''} 
-                  onChange={(e) => handleArrayChange('contacts', index, 'name', e.target.value)} 
+                <input
+                  type="text"
+                  className="form-control form-control-sm"
+                  required
+                  value={contact.name || ''}
+                  onChange={(e) => handleArrayChange('contacts', index, 'name', e.target.value)}
                   placeholder="e.g. John Doe"
                 />
               </div>
               <div className="form-group">
                 <label className="font-medium text-xs text-secondary mb-1 block">Mobile</label>
-                <input 
-                  type="text" 
-                  className="form-control form-control-sm" 
-                  value={contact.mobile || ''} 
-                  onChange={(e) => handleArrayChange('contacts', index, 'mobile', e.target.value)} 
+                <input
+                  type="text"
+                  className="form-control form-control-sm"
+                  value={contact.mobile || ''}
+                  onChange={(e) => handleArrayChange('contacts', index, 'mobile', e.target.value)}
                   placeholder="+91 9876543210"
                 />
               </div>
               <div className="form-group">
                 <label className="font-medium text-xs text-secondary mb-1 block">Email</label>
-                <input 
-                  type="email" 
-                  className="form-control form-control-sm" 
-                  value={contact.email || ''} 
-                  onChange={(e) => handleArrayChange('contacts', index, 'email', e.target.value)} 
+                <input
+                  type="email"
+                  className="form-control form-control-sm"
+                  value={contact.email || ''}
+                  onChange={(e) => handleArrayChange('contacts', index, 'email', e.target.value)}
                   placeholder="john@example.com"
                 />
               </div>
@@ -762,14 +762,14 @@ const CustomerForm = ({ onCancel, onSuccess, initialData }) => {
       <div>
         <div className="flex justify-between items-center mb-sm">
           <div>
-            <h3 className="text-sm font-semibold text-primary m-0">Documents & Certificates</h3>
+            <h3 className="text-sm font-semibold text-text-primary m-0">Documents & Certificates</h3>
             <p className="text-xs text-secondary-light m-0">Attach GST certificates, PAN cards, or registration files.</p>
           </div>
-          <Button 
-            type="button" 
-            size="sm" 
-            variant="outline" 
-            leftIcon={Plus} 
+          <Button
+            type="button"
+            size="sm"
+            variant="outline"
+            leftIcon={Plus}
             onClick={() => addArrayItem('documents', { document_type: '', file_url: '' })}
           >
             Add Document
@@ -785,38 +785,38 @@ const CustomerForm = ({ onCancel, onSuccess, initialData }) => {
         {formData.documents.map((doc, index) => (
           <div key={index} className="bg-surface p-md rounded-lg border border-light shadow-xs mb-sm">
             <div className="flex justify-between items-center pb-xs mb-sm border-b border-light">
-              <span className="font-semibold text-xs uppercase text-primary">Document #{index + 1}</span>
-              <button 
-                type="button" 
-                className="text-danger hover:bg-danger-light p-xs rounded flex items-center gap-1 text-xs font-medium transition-all" 
+              <span className="font-semibold text-xs uppercase text-text-primary">Document #{index + 1}</span>
+              <button
+                type="button"
+                className="text-danger hover:bg-danger-light p-xs rounded flex items-center gap-1 text-xs font-medium transition-all"
                 onClick={() => removeArrayItem('documents', index)}
               >
-                <Trash2 size={14}/> Remove
+                <Trash2 size={14} /> Remove
               </button>
             </div>
             <div className="form-grid">
               <div className="form-group">
                 <label className="font-medium text-xs text-secondary mb-1 block">Document Type <span className="text-danger">*</span></label>
-                <input 
-                  type="text" 
-                  className="form-control form-control-sm" 
-                  required 
-                  value={doc.document_type || ''} 
-                  onChange={(e) => handleArrayChange('documents', index, 'document_type', e.target.value)} 
-                  placeholder="e.g. GST Certificate, PAN Copy" 
+                <input
+                  type="text"
+                  className="form-control form-control-sm"
+                  required
+                  value={doc.document_type || ''}
+                  onChange={(e) => handleArrayChange('documents', index, 'document_type', e.target.value)}
+                  placeholder="e.g. GST Certificate, PAN Copy"
                 />
               </div>
               <div className="form-group">
                 <label className="font-medium text-xs text-secondary mb-1 block">File Upload <span className="text-danger">*</span></label>
                 <div className="flex gap-sm items-center">
-                  <input 
-                    type="file" 
-                    disabled={isLoading} 
-                    className="form-control form-control-sm" 
-                    onChange={(e) => handleFileUpload(index, e.target.files[0])} 
+                  <input
+                    type="file"
+                    disabled={isLoading}
+                    className="form-control form-control-sm"
+                    onChange={(e) => handleFileUpload(index, e.target.files[0])}
                   />
                   {doc.file_url && (
-                    <a href={doc.file_url} target="_blank" rel="noreferrer" className="text-primary text-xs font-semibold underline whitespace-nowrap">
+                    <a href={doc.file_url} target="_blank" rel="noreferrer" className="text-text-primary text-xs font-semibold underline whitespace-nowrap">
                       View File
                     </a>
                   )}
@@ -834,11 +834,11 @@ const CustomerForm = ({ onCancel, onSuccess, initialData }) => {
       {/* Top Title Bar */}
       <div className="flex justify-between items-center mb-md pb-xs border-b border-light">
         <div className="flex items-center gap-sm">
-          <div className="p-2 rounded-lg bg-surface-hover text-primary border border-light">
+          <div className="p-2 rounded-lg bg-surface-hover text-text-primary border border-light">
             <Building2 size={20} />
           </div>
           <div>
-            <h2 className="text-base font-bold text-primary m-0">{isEditMode ? 'Edit Customer Details' : 'Create New Customer'}</h2>
+            <h2 className="text-base font-bold text-text-primary m-0">{isEditMode ? 'Edit Customer Details' : 'Create New Customer'}</h2>
             <p className="text-xs text-secondary-light m-0">Fill in company details, addresses, and banking contacts.</p>
           </div>
         </div>

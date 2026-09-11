@@ -6,6 +6,7 @@ import ExpandableForm from '../../../../../../shared/components/Master/Expandabl
 import BulkImportModal from '../../../../../../shared/components/BulkImportModal/BulkImportModal';
 import ChargeList from './ChargeList';
 import ChargeForm from './ChargeForm';
+import FloatingWrapper from '../../../../../../shared/components/FloattingWrapper/FloatingWrapper';
 
 const Charges = () => {
   const [isFormOpen, setIsFormOpen] = useState(false);
@@ -45,43 +46,44 @@ const Charges = () => {
 
   return (
     <Page>
-      <PageHeader 
+      <PageHeader
         title="Charge Master"
+        className={'text-primary'}
         primaryAction={{ label: '+ Charge', onClick: handleCreateNew }}
       />
-      
+
       <div className="mt-lg">
         <div className="bg-surface border-light rounded-lg shadow-sm">
-          <MasterToolbar 
-            entityName="Charge" 
-            searchTerm={searchTerm}
-            onSearch={setSearchTerm}
-            totalRecords={totalRecords}
-            statusFilter={statusFilter}
-            onStatusChange={setStatusFilter}
-            onBulkImport={() => setIsBulkImportOpen(true)}
-          />
-
           <ExpandableForm isOpen={isFormOpen}>
-            <ChargeForm 
-              onCancel={handleCancel} 
-              onSuccess={handleSuccess} 
-              initialData={selectedCharge} 
+            <ChargeForm
+              onCancel={handleCancel}
+              onSuccess={handleSuccess}
+              initialData={selectedCharge}
             />
           </ExpandableForm>
-
-          <ChargeList 
-            onEdit={handleEdit} 
-            searchQuery={searchTerm}
-            viewMode={viewMode}
-            refreshTrigger={refreshTrigger}
-            onTotalCountChange={setTotalRecords}
-            statusFilter={statusFilter}
-          />
+          <FloatingWrapper>
+            <MasterToolbar
+              entityName="Charge"
+              searchTerm={searchTerm}
+              onSearch={setSearchTerm}
+              totalRecords={totalRecords}
+              statusFilter={statusFilter}
+              onStatusChange={setStatusFilter}
+              onBulkImport={() => setIsBulkImportOpen(true)}
+            />
+            <ChargeList
+              onEdit={handleEdit}
+              searchQuery={searchTerm}
+              viewMode={viewMode}
+              refreshTrigger={refreshTrigger}
+              onTotalCountChange={setTotalRecords}
+              statusFilter={statusFilter}
+            />
+          </FloatingWrapper>
         </div>
       </div>
 
-      <BulkImportModal 
+      <BulkImportModal
         isOpen={isBulkImportOpen}
         onClose={() => setIsBulkImportOpen(false)}
         entityType="charge"

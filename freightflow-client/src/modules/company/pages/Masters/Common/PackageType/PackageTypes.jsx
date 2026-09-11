@@ -6,6 +6,7 @@ import ExpandableForm from '../../../../../../shared/components/Master/Expandabl
 import BulkImportModal from '../../../../../../shared/components/BulkImportModal/BulkImportModal';
 import PackageTypeList from './PackageTypeList';
 import PackageTypeForm from './PackageTypeForm';
+import FloatingWrapper from '../../../../../../shared/components/FloattingWrapper/FloatingWrapper';
 
 const PackageTypes = () => {
   const [isFormOpen, setIsFormOpen] = useState(false);
@@ -41,43 +42,44 @@ const PackageTypes = () => {
 
   return (
     <Page>
-      <PageHeader 
+      <PageHeader
         title="Package Type Master"
+        className={'text-primary'}
         primaryAction={{ label: '+ Package Type', onClick: handleCreateNew }}
       />
-      
+
       <div className="mt-lg">
         <div className="bg-surface border-light rounded-lg shadow-sm">
-          <MasterToolbar 
-            entityName="Package Types" 
-            searchTerm={searchTerm}
-            onSearch={setSearchTerm}
-            totalRecords={totalRecords}
-            statusFilter={statusFilter}
-            onStatusChange={setStatusFilter}
-            onBulkImport={() => setIsBulkImportOpen(true)}
-          />
-
           <ExpandableForm isOpen={isFormOpen}>
-            <PackageTypeForm 
-              onCancel={handleCancel} 
-              onSuccess={handleSuccess} 
-              initialData={selectedType} 
+            <PackageTypeForm
+              onCancel={handleCancel}
+              onSuccess={handleSuccess}
+              initialData={selectedType}
             />
           </ExpandableForm>
-
-          <PackageTypeList 
-            onEdit={handleEdit} 
-            searchQuery={searchTerm}
-            viewMode={viewMode}
-            refreshTrigger={refreshTrigger}
-            onTotalCountChange={setTotalRecords}
-            statusFilter={statusFilter}
-          />
+          <FloatingWrapper>
+            <MasterToolbar
+              entityName="Package Types"
+              searchTerm={searchTerm}
+              onSearch={setSearchTerm}
+              totalRecords={totalRecords}
+              statusFilter={statusFilter}
+              onStatusChange={setStatusFilter}
+              onBulkImport={() => setIsBulkImportOpen(true)}
+            />
+            <PackageTypeList
+              onEdit={handleEdit}
+              searchQuery={searchTerm}
+              viewMode={viewMode}
+              refreshTrigger={refreshTrigger}
+              onTotalCountChange={setTotalRecords}
+              statusFilter={statusFilter}
+            />
+          </FloatingWrapper>
         </div>
       </div>
 
-      <BulkImportModal 
+      <BulkImportModal
         isOpen={isBulkImportOpen}
         onClose={() => setIsBulkImportOpen(false)}
         entityType="packageType"

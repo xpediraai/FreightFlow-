@@ -6,6 +6,7 @@ import ExpandableForm from '../../../../../../shared/components/Master/Expandabl
 import BulkImportModal from '../../../../../../shared/components/BulkImportModal/BulkImportModal';
 import TransportModeList from './TransportModeList';
 import TransportModeForm from './TransportModeForm';
+import FloatingWrapper from '../../../../../../shared/components/FloattingWrapper/FloatingWrapper';
 
 const TransportModes = () => {
   const [isFormOpen, setIsFormOpen] = useState(false);
@@ -41,43 +42,44 @@ const TransportModes = () => {
 
   return (
     <Page>
-      <PageHeader 
+      <PageHeader
         title="Transport Mode Master"
+        className={'text-primary'}
         primaryAction={{ label: '+ Transport Mode', onClick: handleCreateNew }}
       />
-      
+
       <div className="mt-lg">
         <div className="bg-surface border-light rounded-lg shadow-sm">
-          <MasterToolbar 
-            entityName="Transport Modes" 
-            searchTerm={searchTerm}
-            onSearch={setSearchTerm}
-            totalRecords={totalRecords}
-            statusFilter={statusFilter}
-            onStatusChange={setStatusFilter}
-            onBulkImport={() => setIsBulkImportOpen(true)}
-          />
-
           <ExpandableForm isOpen={isFormOpen}>
-            <TransportModeForm 
-              onCancel={handleCancel} 
-              onSuccess={handleSuccess} 
-              initialData={selectedMode} 
+            <TransportModeForm
+              onCancel={handleCancel}
+              onSuccess={handleSuccess}
+              initialData={selectedMode}
             />
           </ExpandableForm>
-
-          <TransportModeList 
-            onEdit={handleEdit} 
-            searchQuery={searchTerm}
-            viewMode={viewMode}
-            refreshTrigger={refreshTrigger}
-            onTotalCountChange={setTotalRecords}
-            statusFilter={statusFilter}
-          />
+          <FloatingWrapper>
+            <MasterToolbar
+              entityName="Transport Modes"
+              searchTerm={searchTerm}
+              onSearch={setSearchTerm}
+              totalRecords={totalRecords}
+              statusFilter={statusFilter}
+              onStatusChange={setStatusFilter}
+              onBulkImport={() => setIsBulkImportOpen(true)}
+            />
+            <TransportModeList
+              onEdit={handleEdit}
+              searchQuery={searchTerm}
+              viewMode={viewMode}
+              refreshTrigger={refreshTrigger}
+              onTotalCountChange={setTotalRecords}
+              statusFilter={statusFilter}
+            />
+          </FloatingWrapper>
         </div>
       </div>
 
-      <BulkImportModal 
+      <BulkImportModal
         isOpen={isBulkImportOpen}
         onClose={() => setIsBulkImportOpen(false)}
         entityType="transportMode"

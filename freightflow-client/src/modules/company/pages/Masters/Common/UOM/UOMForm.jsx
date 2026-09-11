@@ -55,7 +55,7 @@ const UOMForm = ({ onCancel, onSuccess, initialData }) => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     setGlobalError('');
-    
+
     const newErrors = {};
     Object.keys(formData).forEach(key => {
       const err = validateField(key, formData[key]);
@@ -70,7 +70,7 @@ const UOMForm = ({ onCancel, onSuccess, initialData }) => {
     }
 
     setIsLoading(true);
-    
+
     try {
       if (isEditMode) {
         await commonService.updateUOM(initialData.id, formData);
@@ -98,62 +98,62 @@ const UOMForm = ({ onCancel, onSuccess, initialData }) => {
         <div className="form-grid">
           <div className="form-group">
             <label>UOM Code <span className="text-danger">*</span></label>
-            <input 
-              disabled={isLoading || isEditMode} 
-              type="text" 
-              name="uom_code" 
-              value={formData.uom_code} 
-              onChange={handleChange} 
+            <input
+              disabled={isLoading || isEditMode}
+              type="text"
+              name="uom_code"
+              value={formData.uom_code}
+              onChange={handleChange}
               onBlur={handleBlur}
-              className="form-control form-control-sm" 
+              className="form-control form-control-sm"
             />
             {errors.uom_code && <div className="text-danger text-xs mt-xs">{errors.uom_code}</div>}
           </div>
           <div className="form-group">
             <label>UOM Name <span className="text-danger">*</span></label>
-            <input 
-              disabled={isLoading} 
-              type="text" 
-              name="uom_name" 
-              value={formData.uom_name} 
-              onChange={handleChange} 
+            <input
+              disabled={isLoading}
+              type="text"
+              name="uom_name"
+              value={formData.uom_name}
+              onChange={handleChange}
               onBlur={handleBlur}
-              className="form-control form-control-sm" 
+              className="form-control form-control-sm"
             />
             {errors.uom_name && <div className="text-danger text-xs mt-xs">{errors.uom_name}</div>}
           </div>
           <div className="form-group">
             <label>Symbol</label>
-            <input 
-              disabled={isLoading} 
-              type="text" 
-              name="symbol" 
-              value={formData.symbol} 
-              onChange={handleChange} 
+            <input
+              disabled={isLoading}
+              type="text"
+              name="symbol"
+              value={formData.symbol}
+              onChange={handleChange}
               onBlur={handleBlur}
-              className="form-control form-control-sm" 
+              className="form-control form-control-sm"
             />
           </div>
           <div className="form-group">
             <label>Description</label>
-            <input 
-              disabled={isLoading} 
-              type="text" 
-              name="description" 
-              value={formData.description} 
-              onChange={handleChange} 
+            <input
+              disabled={isLoading}
+              type="text"
+              name="description"
+              value={formData.description}
+              onChange={handleChange}
               onBlur={handleBlur}
-              className="form-control form-control-sm" 
+              className="form-control form-control-sm"
             />
           </div>
           {isEditMode && (
             <div className="form-group">
               <label>Status</label>
-              <StatusToggle 
-              value={formData.status} 
-              onChange={(val) => handleChange({ target: { name: 'status', value: val } })}
-              disabled={isLoading}
-            />
+              <StatusToggle
+                value={formData.status}
+                onChange={(val) => handleChange({ target: { name: 'status', value: val } })}
+                disabled={isLoading}
+              />
             </div>
           )}
         </div>

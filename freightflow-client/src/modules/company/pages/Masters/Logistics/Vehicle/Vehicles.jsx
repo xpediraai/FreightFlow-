@@ -6,6 +6,7 @@ import ExpandableForm from '../../../../../../shared/components/Master/Expandabl
 import BulkImportModal from '../../../../../../shared/components/BulkImportModal/BulkImportModal';
 import VehicleList from './VehicleList';
 import VehicleForm from './VehicleForm';
+import FloatingWrapper from '../../../../../../shared/components/FloattingWrapper/FloatingWrapper';
 
 const Vehicles = () => {
   const [isFormOpen, setIsFormOpen] = useState(false);
@@ -41,43 +42,44 @@ const Vehicles = () => {
 
   return (
     <Page>
-      <PageHeader 
+      <PageHeader
         title="Vehicle Master"
+        className={'text-primary'}
         primaryAction={{ label: '+ Vehicle', onClick: handleCreateNew }}
       />
-      
+
       <div className="mt-lg">
         <div className="bg-surface border-light rounded-lg shadow-sm">
-          <MasterToolbar 
-            entityName="Vehicle" 
-            searchTerm={searchTerm}
-            onSearch={setSearchTerm}
-            totalRecords={totalRecords}
-            statusFilter={statusFilter}
-            onStatusChange={setStatusFilter}
-            onBulkImport={() => setIsBulkImportOpen(true)}
-          />
-
           <ExpandableForm isOpen={isFormOpen}>
-            <VehicleForm 
-              onCancel={handleCancel} 
-              onSuccess={handleSuccess} 
-              initialData={selectedVehicle} 
+            <VehicleForm
+              onCancel={handleCancel}
+              onSuccess={handleSuccess}
+              initialData={selectedVehicle}
             />
           </ExpandableForm>
-
-          <VehicleList 
-            onEdit={handleEdit} 
-            searchQuery={searchTerm}
-            viewMode={viewMode}
-            refreshTrigger={refreshTrigger}
-            onTotalCountChange={setTotalRecords}
-            statusFilter={statusFilter}
-          />
+          <FloatingWrapper>
+            <MasterToolbar
+              entityName="Vehicle"
+              searchTerm={searchTerm}
+              onSearch={setSearchTerm}
+              totalRecords={totalRecords}
+              statusFilter={statusFilter}
+              onStatusChange={setStatusFilter}
+              onBulkImport={() => setIsBulkImportOpen(true)}
+            />
+            <VehicleList
+              onEdit={handleEdit}
+              searchQuery={searchTerm}
+              viewMode={viewMode}
+              refreshTrigger={refreshTrigger}
+              onTotalCountChange={setTotalRecords}
+              statusFilter={statusFilter}
+            />
+          </FloatingWrapper>
         </div>
       </div>
 
-      <BulkImportModal 
+      <BulkImportModal
         isOpen={isBulkImportOpen}
         onClose={() => setIsBulkImportOpen(false)}
         entityType="vehicle"

@@ -6,6 +6,7 @@ import ExpandableForm from '../../../../../../shared/components/Master/Expandabl
 import BulkImportModal from '../../../../../../shared/components/BulkImportModal/BulkImportModal';
 import VendorList from './VendorList';
 import VendorForm from './VendorForm';
+import FloatingWrapper from '../../../../../../shared/components/FloattingWrapper/FloatingWrapper';
 
 const Vendors = () => {
   const [isFormOpen, setIsFormOpen] = useState(false);
@@ -43,26 +44,12 @@ const Vendors = () => {
     <Page>
       <PageHeader
         title="Vendor Master"
+        className={'text-primary'}
         primaryAction={{ label: '+ Vendor', onClick: handleCreateNew }}
       />
 
       <div className="mt-lg">
         <div className="bg-surface border-light rounded-lg shadow-sm">
-          <MasterToolbar
-            entityName="Vendor"
-            searchTerm={searchTerm}
-            onSearch={setSearchTerm}
-            totalRecords={totalRecords}
-            statusFilter={statusFilter}
-            onStatusChange={setStatusFilter}
-            viewMode={viewMode}
-            onViewModeChange={(mode) => {
-              setViewMode(mode);
-              localStorage.setItem('preferredViewMode', mode);
-            }}
-            onBulkImport={() => setIsBulkImportOpen(true)}
-          />
-
           <ExpandableForm isOpen={isFormOpen}>
             <VendorForm
               onCancel={handleCancel}
@@ -70,15 +57,30 @@ const Vendors = () => {
               initialData={selectedVendor}
             />
           </ExpandableForm>
-
-          <VendorList
-            onEdit={handleEdit}
-            searchQuery={searchTerm}
-            viewMode={viewMode}
-            refreshTrigger={refreshTrigger}
-            onTotalCountChange={setTotalRecords}
-            statusFilter={statusFilter}
-          />
+          <FloatingWrapper>
+            <MasterToolbar
+              entityName="Vendor"
+              searchTerm={searchTerm}
+              onSearch={setSearchTerm}
+              totalRecords={totalRecords}
+              statusFilter={statusFilter}
+              onStatusChange={setStatusFilter}
+              viewMode={viewMode}
+              onViewModeChange={(mode) => {
+                setViewMode(mode);
+                localStorage.setItem('preferredViewMode', mode);
+              }}
+              onBulkImport={() => setIsBulkImportOpen(true)}
+            />
+            <VendorList
+              onEdit={handleEdit}
+              searchQuery={searchTerm}
+              viewMode={viewMode}
+              refreshTrigger={refreshTrigger}
+              onTotalCountChange={setTotalRecords}
+              statusFilter={statusFilter}
+            />
+          </FloatingWrapper>
         </div>
       </div>
 

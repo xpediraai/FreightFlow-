@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import Page from '../../../../../../shared/components/Page';
 import PageHeader from '../../../../../../shared/components/PageHeader';
 import MasterToolbar from '../../../../../../shared/components/Master/MasterToolbar';
@@ -6,6 +6,7 @@ import ExpandableForm from '../../../../../../shared/components/Master/Expandabl
 import BulkImportModal from '../../../../../../shared/components/BulkImportModal/BulkImportModal';
 import CountryList from './CountryList';
 import CountryForm from './CountryForm';
+import FloatingWrapper from '../../../../../../shared/components/FloattingWrapper/FloatingWrapper';
 
 const Countries = () => {
   const [isFormOpen, setIsFormOpen] = useState(false);
@@ -43,26 +44,12 @@ const Countries = () => {
     <Page>
       <PageHeader
         title="Country Master"
+        className={'text-primary'}
         primaryAction={{ label: '+ Country', onClick: handleCreateNew }}
       />
 
       <div className="mt-lg">
         <div className="bg-surface border-light rounded-lg shadow-sm">
-          <MasterToolbar
-            entityName="Country"
-            searchTerm={searchTerm}
-            onSearch={setSearchTerm}
-            totalRecords={totalRecords}
-            statusFilter={statusFilter}
-            onStatusChange={setStatusFilter}
-            viewMode={viewMode}
-            onViewModeChange={(mode) => {
-              setViewMode(mode);
-              localStorage.setItem('preferredViewMode', mode);
-            }}
-            onBulkImport={() => setIsBulkImportOpen(true)}
-          />
-
           <ExpandableForm isOpen={isFormOpen}>
             <CountryForm
               onCancel={handleCancel}
@@ -70,15 +57,30 @@ const Countries = () => {
               initialData={selectedCountry}
             />
           </ExpandableForm>
-
-          <CountryList
-            onEdit={handleEdit}
-            searchQuery={searchTerm}
-            viewMode={viewMode}
-            refreshTrigger={refreshTrigger}
-            onTotalCountChange={setTotalRecords}
-            statusFilter={statusFilter}
-          />
+          <FloatingWrapper>
+            <MasterToolbar
+              entityName="Country"
+              searchTerm={searchTerm}
+              onSearch={setSearchTerm}
+              totalRecords={totalRecords}
+              statusFilter={statusFilter}
+              onStatusChange={setStatusFilter}
+              viewMode={viewMode}
+              onViewModeChange={(mode) => {
+                setViewMode(mode);
+                localStorage.setItem('preferredViewMode', mode);
+              }}
+              onBulkImport={() => setIsBulkImportOpen(true)}
+            />
+            <CountryList
+              onEdit={handleEdit}
+              searchQuery={searchTerm}
+              viewMode={viewMode}
+              refreshTrigger={refreshTrigger}
+              onTotalCountChange={setTotalRecords}
+              statusFilter={statusFilter}
+            />
+          </FloatingWrapper>
         </div>
       </div>
 

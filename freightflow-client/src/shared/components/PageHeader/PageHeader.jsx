@@ -3,23 +3,24 @@ import { RefreshCw, Download } from 'lucide-react';
 import Button from '../Button';
 import './PageHeader.css';
 
-const PageHeader = ({ 
-  title, 
-  subtitle, 
-  breadcrumbs, 
-  primaryAction, 
+const PageHeader = ({
+  title,
+  subtitle,
+  breadcrumbs,
+  primaryAction,
+  className,
   secondaryAction,
   onRefresh,
-  onExport 
+  onExport
 }) => {
   return (
     <div className="page-header">
       <div className="page-header-title-section">
 
-        <h1 className="page-title">{title}</h1>
+        <h1 className={`page-title ${className}`}>{title}</h1>
         {subtitle && <p className="page-subtitle">{subtitle}</p>}
       </div>
-      
+
       <div className="page-header-actions">
         {onRefresh && (
           <Button variant="ghost" size="sm" onClick={onRefresh} leftIcon={RefreshCw}>

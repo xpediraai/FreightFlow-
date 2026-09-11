@@ -6,6 +6,8 @@ import ExpandableForm from '../../../../../../shared/components/Master/Expandabl
 import BulkImportModal from '../../../../../../shared/components/BulkImportModal/BulkImportModal';
 import CustomerList from './CustomerList';
 import CustomerForm from './CustomerForm';
+import FloatingWrapper from '../../../../../../shared/components/FloattingWrapper/FloatingWrapper';
+import { color } from 'framer-motion';
 
 const Customers = () => {
   const [isFormOpen, setIsFormOpen] = useState(false);
@@ -43,26 +45,12 @@ const Customers = () => {
     <Page>
       <PageHeader
         title="Customer Master"
+        className={'text-primary '}
         primaryAction={{ label: '+ Customer', onClick: handleCreateNew }}
       />
 
       <div className="mt-lg">
         <div className="bg-surface border-light rounded-lg shadow-sm">
-          <MasterToolbar
-            entityName="Customer"
-            searchTerm={searchTerm}
-            onSearch={setSearchTerm}
-            totalRecords={totalRecords}
-            statusFilter={statusFilter}
-            onStatusChange={setStatusFilter}
-            viewMode={viewMode}
-            onViewModeChange={(mode) => {
-              setViewMode(mode);
-              localStorage.setItem('preferredViewMode', mode);
-            }}
-            onBulkImport={() => setIsBulkImportOpen(true)}
-          />
-
           <ExpandableForm isOpen={isFormOpen}>
             <CustomerForm
               onCancel={handleCancel}
@@ -70,15 +58,30 @@ const Customers = () => {
               initialData={selectedCustomer}
             />
           </ExpandableForm>
-
-          <CustomerList
-            onEdit={handleEdit}
-            searchQuery={searchTerm}
-            viewMode={viewMode}
-            refreshTrigger={refreshTrigger}
-            onTotalCountChange={setTotalRecords}
-            statusFilter={statusFilter}
-          />
+          <FloatingWrapper>
+            <MasterToolbar
+              entityName="Customer"
+              searchTerm={searchTerm}
+              onSearch={setSearchTerm}
+              totalRecords={totalRecords}
+              statusFilter={statusFilter}
+              onStatusChange={setStatusFilter}
+              viewMode={viewMode}
+              onViewModeChange={(mode) => {
+                setViewMode(mode);
+                localStorage.setItem('preferredViewMode', mode);
+              }}
+              onBulkImport={() => setIsBulkImportOpen(true)}
+            />
+            <CustomerList
+              onEdit={handleEdit}
+              searchQuery={searchTerm}
+              viewMode={viewMode}
+              refreshTrigger={refreshTrigger}
+              onTotalCountChange={setTotalRecords}
+              statusFilter={statusFilter}
+            />
+          </FloatingWrapper>
         </div>
       </div>
 

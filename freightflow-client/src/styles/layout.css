@@ -7,18 +7,213 @@
 
 .layout-sidebar {
   width: 260px;
-  background-color: var(--sidebar-bg);
-  color: #fff;
-  flex-shrink: 0;
+
+  background:
+    radial-gradient(
+      circle at 0% 0%,
+      rgba(239, 68, 68, 0.08),
+      transparent 32%
+    ),
+    linear-gradient(
+      180deg,
+      #0f172a 0%,
+      #151e31 55%,
+      #111827 100%
+    );
+
+  color: #ffffff;
+
   display: flex;
   flex-direction: column;
-  transition: width var(--transition-layout), transform var(--transition-layout);
+
+  flex-shrink: 0;
+
   overflow: hidden;
+
+  border-right: 1px solid rgba(255, 255, 255, 0.06);
+
+  transition:
+    width var(--transition-layout),
+    transform var(--transition-layout);
+
+  box-shadow:
+    4px 0 20px rgba(15, 23, 42, 0.08);
 }
 
 .layout-sidebar.closed {
   width: 0;
   transform: translateX(-100%);
+}
+
+
+.sidebar-navigation {
+  flex: 1;
+
+  display: flex;
+  flex-direction: column;
+
+  gap: 3px;
+
+  padding: 18px 10px;
+
+  overflow-y: auto;
+}
+
+.sidebar-section-label {
+  padding: 5px 12px 8px;
+
+  color: #64748b;
+
+  font-size: 9px;
+  font-weight: 700;
+
+  letter-spacing: 1.2px;
+}
+
+
+/* =========================================================
+   NAV ITEM
+========================================================= */
+
+.sidebar-nav-item {
+  position: relative;
+
+  width: 100%;
+  min-height: 40px;
+
+  display: flex;
+  align-items: center;
+
+  gap: 11px;
+
+  padding-top: 9px;
+  padding-bottom: 9px;
+  padding-right: 10px;
+
+  border: none;
+  border-radius: 7px;
+
+  background: transparent;
+
+  color: #aebaca;
+
+  text-decoration: none;
+
+  font-size: 13px;
+  font-weight: 500;
+
+  white-space: nowrap;
+
+  cursor: pointer;
+
+  transition:
+    background-color 0.18s ease,
+    color 0.18s ease,
+    transform 0.18s ease;
+}
+
+.sidebar-nav-item:hover {
+  background: rgba(255, 255, 255, 0.055);
+
+  color: #ffffff;
+}
+
+.sidebar-nav-icon {
+  flex-shrink: 0;
+
+  color: currentColor;
+}
+
+
+.sidebar-chevron {
+  margin-left: auto;
+
+  display: flex;
+  align-items: center;
+
+  color: #64748b;
+
+  transition: opacity 0.2s ease;
+}
+
+
+
+/* =========================================================
+   ACTIVE ITEM
+========================================================= */
+
+.sidebar-nav-active {
+  color: #ffffff;
+
+  background: rgba(239, 68, 68, 0.11);
+
+  font-weight: 600;
+}
+
+.sidebar-nav-active:hover {
+  background: rgba(239, 68, 68, 0.15);
+}
+
+
+/* Red active indicator */
+
+.sidebar-nav-active::before {
+  content: '';
+
+  position: absolute;
+
+  left: 0;
+  top: 8px;
+  bottom: 8px;
+
+  width: 3px;
+
+  border-radius: 0 4px 4px 0;
+
+  background: #ef4444;
+}
+
+
+/* Active icon */
+
+.sidebar-nav-active .sidebar-nav-icon {
+  color: #ef4444;
+}
+
+
+/* =========================================================
+   CHILD NAVIGATION
+========================================================= */
+
+.nav-children {
+  overflow: hidden;
+
+  margin-left: 8px;
+
+  border-left: 1px solid rgba(255, 255, 255, 0.07);
+}
+
+
+/* =========================================================
+   SCROLLBAR
+========================================================= */
+
+.sidebar-navigation::-webkit-scrollbar {
+  width: 4px;
+}
+
+.sidebar-navigation::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.sidebar-navigation::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.12);
+
+  border-radius: 10px;
+}
+
+.sidebar-navigation::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 255, 255, 0.2);
 }
 
 .layout-main {
@@ -45,16 +240,30 @@
   overflow-y: auto;
 }
 
-/* Responsive adjustments */
+
+/* =========================================================
+   MOBILE
+========================================================= */
+
 @media (max-width: 768px) {
+
   .layout-sidebar {
     position: fixed;
-    z-index: var(--z-drawer, 1000);
-    height: 100%;
-    transform: translateX(-100%);
+
+    top: 0;
+    left: 0;
+
     width: 260px;
+    height: 100vh;
+
+    z-index: 1000;
+
+    transform: translateX(-100%);
+
+    box-shadow:
+      8px 0 30px rgba(15, 23, 42, 0.25);
   }
-  
+
   .layout-sidebar:not(.closed) {
     transform: translateX(0);
   }

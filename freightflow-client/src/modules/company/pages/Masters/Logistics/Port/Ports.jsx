@@ -6,6 +6,7 @@ import ExpandableForm from '../../../../../../shared/components/Master/Expandabl
 import BulkImportModal from '../../../../../../shared/components/BulkImportModal/BulkImportModal';
 import PortList from './PortList';
 import PortForm from './PortForm';
+import FloatingWrapper from '../../../../../../shared/components/FloattingWrapper/FloatingWrapper';
 
 const Ports = () => {
   const [isFormOpen, setIsFormOpen] = useState(false);
@@ -43,26 +44,12 @@ const Ports = () => {
     <Page>
       <PageHeader
         title="Port Master"
+        className={'text-primary'}
         primaryAction={{ label: '+ Port', onClick: handleCreateNew }}
       />
 
       <div className="mt-lg">
         <div className="bg-surface border-light rounded-lg shadow-sm">
-          <MasterToolbar
-            entityName="Port"
-            searchTerm={searchTerm}
-            onSearch={setSearchTerm}
-            totalRecords={totalRecords}
-            statusFilter={statusFilter}
-            onStatusChange={setStatusFilter}
-            viewMode={viewMode}
-            onViewModeChange={(mode) => {
-              setViewMode(mode);
-              localStorage.setItem('preferredViewMode', mode);
-            }}
-            onBulkImport={() => setIsBulkImportOpen(true)}
-          />
-
           <ExpandableForm isOpen={isFormOpen}>
             <PortForm
               onCancel={handleCancel}
@@ -70,15 +57,30 @@ const Ports = () => {
               initialData={selectedPort}
             />
           </ExpandableForm>
-
-          <PortList
-            onEdit={handleEdit}
-            searchQuery={searchTerm}
-            viewMode={viewMode}
-            refreshTrigger={refreshTrigger}
-            onTotalCountChange={setTotalRecords}
-            statusFilter={statusFilter}
-          />
+          <FloatingWrapper>
+            <MasterToolbar
+              entityName="Port"
+              searchTerm={searchTerm}
+              onSearch={setSearchTerm}
+              totalRecords={totalRecords}
+              statusFilter={statusFilter}
+              onStatusChange={setStatusFilter}
+              viewMode={viewMode}
+              onViewModeChange={(mode) => {
+                setViewMode(mode);
+                localStorage.setItem('preferredViewMode', mode);
+              }}
+              onBulkImport={() => setIsBulkImportOpen(true)}
+            />
+            <PortList
+              onEdit={handleEdit}
+              searchQuery={searchTerm}
+              viewMode={viewMode}
+              refreshTrigger={refreshTrigger}
+              onTotalCountChange={setTotalRecords}
+              statusFilter={statusFilter}
+            />
+          </FloatingWrapper>
         </div>
       </div>
 

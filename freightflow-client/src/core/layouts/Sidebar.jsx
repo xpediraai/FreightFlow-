@@ -1,8 +1,8 @@
 import React, { useState } from 'react';
 import { NavLink, useNavigate } from 'react-router-dom';
-import { 
-  LayoutDashboard, Users, Building2, Truck, Package, Settings, LogOut, ChevronDown, ChevronRight, Circle, 
-  Globe, Box, Briefcase, MapPin, Grid, Map, CreditCard, Ruler, PackageOpen, FileText, Plane, Anchor, Ship, 
+import {
+  LayoutDashboard, Users, Building2, Truck, Package, Settings, LogOut, ChevronDown, ChevronRight, Circle,
+  Globe, Box, Briefcase, MapPin, Grid, Map, CreditCard, Ruler, PackageOpen, FileText, Plane, Anchor, Ship,
   Warehouse, Car, Award, Store, ShoppingBag, Receipt, DollarSign
 } from 'lucide-react';
 import clsx from 'clsx';
@@ -48,13 +48,24 @@ const NavItem = ({ item, level = 0, isOpen, activeMenus, setActiveMenus }) => {
             <Icon size={level === 0 ? 20 : 16} style={{ flexShrink: 0 }} />
             <span style={{ opacity: isOpen ? 1 : 0, transition: 'opacity 0.2s', whiteSpace: 'nowrap', display: 'inline-block' }}>{item.name}</span>
           </div>
-          <div style={{ opacity: isOpen ? 1 : 0, transition: 'opacity 0.2s' }}>
-            {isExpanded ? <ChevronDown size={16} /> : <ChevronRight size={16} />}
-          </div>
+
+          <span
+            className="sidebar-chevron"
+            style={{
+              opacity: isOpen ? 1 : 0,
+            }}
+          >
+            {isExpanded ? (
+              <ChevronDown size={15} />
+            ) : (
+              <ChevronRight size={15} />
+            )}
+          </span>
+
         </button>
         <AnimatePresence initial={false}>
           {isExpanded && isOpen && (
-            <motion.div 
+            <motion.div
               className="nav-children overflow-hidden"
               initial={{ height: 0, opacity: 0 }}
               animate={{ height: 'auto', opacity: 1 }}
@@ -76,40 +87,95 @@ const NavItem = ({ item, level = 0, isOpen, activeMenus, setActiveMenus }) => {
       to={item.path}
       end={item.path === '/app' || item.path === '/company/dashboard'}
       className={({ isActive }) =>
-        `flex items-center gap-md p-sm ${isActive ? 'bg-secondary-dark' : ''}`
+        clsx(
+          'sidebar-nav-item',
+          {
+            'sidebar-nav-active': isActive,
+          }
+        )
       }
-      style={({ isActive }) => ({
+      style={{
         paddingLeft,
-        textDecoration: 'none',
-        borderRadius: 'var(--radius-sm)',
-        transition: 'background-color var(--transition)',
-        whiteSpace: 'nowrap',
-        color: isActive ? 'white' : 'rgba(255, 255, 255, 0.7)'
-      })}
+      }}
     >
-      <Icon size={level === 0 ? 20 : (level === 1 ? 16 : 14)} style={{ opacity: level > 1 ? 0.5 : 1, flexShrink: 0 }} />
-      <span style={{ opacity: isOpen ? 1 : 0, transition: 'opacity 0.2s', whiteSpace: 'nowrap', display: 'inline-block', overflow: 'hidden' }}>{item.name}</span>
+      {({ isActive }) => (
+        <>
+          <Icon
+            size={
+              level === 0
+                ? 19
+                : level === 1
+                  ? 16
+                  : 14
+            }
+            className="sidebar-nav-icon"
+            style={{
+              opacity: level > 1 ? 0.65 : 1,
+            }}
+          />
+
+          <span
+            className="sidebar-nav-label"
+            style={{
+              opacity: isOpen ? 1 : 0,
+              width: isOpen ? 'auto' : 0,
+            }}
+          >
+            {item.name}
+          </span>
+        </>
+      )}
     </NavLink>
   );
 };
 
+
+/* =========================================================
+   SIDEBAR
+========================================================= */
+
 const Sidebar = ({ isOpen }) => {
-  const { currentUser, logout } = useAuth();
-  const navigate = useNavigate();
+  const { currentUser } = useAuth();
+
+
   const navItems = getNavItems(currentUser?.role);
+
   const [activeMenus, setActiveMenus] = useState({});
 
-  const handleLogout = () => {
-    logout();
-    navigate('/');
-  };
 
   return (
-    <aside className={clsx('layout-sidebar', { 'closed': !isOpen })} style={{ display: 'flex', flexDirection: 'column' }}>
-      <div className="p-lg flex items-center justify-center border-b" style={{ borderColor: 'var(--secondary-dark)' }}>
-        <h2 className="font-bold whitespace-nowrap overflow-hidden" style={{ color: '#d32f2f', opacity: isOpen ? 1 : 0, transition: 'opacity 0.2s' }}>FreightFlow</h2>
+    <aside
+      className={clsx(
+        'layout-sidebar',
+        {
+          closed: !isOpen,
+        }
+      )}
+    >
+
+      {/* =====================================================
+          LOGO
+      ===================================================== */}
+
+      <div
+        style={{
+          opacity: isOpen ? 1 : 0,
+          height: '64px'
+        }}
+      >
+        <img height={'64px'} width={'100%'} src='\src\assets\FFLogoRed-removebg-preview.png' />
       </div>
-      <nav className="flex-col gap-xs p-md flex-grow overflow-y-auto" style={{ display: 'flex' }}>
+
+
+      {/* =====================================================
+          NAVIGATION
+      ===================================================== */}
+
+      <nav className="sidebar-navigation">
+        <div className="sidebar-section-label">
+          MENU
+        </div>
+
         {navItems.map((item, idx) => (
           <NavItem key={idx} item={item} isOpen={isOpen} activeMenus={activeMenus} setActiveMenus={setActiveMenus} />
         ))}
