@@ -5,6 +5,7 @@ import MasterToolbar from '../../../../../shared/components/Master/MasterToolbar
 import ExpandableForm from '../../../../../shared/components/Master/ExpandableForm';
 import ShippingInquiryList from './ShippingInquiryList';
 import ShippingInquiryForm from './ShippingInquiryForm';
+import FloatingWrapper from '../../../../../shared/components/FloattingWrapper/FloatingWrapper';
 
 const ShippingInquiries = () => {
   const [inquiries, setInquiries] = useState(() => {
@@ -71,26 +72,13 @@ const ShippingInquiries = () => {
     <Page>
       <PageHeader
         title="Shipping Inquiry"
+        className={'text-primary'}
         subtitle="Manage export shipment inquiries, POL/POD routing, container requirements, and cargo readiness."
         primaryAction={{ label: '+ Shipping Inquiry', onClick: handleCreateNew }}
       />
 
       <div className="mt-lg">
         <div className="bg-surface border-light rounded-lg shadow-sm">
-          <MasterToolbar
-            entityName="Shipping Inquiry"
-            searchTerm={searchTerm}
-            onSearch={setSearchTerm}
-            totalRecords={inquiries.length}
-            statusFilter={statusFilter}
-            onStatusChange={setStatusFilter}
-            viewMode={viewMode}
-            onViewModeChange={(mode) => {
-              setViewMode(mode);
-              localStorage.setItem('preferredViewMode', mode);
-            }}
-          />
-
           <ExpandableForm isOpen={isFormOpen}>
             <ShippingInquiryForm
               onCancel={handleCancel}
@@ -99,15 +87,29 @@ const ShippingInquiries = () => {
               existingCount={inquiries.length}
             />
           </ExpandableForm>
-
-          <ShippingInquiryList
-            inquiries={inquiries}
-            onEdit={handleEdit}
-            onDelete={handleDelete}
-            searchQuery={searchTerm}
-            viewMode={viewMode}
-            statusFilter={statusFilter}
-          />
+          <FloatingWrapper>
+            <MasterToolbar
+              entityName="Shipping Inquiry"
+              searchTerm={searchTerm}
+              onSearch={setSearchTerm}
+              totalRecords={inquiries.length}
+              statusFilter={statusFilter}
+              onStatusChange={setStatusFilter}
+              viewMode={viewMode}
+              onViewModeChange={(mode) => {
+                setViewMode(mode);
+                localStorage.setItem('preferredViewMode', mode);
+              }}
+            />
+            <ShippingInquiryList
+              inquiries={inquiries}
+              onEdit={handleEdit}
+              onDelete={handleDelete}
+              searchQuery={searchTerm}
+              viewMode={viewMode}
+              statusFilter={statusFilter}
+            />
+          </FloatingWrapper>
         </div>
       </div>
     </Page>
