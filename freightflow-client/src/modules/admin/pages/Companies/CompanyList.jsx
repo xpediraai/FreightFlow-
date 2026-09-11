@@ -1,18 +1,35 @@
 import React, { useEffect, useState } from 'react';
 import ConfirmDeleteModal from '../../../../shared/components/ConfirmDeleteModal';
-import { Eye, Edit2, Trash2 } from 'lucide-react';
+import { Eye, Edit2, Trash2, Star } from 'lucide-react';
 import TableView from '../../../../shared/components/TableView/TableView';
 import Button from '../../../../shared/components/Button';
 import Badge from '../../../../shared/components/Badge';
 import { adminService } from '../../services/admin.service';
+import { toast } from 'react-toastify';
 
 const CompanyList = ({ onEdit, searchQuery = '', viewMode = 'table', refreshTrigger = 0, onTotalCountChange, statusFilter = 'ALL STATUS' }) => {
   const [companies, setCompanies] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
 
+  const [defaultCompanyId, setDefaultCompanyId] = useState(() => {
+    return localStorage.getItem('freightflow_default_company_id') || '';
+  });
+
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
   const [itemToDelete, setItemToDelete] = useState(null);
   const [isDeleting, setIsDeleting] = useState(false);
+
+  const handleSetDefault = (company) => {
+    const compId = company.id || company.company_code;
+    const compName = company.company_name || company.name;
+    
+    localStorage.setItem('freightflow_default_company_id', compId);
+    localStorage.setItem('freightflow_default_company_name', compName);
+    setDefaultCompanyId(compId);
+    
+    toast.success(`Set "${compName}" as default login company ⭐`);
+    window.dispatchEvent(new Event('default_company_changed'));
+  };
 
   const handleDeleteClick = (row) => {
     setItemToDelete(row);
@@ -39,6 +56,14 @@ const CompanyList = ({ onEdit, searchQuery = '', viewMode = 'table', refreshTrig
   useEffect(() => {
     fetchCompanies();
   }, [refreshTrigger]);
+
+  useEffect(() => {
+    const handleDefaultChange = () => {
+      setDefaultCompanyId(localStorage.getItem('freightflow_default_company_id') || '');
+    };
+    window.addEventListener('default_company_changed', handleDefaultChange);
+    return () => window.removeEventListener('default_company_changed', handleDefaultChange);
+  }, []);
 
   const fetchCompanies = async () => {
     setIsLoading(true);
@@ -75,16 +100,57 @@ const CompanyList = ({ onEdit, searchQuery = '', viewMode = 'table', refreshTrig
     }
   }, [calculatedTotalRecords, onTotalCountChange]);
 
+  const resolveDefaultCompanyId = (companyList) => {
+    const storedId = localStorage.getItem('freightflow_default_company_id');
+    if (storedId) {
+      const found = companyList.find(c => String(c.id || c.company_code) === String(storedId));
+      if (found) return String(found.id || found.company_code);
+    }
+    const dbDefault = companyList.find(c => c.is_default);
+    if (dbDefault) return String(dbDefault.id || dbDefault.company_code);
+    const shanti = companyList.find(c => (c.company_name || c.name) === 'Shanti');
+    if (shanti) return String(shanti.id || shanti.company_code);
+    if (companyList.length > 0) return String(companyList[0].id || companyList[0].company_code);
+    return null;
+  };
+
+  const effectiveDefaultId = resolveDefaultCompanyId(companies);
+
   const columns = [
     {
       header: 'Company Name',
       key: 'name',
-      render: (row) => (
-        <div>
-          <div style={{ fontWeight: 600 }}>{row.company_name || row.name}</div>
-          <div style={{ fontSize: '0.85rem', color: 'var(--color-text-tertiary)' }}>Code: {row.company_code || row.code}</div>
-        </div>
-      )
+      render: (row) => {
+        const rowId = String(row.id || row.company_code);
+        const isDefault = rowId === String(effectiveDefaultId);
+        return (
+          <div>
+            <div style={{ fontWeight: 600, display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
+              <span>{row.company_name || row.name}</span>
+              {isDefault && (
+                <span 
+                  style={{
+                    fontSize: '0.72rem',
+                    background: '#fef3c7',
+                    color: '#b45309',
+                    padding: '1px 6px',
+                    borderRadius: '4px',
+                    fontWeight: 600,
+                    border: '1px solid #fcd34d',
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    gap: '2px'
+                  }}
+                  title="Default Login Company"
+                >
+                  <Star size={11} fill="#b45309" color="#b45309" /> Default
+                </span>
+              )}
+            </div>
+            <div style={{ fontSize: '0.85rem', color: 'var(--color-text-tertiary)' }}>Code: {row.company_code || row.code}</div>
+          </div>
+        );
+      }
     },
     {
       header: 'Email / Contact',
@@ -123,31 +189,57 @@ const CompanyList = ({ onEdit, searchQuery = '', viewMode = 'table', refreshTrig
     {
       header: 'Actions',
       key: 'actions',
-      render: (row) => (
-        <div style={{ display: 'flex', gap: '0.5rem' }} onClick={(e) => e.stopPropagation()}>
-          <button
-            className="action-btn view-btn"
-            onClick={() => setViewModalData(row)}
-            title="View Details"
-          >
-            <Eye size={16} />
-          </button>
-          <button
-            className="action-btn edit-btn"
-            onClick={() => onEdit && onEdit(row)}
-            title="Edit Company"
-          >
-            <Edit2 size={16} />
-          </button>
-          <button 
-            className="action-btn delete-btn"
-            title="Delete"
-            onClick={() => handleDeleteClick(row)}
-          >
-            <Trash2 size={16} />
-          </button>
-        </div>
-      )
+      render: (row) => {
+        const rowId = String(row.id || row.company_code);
+        const isDefault = rowId === String(defaultCompanyId) || (!defaultCompanyId && (row.company_name === 'Shanti' || row.name === 'Shanti'));
+        return (
+          <div style={{ display: 'flex', gap: '0.4rem', alignItems: 'center' }} onClick={(e) => e.stopPropagation()}>
+            <button
+              className="action-btn star-btn"
+              onClick={() => handleSetDefault(row)}
+              title={isDefault ? "Default Login Company" : "Set as Default Login Company"}
+              style={{
+                background: isDefault ? '#fef9c3' : '#ffffff',
+                border: isDefault ? '1px solid #fde047' : '1px solid #e5e7eb',
+                borderRadius: '6px',
+                padding: '4px 6px',
+                cursor: 'pointer',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                transition: 'all 0.2s'
+              }}
+            >
+              <Star 
+                size={16} 
+                fill={isDefault ? "#eab308" : "none"} 
+                color={isDefault ? "#ca8a04" : "#9ca3af"} 
+              />
+            </button>
+            <button
+              className="action-btn view-btn"
+              onClick={() => setViewModalData(row)}
+              title="View Details"
+            >
+              <Eye size={16} />
+            </button>
+            <button
+              className="action-btn edit-btn"
+              onClick={() => onEdit && onEdit(row)}
+              title="Edit Company"
+            >
+              <Edit2 size={16} />
+            </button>
+            <button 
+              className="action-btn delete-btn"
+              title="Delete"
+              onClick={() => handleDeleteClick(row)}
+            >
+              <Trash2 size={16} />
+            </button>
+          </div>
+        );
+      }
     }
   ];
 

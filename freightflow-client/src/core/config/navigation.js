@@ -1,7 +1,7 @@
 import {
   LayoutDashboard, Users, Building2, Truck, Package, Settings, Circle,
   Globe, Box, Briefcase, MapPin, Grid, Map, CreditCard, Ruler, PackageOpen, FileText, Plane, Anchor, Ship,
-  Warehouse, Car, Award, Store, ShoppingBag, Receipt, DollarSign, Radar
+  Warehouse, Car, Award, Store, ShoppingBag, Receipt, DollarSign, FileOutput, HelpCircle
 } from 'lucide-react';
 
 export const getNavItems = (role) => {
@@ -81,7 +81,15 @@ export const getNavItems = (role) => {
         }
       ]
     },
-    { name: 'Shipment Tracking', path: '/company/tracking', icon: Radar, color: '#00BCD4' },
+    {
+      name: 'Export',
+      icon: FileOutput,
+      color: '#4CAF50',
+      children: [
+        { name: 'Shipping Inquiry', path: '/company/export/shipping-inquiry', icon: HelpCircle, color: '#009688' },
+        { name: 'Quotation', path: '/company/export/quotation', icon: FileText, color: '#1976D2' },
+      ]
+    },
     { name: 'Settings', path: '/app/settings', icon: Settings, color: '#616161' },
   ];
 };

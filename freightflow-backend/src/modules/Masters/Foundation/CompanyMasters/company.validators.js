@@ -5,6 +5,7 @@
 const Joi = require("joi");
 
 const companyBaseSchema = {
+    id: Joi.string().allow('', null),
     company_code: Joi.string().required(),
     company_name: Joi.string().required(),
     address: Joi.string().allow('', null),
@@ -34,13 +35,13 @@ const companyBaseSchema = {
     owner_id: Joi.string().uuid().allow('', null)
 };
 
-const createCompanySchema = Joi.object(companyBaseSchema);
+const createCompanySchema = Joi.object(companyBaseSchema).unknown(true);
 
 const updateCompanySchema = Joi.object({
     ...companyBaseSchema,
     company_code: Joi.string().optional(),
     company_name: Joi.string().optional()
-});
+}).unknown(true);
 
 module.exports = {
     createCompanySchema,

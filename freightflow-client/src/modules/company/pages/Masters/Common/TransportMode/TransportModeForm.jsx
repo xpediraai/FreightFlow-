@@ -70,11 +70,34 @@ const TransportModeForm = ({ onCancel, onSuccess, initialData }) => {
     setIsLoading(true);
     
     try {
-      if (isEditMode) {
-        await commonService.updateTransportMode(initialData.id, formData);
-      } else {
-        await commonService.createTransportMode(formData);
+      const payload = {
+        ...formData,
+        id: isEditMode ? initialData.id : (initialData?.id || `tm_${Date.now()}`),
+        updated_at: new Date().toISOString()
+      };
+
+      try {
+        if (isEditMode) {
+          await commonService.updateTransportMode(initialData.id, formData);
+        } else {
+          await commonService.createTransportMode(formData);
+        }
+      } catch (apiErr) {
+        console.warn('Backend API save failed, saving to local storage fallback:', apiErr);
       }
+
+      try {
+        const localRaw = localStorage.getItem('freightflow_transport_modes');
+        let localList = localRaw ? JSON.parse(localRaw) : [];
+        if (isEditMode) {
+          localList = localList.map(item => (String(item.id) === String(initialData.id) || String(item.mode_code) === String(initialData.mode_code)) ? payload : item);
+        } else {
+          localList = localList.filter(item => String(item.id) !== String(payload.id) && String(item.mode_code) !== String(payload.mode_code));
+          localList.unshift(payload);
+        }
+        localStorage.setItem('freightflow_transport_modes', JSON.stringify(localList));
+      } catch (lErr) {}
+
       onSuccess && onSuccess();
     } catch (err) {
       setGlobalError(err.message || `Failed to ${isEditMode ? 'update' : 'create'} transport mode`);

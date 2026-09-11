@@ -23,6 +23,26 @@ const Charge = sequelize.define("Charge", {
         type: DataTypes.STRING,
         allowNull: false,
     },
+    basis: {
+        type: DataTypes.STRING,
+        allowNull: true,
+        defaultValue: "Per Container",
+    },
+    default_rate: {
+        type: DataTypes.DECIMAL(12, 2),
+        allowNull: true,
+        defaultValue: 0,
+    },
+    default_qty: {
+        type: DataTypes.INTEGER,
+        allowNull: true,
+        defaultValue: 1,
+    },
+    default_applicable: {
+        type: DataTypes.BOOLEAN,
+        allowNull: true,
+        defaultValue: true,
+    },
     charge_type: {
         type: DataTypes.ENUM("Revenue", "Expense", "Both"),
         allowNull: false,
