@@ -59,7 +59,7 @@ const QuotationPreviewModal = ({ quotation, onClose }) => {
   };
 
   const activeCharges = Array.isArray(quotation.charges) 
-    ? quotation.charges.filter(c => c.applicable && Number(c.amount) > 0)
+    ? quotation.charges.filter(c => c.applicable !== false && Number(c.amount) > 0)
     : [];
 
   return (
@@ -295,7 +295,7 @@ const QuotationPreviewModal = ({ quotation, onClose }) => {
                       activeCharges.map((charge, idx) => (
                         <tr key={idx} style={{ borderBottom: '1px solid #e2e8f0', backgroundColor: idx % 2 === 0 ? '#ffffff' : '#f8fafc', pageBreakInside: 'avoid' }}>
                           <td style={{ padding: '0.3rem 0.5rem', textAlign: 'center', color: '#64748b' }}>{idx + 1}</td>
-                          <td style={{ padding: '0.3rem 0.5rem', fontWeight: 600, color: '#0f172a' }}>{charge.name}</td>
+                          <td style={{ padding: '0.3rem 0.5rem', fontWeight: 600, color: '#0f172a' }}>{charge.charge_name || charge.name}</td>
                           <td style={{ padding: '0.3rem 0.5rem', color: '#64748b', fontSize: '0.75rem' }}>{charge.basis}</td>
                           <td style={{ padding: '0.3rem 0.5rem', textAlign: 'center', fontWeight: 500 }}>{charge.quantity}</td>
                           <td style={{ padding: '0.3rem 0.5rem', textAlign: 'right' }}>₹{Number(charge.rate).toLocaleString('en-IN', { minimumFractionDigits: 2 })}</td>

@@ -63,6 +63,10 @@ db.ShippingInquiry = shippingInquiryModels.ShippingInquiry;
 db.ShippingInquiryCargo = shippingInquiryModels.ShippingInquiryCargo;
 db.ShippingInquiryContainer = shippingInquiryModels.ShippingInquiryContainer;
 
+const exportQuotationModels = require("../modules/Operations/ExportQuotation/exportQuotation.model");
+db.ExportQuotation = exportQuotationModels.ExportQuotation;
+db.ExportQuotationCharge = exportQuotationModels.ExportQuotationCharge;
+
 // Define Associations
 db.Users.hasMany(db.RefreshTokens, { foreignKey: "user_id" });
 db.RefreshTokens.belongsTo(db.Users, { foreignKey: "user_id" });
@@ -86,6 +90,10 @@ db.ShippingInquiryCargo.belongsTo(db.ShippingInquiry, { foreignKey: "inquiry_id"
 
 db.ShippingInquiry.hasMany(db.ShippingInquiryContainer, { foreignKey: "inquiry_id", as: "containerDetails" });
 db.ShippingInquiryContainer.belongsTo(db.ShippingInquiry, { foreignKey: "inquiry_id" });
+
+// Export Quotation Associations
+db.ExportQuotation.hasMany(db.ExportQuotationCharge, { foreignKey: "quotation_id", as: "charges" });
+db.ExportQuotationCharge.belongsTo(db.ExportQuotation, { foreignKey: "quotation_id" });
 
 // Master Associations
 db.State.belongsTo(db.Country, { foreignKey: 'country_id', as: 'country' });
