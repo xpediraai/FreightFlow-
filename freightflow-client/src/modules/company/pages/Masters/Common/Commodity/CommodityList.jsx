@@ -26,7 +26,7 @@ const CommodityList = ({ onEdit, searchQuery = '', viewMode = 'table', refreshTr
     if (!itemToDelete) return;
     setIsDeleting(true);
     try {
-      await commonService.deleteCommodity(itemToDelete.id);
+      await businessService.deleteCommodity(itemToDelete.id);
       setIsDeleteModalOpen(false);
       setItemToDelete(null);
       setCommodities(prev => prev.filter(item => item.id !== itemToDelete.id));
