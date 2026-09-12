@@ -160,10 +160,13 @@ const Sidebar = ({ isOpen }) => {
       <div
         style={{
           opacity: isOpen ? 1 : 0,
-          height: '64px'
+          height: '74px',
+          display: 'flex',
+          justifyContent: 'center',
+          alignItems: 'center',
         }}
       >
-        <img object-fit={"fill"} height={'64px'} width={'100%'} src='\src\assets\FFLogoRed-removebg-preview.png' />
+        <img object-fit={"fill"} height={'64px'} width={'200px'} src='\src\assets\FFLogoRed-removebg-preview.png' />
       </div>
 
 
