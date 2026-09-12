@@ -163,7 +163,7 @@ const Sidebar = ({ isOpen }) => {
           height: '64px'
         }}
       >
-        <img height={'64px'} width={'100%'} src='\src\assets\FFLogoRed-removebg-preview.png' />
+        <img object-fit={"fill"} height={'64px'} width={'100%'} src='\src\assets\FFLogoRed-removebg-preview.png' />
       </div>
 
 

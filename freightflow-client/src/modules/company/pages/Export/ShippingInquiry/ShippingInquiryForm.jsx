@@ -62,6 +62,20 @@ const portLabel = (p) =>
 const getExporterName = (exp) =>
   exp?.customer_name || exp?.name || exp?.company_name || '';
 
+const formatReadyDate = (dateVal) => {
+  if (!dateVal) return '';
+  if (typeof dateVal === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(dateVal.trim())) {
+    return dateVal.trim();
+  }
+  try {
+    const d = new Date(dateVal);
+    if (!isNaN(d.getTime())) {
+      return d.toISOString().split('T')[0];
+    }
+  } catch (e) { }
+  return String(dateVal).split('T')[0] || '';
+};
+
 // ============================================================
 // Defaults (fallback when API is empty)
 // ============================================================
@@ -111,6 +125,13 @@ const DEFAULT_UOMS = [
   { id: 'uom_3', uom_code: 'LBS', uom_name: 'Pounds (LBS)' },
   { id: 'uom_4', uom_code: 'CBM', uom_name: 'Cubic Meters (CBM)' },
   { id: 'uom_5', uom_code: 'PCS', uom_name: 'Pieces (PCS)' },
+];
+
+const DEFAULT_TRANSPORT_MODES = [
+  { id: 'tm_1', mode_code: 'AIR', mode_name: 'Air Freight' },
+  { id: 'tm_2', mode_code: 'SEA', mode_name: 'Ocean Freight (FCL/LCL)' },
+  { id: 'tm_3', mode_code: 'ROAD', mode_name: 'Road / Land Transport' },
+  { id: 'tm_4', mode_code: 'RAIL', mode_name: 'Rail Freight' },
 ];
 
 const emptyCargo = () => ({
@@ -163,72 +184,141 @@ const buildDefaultValues = (initialData, existingCount) => {
   const rawWeight = initialData.gross_weight || initialData.weight || '';
   const parsedWeight = parseWeightString(rawWeight);
 
-  // Prefer nested cargoDetails; fall back to legacy flat fields
-  let cargoDetails = Array.isArray(initialData.cargoDetails) && initialData.cargoDetails.length
-    ? initialData.cargoDetails.map((c) => ({
-      commodity: c.commodity || '',
-      hsn_code: c.hsn_code || '',
-      cargo_type: c.cargo_type || 'General',
-      weight_value: c.weight_value ?? parsedWeight.val,
-      weight_uom: c.weight_uom || parsedWeight.uom || 'KG',
-    }))
-    : [
+  // Normalize cargo details
+  let rawCargos = initialData.cargoDetails || initialData.cargos || initialData.cargo_details;
+  if (typeof rawCargos === 'string') {
+    try { rawCargos = JSON.parse(rawCargos); } catch (e) { rawCargos = null; }
+  }
+
+  let cargoDetails = [];
+  if (Array.isArray(rawCargos) && rawCargos.length > 0) {
+    cargoDetails = rawCargos.map((c) => {
+      const cWeight = parseWeightString(c.weight_value || c.gross_weight || c.weight || rawWeight);
+      return {
+        id: c.id,
+        commodity: c.commodity || c.commodity_name || c.item_name || '',
+        hsn_code: c.hsn_code || c.hsn || c.hs_code || '',
+        cargo_type: c.cargo_type || c.type || 'General',
+        weight_value: c.weight_value !== undefined && c.weight_value !== null && c.weight_value !== ''
+          ? String(c.weight_value)
+          : (cWeight.val || parsedWeight.val || ''),
+        weight_uom: c.weight_uom || c.uom || cWeight.uom || parsedWeight.uom || 'KG',
+      };
+    });
+  } else {
+    cargoDetails = [
       {
-        commodity: initialData.commodity || '',
-        hsn_code: initialData.hsn_code || '',
+        commodity: initialData.commodity || initialData.commodity_name || '',
+        hsn_code: initialData.hsn_code || initialData.hsn || '',
         cargo_type: initialData.cargo_type || 'General',
-        weight_value: parsedWeight.val,
+        weight_value: parsedWeight.val || '',
         weight_uom: parsedWeight.uom || 'KG',
       },
     ];
-  const containerDetails =
-    Array.isArray(initialData.containerDetails) &&
-      initialData.containerDetails.length
-      ? initialData.containerDetails.map((c) => ({
-        container_type: c.container_type || "20'",
-        no_of_containers: String(c.no_of_containers || c.quantity || '1'),
-      }))
-      : [
-        {
-          container_type: initialData.container_type || "20'",
-          no_of_containers: String(
-            initialData.no_of_containers || initialData.quantity || '1'
-          ),
-        },
-      ];
+  }
+
+  // Normalize container details
+  let rawContainers = initialData.containerDetails || initialData.containers || initialData.container_details;
+  if (typeof rawContainers === 'string') {
+    try { rawContainers = JSON.parse(rawContainers); } catch (e) { rawContainers = null; }
+  }
+
+  let containerDetails = [];
+  if (Array.isArray(rawContainers) && rawContainers.length > 0) {
+    containerDetails = rawContainers.map((c) => ({
+      id: c.id,
+      container_type: c.container_type || c.containerType || c.type || "20'",
+      no_of_containers: String(c.no_of_containers ?? c.quantity ?? c.count ?? c.no_of_container ?? '1'),
+    }));
+  } else {
+    containerDetails = [
+      {
+        container_type: initialData.container_type || initialData.containerType || "20'",
+        no_of_containers: String(
+          initialData.no_of_containers ?? initialData.quantity ?? '1'
+        ),
+      },
+    ];
+  }
+
+  // Parse factory details
+  let parsedFactory = initialData.factory_details;
+  if (typeof parsedFactory === 'string') {
+    try { parsedFactory = JSON.parse(parsedFactory); } catch (e) { parsedFactory = null; }
+  }
+
+  // Normalize stuffing location
+  let stuffingLocation = initialData.stuffing_location || initialData.stuffing_type || 'Factory';
+  let stuffingLocationOther = initialData.stuffing_location_other || initialData.other_stuffing_location || '';
+  const locLower = String(stuffingLocation).toLowerCase().trim();
+  if (locLower === 'factory' || locLower === 'factory stuffing') {
+    stuffingLocation = 'Factory';
+  } else if (locLower === 'cfs' || locLower === 'cfs stuffing') {
+    stuffingLocation = 'CFS';
+  } else if (stuffingLocation !== 'Factory' && stuffingLocation !== 'CFS') {
+    stuffingLocationOther = stuffingLocationOther || stuffingLocation;
+    stuffingLocation = 'Other';
+  }
+
+  // Normalize priority
+  let priority = initialData.priority || 'Medium';
+  if (typeof priority === 'string' && priority.length > 0) {
+    priority = priority.charAt(0).toUpperCase() + priority.slice(1).toLowerCase();
+  }
+  if (!['Low', 'Medium', 'High'].includes(priority)) {
+    priority = 'Medium';
+  }
+
+  // Normalize shipment terms (handle underscores and casing)
+  let shipmentTerms = initialData.shipment_terms || initialData.incoterms || initialData.terms || 'FOB';
+  if (shipmentTerms === 'Freight_Prepaid') shipmentTerms = 'Freight Prepaid';
+  if (shipmentTerms === 'Freight_Collect') shipmentTerms = 'Freight Collect';
+
+  // Normalize shipment type
+  let shipmentType = initialData.shipment_type || initialData.transport_mode || initialData.mode_of_shipment || '';
+  if (shipmentType) {
+    const sLower = String(shipmentType).toLowerCase().trim();
+    if (sLower === 'sea' || sLower === 'ocean' || sLower === 'ocean freight' || sLower === 'sea freight' || sLower === 'ocean freight (fcl/lcl)') {
+      shipmentType = 'Ocean Freight (FCL/LCL)';
+    } else if (sLower === 'air' || sLower === 'air freight') {
+      shipmentType = 'Air Freight';
+    } else if (sLower === 'road' || sLower === 'land' || sLower === 'road freight' || sLower === 'road / land transport') {
+      shipmentType = 'Road / Land Transport';
+    } else if (sLower === 'rail' || sLower === 'rail freight') {
+      shipmentType = 'Rail Freight';
+    }
+  }
+
   return {
     inquiry_no: initialData.inquiry_no || generateInquiryNo(existingCount),
     exporter_id: initialData.exporter_id || initialData.customer_id || '',
     exporter_name: initialData.exporter_name || initialData.customer_name || '',
-    pol: initialData.pol || initialData.origin || '',
-    pod: initialData.pod || initialData.destination || '',
-    fpod: initialData.fpod || '',
-    shipment_type: initialData.shipment_type || '',
-    shipment_sub_type: initialData.shipment_sub_type || '',
-    shipment_terms: initialData.shipment_terms || 'FOB',
-    cargo_ready_date: initialData.cargo_ready_date
-      ? String(initialData.cargo_ready_date).split('T')[0]
-      : '',
-    stuffing_location: initialData.stuffing_location || 'Factory',
-    stuffing_location_other: initialData.stuffing_location_other || '',
-    factory_name: initialData.factory_name || initialData.factory_details?.factory_name || '',
-    factory_address: initialData.factory_address || initialData.factory_details?.factory_address || '',
-    factory_contact_person: initialData.factory_contact_person || initialData.factory_details?.contact_person || '',
-    shipping_line_preference: initialData.shipping_line_preference || '',
+    pol: initialData.pol || initialData.origin || initialData.port_of_loading || '',
+    pod: initialData.pod || initialData.destination || initialData.port_of_discharge || '',
+    fpod: initialData.fpod || initialData.final_destination || initialData.place_of_delivery || '',
+    shipment_type: shipmentType,
+    shipment_sub_type: initialData.shipment_sub_type || initialData.sub_type || '',
+    shipment_terms: shipmentTerms,
+    cargo_ready_date: formatReadyDate(initialData.cargo_ready_date || initialData.ready_date || initialData.expected_ready_date),
+    stuffing_location: stuffingLocation,
+    stuffing_location_other: stuffingLocationOther,
+    factory_name: initialData.factory_name || parsedFactory?.factory_name || initialData.plant_name || '',
+    factory_address: initialData.factory_address || parsedFactory?.factory_address || '',
+    factory_contact_person: initialData.factory_contact_person || parsedFactory?.contact_person || parsedFactory?.factory_contact_person || initialData.contact_person || '',
+    shipping_line_preference: initialData.shipping_line_preference || initialData.shipping_line || initialData.carrier_preference || initialData.line_preference || '',
     free_days_required:
-      initialData.free_days_required !== undefined &&
-        initialData.free_days_required !== null
+      initialData.free_days_required !== undefined && initialData.free_days_required !== null && initialData.free_days_required !== ''
         ? String(initialData.free_days_required)
-        : '',
+        : (initialData.free_days !== undefined && initialData.free_days !== null && initialData.free_days !== '' ? String(initialData.free_days) : ''),
     special_requirements:
-      initialData.special_requirements || initialData.remarks || '',
-    inspections: initialData.inspections || '',
-    certifications: initialData.certifications || '',
-    fumigations: initialData.fumigations || '',
+      initialData.special_requirements || initialData.remarks || initialData.special_instructions || initialData.notes || initialData.exporter_instructions || '',
+    inspections: initialData.inspections || initialData.inspection || '',
+    certifications: initialData.certifications || initialData.certification || '',
+    fumigations: initialData.fumigations || initialData.fumigation || '',
     loading_unloading: initialData.loading_unloading || '',
     palletization: initialData.palletization || '',
     lashing_chocking: initialData.lashing_chocking || '',
-    priority: initialData.priority || 'Medium',
+    priority: priority,
     status: initialData.status || 'Pending',
     cargoDetails,
     containerDetails
@@ -236,7 +326,7 @@ const buildDefaultValues = (initialData, existingCount) => {
 };
 
 // ============================================================
-// Styles (kept minimal / consistent with original)
+// Styles
 // ============================================================
 
 const styles = {
@@ -383,8 +473,13 @@ const ShippingInquiryForm = ({
   const [isDropdownsLoading, setIsDropdownsLoading] = useState(true);
   const [submitError, setSubmitError] = useState('');
   const [isFactoryModalOpen, setIsFactoryModalOpen] = useState(false);
+
   const [factoryDetails, setFactoryDetails] = useState(() => {
-    return initialData?.factory_details || (initialData?.factory_name ? {
+    let fact = initialData?.factory_details;
+    if (typeof fact === 'string') {
+      try { fact = JSON.parse(fact); } catch (e) { fact = null; }
+    }
+    return fact || (initialData?.factory_name ? {
       factory_name: initialData.factory_name || '',
       factory_address: initialData.factory_address || '',
       city: initialData.factory_city || initialData.city || '',
@@ -396,18 +491,61 @@ const ShippingInquiryForm = ({
     } : null);
   });
 
-  const [exporters, setExporters] = useState(DEFAULT_EXPORTERS);
-  const [ports, setPorts] = useState(DEFAULT_PORTS);
-  const [shippingLines, setShippingLines] = useState(DEFAULT_SHIPPING_LINES);
-  const [containerTypes, setContainerTypes] = useState(DEFAULT_CONTAINER_TYPES);
+  const [exporters, setExporters] = useState(() => {
+    const list = [...DEFAULT_EXPORTERS];
+    if (initialData?.exporter_id || initialData?.exporter_name || initialData?.customer_name) {
+      const expId = initialData.exporter_id || initialData.customer_id || initialData.exporter_name;
+      const expName = initialData.exporter_name || initialData.customer_name || expId;
+      if (!list.some(e => String(e.id) === String(expId) || getExporterName(e).toLowerCase() === expName.toLowerCase())) {
+        list.unshift({ id: expId, customer_name: expName });
+      }
+    }
+    return list;
+  });
+
+  const [ports, setPorts] = useState(() => {
+    const list = [...DEFAULT_PORTS];
+    const pol = initialData?.pol || initialData?.origin;
+    const pod = initialData?.pod || initialData?.destination;
+    if (pol && !list.some(p => portLabel(p).toLowerCase() === String(pol).toLowerCase())) {
+      list.unshift({ id: `pol_${pol}`, port_name: pol, port_code: pol });
+    }
+    if (pod && !list.some(p => portLabel(p).toLowerCase() === String(pod).toLowerCase())) {
+      list.unshift({ id: `pod_${pod}`, port_name: pod, port_code: pod });
+    }
+    return list;
+  });
+
+  const [shippingLines, setShippingLines] = useState(() => {
+    const list = [...DEFAULT_SHIPPING_LINES];
+    const line = initialData?.shipping_line_preference || initialData?.shipping_line;
+    if (line && !list.some(sl => (sl.name || sl).toLowerCase() === String(line).toLowerCase())) {
+      list.unshift({ id: `sl_${line}`, name: line });
+    }
+    return list;
+  });
+
+  const [containerTypes, setContainerTypes] = useState(() => {
+    const list = [...DEFAULT_CONTAINER_TYPES];
+    const initialContainers = initialData?.containerDetails || (initialData?.container_type ? [{ container_type: initialData.container_type }] : []);
+    if (Array.isArray(initialContainers)) {
+      initialContainers.forEach((c) => {
+        const ct = c.container_type || c.containerType;
+        if (ct && !list.some(item => (item.container_code || item.container_name || item).toLowerCase() === String(ct).toLowerCase())) {
+          list.push({ id: `ct_${ct}`, container_code: ct, container_name: ct });
+        }
+      });
+    }
+    return list;
+  });
+
   const [uoms, setUoms] = useState(DEFAULT_UOMS);
-  const [transportModes, setTransportModes] = useState([]);
+  const [transportModes, setTransportModes] = useState(DEFAULT_TRANSPORT_MODES);
 
   const defaultValues = useMemo(
     () => buildDefaultValues(initialData, existingCount),
-    // Only rebuild when identity of edit record / count changes
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [initialData?.id, existingCount]
+    [initialData, existingCount]
   );
 
   const {
@@ -445,16 +583,37 @@ const ShippingInquiryForm = ({
   // Keep exporter_name in sync when exporter_id changes
   useEffect(() => {
     if (!exporterId) {
-      setValue('exporter_name', '');
       return;
     }
-    const selected = exporters.find((c) => String(c.id) === String(exporterId));
-    setValue('exporter_name', selected ? getExporterName(selected) : '');
+    const selected = exporters.find((c) => String(c.id) === String(exporterId) || getExporterName(c).toLowerCase() === String(exporterId).toLowerCase());
+    if (selected) {
+      setValue('exporter_name', getExporterName(selected), { shouldDirty: true });
+    }
   }, [exporterId, exporters, setValue]);
 
-  // Reset form when switching create/edit record
+  // Reset form and factory state when switching create/edit record
   useEffect(() => {
-    reset(buildDefaultValues(initialData, existingCount));
+    const values = buildDefaultValues(initialData, existingCount);
+    reset(values);
+
+    let fact = initialData?.factory_details;
+    if (typeof fact === 'string') {
+      try { fact = JSON.parse(fact); } catch (e) { fact = null; }
+    }
+    if (values.factory_name || values.factory_address || fact) {
+      setFactoryDetails({
+        factory_name: values.factory_name,
+        factory_address: values.factory_address,
+        city: initialData?.factory_city || initialData?.city || fact?.city || '',
+        state: initialData?.factory_state || initialData?.state || fact?.state || 'Gujarat',
+        pincode: initialData?.factory_pincode || initialData?.pincode || fact?.pincode || '',
+        contact_person: values.factory_contact_person || initialData?.contact_person || fact?.contact_person || '',
+        contact_phone: initialData?.factory_contact_phone || initialData?.contact_phone || fact?.contact_phone || '',
+        gstin: initialData?.factory_gstin || initialData?.gstin || fact?.gstin || ''
+      });
+    } else {
+      setFactoryDetails(null);
+    }
   }, [initialData, existingCount, reset]);
 
   // Master dropdowns
@@ -478,9 +637,31 @@ const ShippingInquiryForm = ({
         const [custRes, portRes, shipLineRes, containerTypeRes, uomRes, transportModeRes] =
           results;
 
+        // 1. Exporters
         const custData = extractList(custRes);
-        if (custData.length) setExporters(custData);
+        let mergedExporters = custData.length > 0 ? custData : DEFAULT_EXPORTERS;
+        if (initialData?.exporter_id || initialData?.exporter_name || initialData?.customer_name) {
+          const expId = initialData.exporter_id || initialData.customer_id;
+          const expName = initialData.exporter_name || initialData.customer_name;
+          const exists = mergedExporters.some(
+            (c) => (expId && String(c.id) === String(expId)) || (expName && getExporterName(c).toLowerCase() === String(expName).toLowerCase())
+          );
+          if (!exists && (expId || expName)) {
+            mergedExporters = [{ id: expId || expName, customer_name: expName || expId }, ...mergedExporters];
+          }
+        }
+        setExporters(mergedExporters);
 
+        // Auto-match exporter_id if only exporter_name was in initialData
+        if (initialData && !initialData.exporter_id && (initialData.exporter_name || initialData.customer_name)) {
+          const targetName = (initialData.exporter_name || initialData.customer_name).toLowerCase();
+          const matchExp = mergedExporters.find(c => getExporterName(c).toLowerCase() === targetName);
+          if (matchExp?.id) {
+            setValue('exporter_id', matchExp.id);
+          }
+        }
+
+        // 2. Ports
         const portData = extractList(portRes);
         let localPorts = [];
         try {
@@ -505,11 +686,28 @@ const ShippingInquiryForm = ({
         const existingPortLabels = new Set(mergedPorts.map(p => portLabel(p).toLowerCase()));
         const missingDefaultPorts = DEFAULT_PORTS.filter(p => !existingPortLabels.has(portLabel(p).toLowerCase()));
         mergedPorts = [...mergedPorts, ...missingDefaultPorts];
+
+        // Ensure initial POL / POD are included in ports options
+        const initialPol = initialData?.pol || initialData?.origin;
+        const initialPod = initialData?.pod || initialData?.destination;
+        if (initialPol && !mergedPorts.some(p => portLabel(p).toLowerCase() === String(initialPol).toLowerCase())) {
+          mergedPorts = [{ id: `pol_${initialPol}`, port_name: initialPol, port_code: initialPol }, ...mergedPorts];
+        }
+        if (initialPod && !mergedPorts.some(p => portLabel(p).toLowerCase() === String(initialPod).toLowerCase())) {
+          mergedPorts = [{ id: `pod_${initialPod}`, port_name: initialPod, port_code: initialPod }, ...mergedPorts];
+        }
         setPorts(mergedPorts);
 
+        // 3. Shipping Lines
         const lineData = extractList(shipLineRes);
-        if (lineData.length) setShippingLines(lineData);
+        let mergedLines = lineData.length > 0 ? lineData : DEFAULT_SHIPPING_LINES;
+        const initialLine = initialData?.shipping_line_preference || initialData?.shipping_line;
+        if (initialLine && !mergedLines.some(sl => (sl.name || sl.shipping_line_name || sl.line_name || sl).toLowerCase() === String(initialLine).toLowerCase())) {
+          mergedLines = [{ id: `sl_${initialLine}`, name: initialLine }, ...mergedLines];
+        }
+        setShippingLines(mergedLines);
 
+        // 4. Container Types
         const contData = extractList(containerTypeRes);
         let localContTypes = [];
         try {
@@ -535,11 +733,33 @@ const ShippingInquiryForm = ({
         const missingContainerDefaults = DEFAULT_CONTAINER_TYPES.filter(c => !existingContainerCodes.has(String(c.container_code || c.code || c.container_name || '').toLowerCase()));
         mergedContainerTypes = [...mergedContainerTypes, ...missingContainerDefaults];
 
+        // Ensure container types from initialData are included
+        const initialContainers = initialData?.containerDetails || (initialData?.container_type ? [{ container_type: initialData.container_type }] : []);
+        if (Array.isArray(initialContainers)) {
+          initialContainers.forEach(c => {
+            const ct = c.container_type || c.containerType;
+            if (ct && !mergedContainerTypes.some(item => String(item.container_code || item.code || item.container_name || item).toLowerCase() === String(ct).toLowerCase())) {
+              mergedContainerTypes.push({ id: `ct_${ct}`, container_code: ct, container_name: ct });
+            }
+          });
+        }
         setContainerTypes(mergedContainerTypes);
 
+        // 5. UOMs
         const uomData = extractList(uomRes);
-        if (uomData.length) setUoms(uomData);
+        let mergedUoms = uomData.length > 0 ? uomData : DEFAULT_UOMS;
+        const initialCargos = initialData?.cargoDetails || (initialData?.gross_weight ? [{ weight_uom: parseWeightString(initialData.gross_weight).uom }] : []);
+        if (Array.isArray(initialCargos)) {
+          initialCargos.forEach(c => {
+            const uomCode = c.weight_uom || c.uom;
+            if (uomCode && !mergedUoms.some(u => String(u.uom_code || u.code || u.uom_name || u).toLowerCase() === String(uomCode).toLowerCase())) {
+              mergedUoms.push({ id: `uom_${uomCode}`, uom_code: uomCode, uom_name: uomCode });
+            }
+          });
+        }
+        setUoms(mergedUoms);
 
+        // 6. Transport Modes
         let tmData = extractList(transportModeRes);
         try {
           const local = localStorage.getItem('freightflow_transport_modes');
@@ -554,12 +774,12 @@ const ShippingInquiryForm = ({
         } catch (e) { }
 
         if (!tmData || tmData.length === 0) {
-          tmData = [
-            { id: 'tm_1', mode_code: 'AIR', mode_name: 'Air Freight' },
-            { id: 'tm_2', mode_code: 'SEA', mode_name: 'Ocean Freight (FCL/LCL)' },
-            { id: 'tm_3', mode_code: 'ROAD', mode_name: 'Road / Land Transport' },
-            { id: 'tm_4', mode_code: 'RAIL', mode_name: 'Rail Freight' }
-          ];
+          tmData = DEFAULT_TRANSPORT_MODES;
+        }
+
+        const initialShipType = initialData?.shipment_type || initialData?.transport_mode;
+        if (initialShipType && !tmData.some(tm => String(tm.mode_name || tm.mode_code || tm).toLowerCase() === String(initialShipType).toLowerCase())) {
+          tmData = [{ id: `tm_${initialShipType}`, mode_code: initialShipType, mode_name: initialShipType }, ...tmData];
         }
         setTransportModes(tmData);
       } catch (err) {
@@ -573,14 +793,13 @@ const ShippingInquiryForm = ({
     return () => {
       cancelled = true;
     };
-  }, []);
+  }, [initialData, setValue]);
 
   const onSubmit = async (values) => {
     setSubmitError('');
     setIsSubmitting(true);
 
     try {
-      const containerCount = parseInt(values.no_of_containers, 10);
       const containers = values.containerDetails || [];
       const totalContainers = containers.reduce((sum, row) => {
         const n = parseInt(row.no_of_containers, 10);
@@ -593,8 +812,22 @@ const ShippingInquiryForm = ({
         ? `${primaryCargo.weight_value} ${primaryCargo.weight_uom || 'KG'}`.trim()
         : '';
 
+      const isFactory = values.stuffing_location === 'Factory';
+
       const payload = {
         ...values,
+        inquiry_no: values.inquiry_no,
+        exporter_id: values.exporter_id,
+        exporter_name: values.exporter_name,
+        pol: values.pol,
+        pod: values.pod,
+        fpod: values.fpod,
+        shipment_type: values.shipment_type,
+        shipment_sub_type: values.shipment_sub_type,
+        shipment_terms: values.shipment_terms,
+        cargo_ready_date: values.cargo_ready_date || null,
+        stuffing_location: values.stuffing_location,
+        stuffing_location_other: values.stuffing_location === 'Other' ? values.stuffing_location_other : '',
         cargoDetails: values.cargoDetails,
         containerDetails: containers,
         gross_weight: finalWeight,
@@ -605,14 +838,27 @@ const ShippingInquiryForm = ({
         origin: values.pol,
         destination: values.pod,
         remarks: values.special_requirements,
-        factory_name: values.factory_name || factoryDetails?.factory_name || '',
-        factory_address: values.factory_address || factoryDetails?.factory_address || '',
-        factory_contact_person: values.factory_contact_person || factoryDetails?.contact_person || '',
-        factory_details: {
+        special_requirements: values.special_requirements,
+        free_days_required: values.free_days_required ? parseInt(values.free_days_required, 10) : null,
+        factory_name: isFactory ? (values.factory_name || factoryDetails?.factory_name || '') : '',
+        factory_address: isFactory ? (values.factory_address || factoryDetails?.factory_address || '') : '',
+        factory_contact_person: isFactory ? (values.factory_contact_person || factoryDetails?.contact_person || '') : '',
+        factory_details: isFactory ? {
           factory_name: values.factory_name || factoryDetails?.factory_name || '',
           factory_address: values.factory_address || factoryDetails?.factory_address || '',
           contact_person: values.factory_contact_person || factoryDetails?.contact_person || '',
-        },
+          city: factoryDetails?.city || '',
+          state: factoryDetails?.state || 'Gujarat',
+          pincode: factoryDetails?.pincode || '',
+          contact_phone: factoryDetails?.contact_phone || '',
+          gstin: factoryDetails?.gstin || ''
+        } : null,
+        // Legacy flat fallbacks
+        commodity: primaryCargo?.commodity || '',
+        hsn_code: primaryCargo?.hsn_code || '',
+        cargo_type: primaryCargo?.cargo_type || 'General',
+        container_type: containers[0]?.container_type || "20'",
+        no_of_containers: containers[0]?.no_of_containers ? parseInt(containers[0].no_of_containers, 10) : 1,
       };
 
       let response;
@@ -644,7 +890,7 @@ const ShippingInquiryForm = ({
     }
   };
 
-  const disabled = isSubmitting || isDropdownsLoading;
+  const disabled = isSubmitting;
 
   return (
     <div className="bg-surface border-light rounded-lg shadow-sm p-lg" >
@@ -652,7 +898,7 @@ const ShippingInquiryForm = ({
         <div>
           <h2 className="text-lg font-semibold m-0" style={styles.title}>
             {isEditMode
-              ? `Edit Export Shipment Inquiry (${defaultValues.inquiry_no})`
+              ? `Edit Export Shipment Inquiry (${watch('inquiry_no') || defaultValues.inquiry_no})`
               : 'New Export Shipment Inquiry'}
           </h2>
           <p className="text-xs text-tertiary m-0 mt-xs" style={styles.subtitle}>
@@ -720,6 +966,7 @@ const ShippingInquiryForm = ({
             </div>
           </div>
         </FloatingWrapper>
+
         {/* SECTION 2 — ROUTING DETAILS */}
         <FloatingWrapper>
           <div style={styles.sectionHeader}>
@@ -749,6 +996,7 @@ const ShippingInquiryForm = ({
                     style={styles.input}
                     disabled={disabled}
                     {...field}
+                    value={field.value || ''}
                     onChange={(e) => {
                       const next = e.target.value;
                       field.onChange(next);
@@ -799,6 +1047,7 @@ const ShippingInquiryForm = ({
                     style={styles.input}
                     disabled={disabled}
                     {...field}
+                    value={field.value || ''}
                     onChange={(e) => {
                       const next = e.target.value;
                       field.onChange(next);
@@ -843,6 +1092,7 @@ const ShippingInquiryForm = ({
             </div>
           </div>
         </FloatingWrapper>
+
         {/* SECTION 3 — CARGO DETAILS (field array) */}
         <FloatingWrapper>
           <div style={styles.sectionHeader}>
@@ -964,11 +1214,14 @@ const ShippingInquiryForm = ({
                     >
                       {uoms.map((u) => {
                         const code =
-                          u.uom_code || u.code || u.uom_name || u.name || 'KG';
-                        const label = u.uom_name || u.name || code;
+                          typeof u === 'object'
+                            ? u.uom_code || u.code || u.uom_name || u.name || 'KG'
+                            : u;
+                        const label =
+                          typeof u === 'object' ? u.uom_name || u.name || code : code;
                         return (
-                          <option key={u.id || code} value={code}>
-                            {code} ({label})
+                          <option key={typeof u === 'object' ? u.id || code : u} value={code}>
+                            {code} {label && label !== code ? `(${label})` : ''}
                           </option>
                         );
                       })}
@@ -994,6 +1247,7 @@ const ShippingInquiryForm = ({
             Add Another Cargo
           </button>
         </FloatingWrapper>
+
         {/* SECTION 4 — CONTAINER REQUIREMENTS */}
         <FloatingWrapper>
           <div style={styles.sectionHeader}>
@@ -1034,11 +1288,11 @@ const ShippingInquiryForm = ({
                     {containerTypes.map((ct) => {
                       const code =
                         typeof ct === 'object'
-                          ? ct.container_code || ct.code
+                          ? ct.container_code || ct.code || ct.container_name || ct.name
                           : ct;
                       const name =
                         typeof ct === 'object'
-                          ? ct.container_name || ct.name
+                          ? ct.container_name || ct.name || ct.container_code || ct.code
                           : ct;
                       const label =
                         code && name && code !== name
@@ -1105,6 +1359,7 @@ const ShippingInquiryForm = ({
             Add Another Container Type
           </button>
         </FloatingWrapper>
+
         {/* SECTION 5 — COMMERCIAL / SHIPMENT TERMS */}
         <FloatingWrapper>
           <div style={styles.sectionHeader}>
@@ -1116,23 +1371,58 @@ const ShippingInquiryForm = ({
               <label className="text-sm font-medium" style={styles.label}>
                 Shipment Type <span style={styles.required}>*</span>
               </label>
-              <select
-                className="form-control form-control-sm"
-                style={styles.input}
-                disabled={disabled}
-                {...register('shipment_type', { required: true })}
-              >
-                <option value="">-- Select Shipment Type --</option>
-                {transportModes.map((tm) => (
-                  <option
-                    key={tm.id || tm.mode_code}
-                    value={tm.mode_name || tm.mode_code}
-                  >
-                    {tm.mode_name} {tm.mode_code ? `(${tm.mode_code})` : ''}
-                  </option>
-                ))}
-              </select>
+              <Controller
+                name="shipment_type"
+                control={control}
+                rules={{ required: 'Shipment Type is required.' }}
+                render={({ field }) => {
+                  const rawVal = field.value || '';
+                  const matchedMode = transportModes.find((tm) => {
+                    const name = String(tm.mode_name || tm.name || '').toLowerCase().trim();
+                    const code = String(tm.mode_code || tm.id || '').toLowerCase().trim();
+                    const target = String(rawVal).toLowerCase().trim();
+                    if (!target) return false;
+                    if (name === target || code === target) return true;
+                    if ((target === 'sea' || target === 'ocean' || target === 'ocean freight') && (name.includes('ocean') || name.includes('sea'))) return true;
+                    if ((target === 'air' || target === 'air freight') && name.includes('air')) return true;
+                    if ((target === 'road' || target === 'land') && (name.includes('road') || name.includes('land'))) return true;
+                    if ((target === 'rail' || target === 'rail freight') && name.includes('rail')) return true;
+                    return false;
+                  });
+
+                  const selectedValue = matchedMode ? (matchedMode.mode_name || matchedMode.mode_code || rawVal) : rawVal;
+
+                  return (
+                    <select
+                      className="form-control form-control-sm"
+                      style={styles.input}
+                      disabled={disabled}
+                      value={selectedValue}
+                      onChange={(e) => field.onChange(e.target.value)}
+                    >
+                      <option value="">-- Select Shipment Type --</option>
+                      {transportModes.map((tm) => {
+                        const name = tm.mode_name || tm.name || tm.mode_code;
+                        const code = tm.mode_code || '';
+                        const label = code && name && code !== name ? `${name} (${code})` : name;
+                        return (
+                          <option key={tm.id || code || name} value={name}>
+                            {label}
+                          </option>
+                        );
+                      })}
+                      {rawVal && !matchedMode && (
+                        <option value={rawVal}>{rawVal}</option>
+                      )}
+                    </select>
+                  );
+                }}
+              />
+              {errors.shipment_type && (
+                <div style={styles.error}>{errors.shipment_type.message || 'Shipment Type is required.'}</div>
+              )}
             </div>
+
             <div className="form-group">
               <label className="text-sm font-medium" style={styles.label}>
                 Shipment Sub Type <span style={styles.required}>*</span>
@@ -1141,12 +1431,20 @@ const ShippingInquiryForm = ({
                 className="form-control form-control-sm"
                 style={styles.input}
                 disabled={disabled}
-                {...register('shipment_sub_type', { required: true })}
+                {...register('shipment_sub_type', { required: 'Shipment Sub Type is required.' })}
               >
+                <option value="">-- Select Shipment Sub Type --</option>
                 <option value="Clearing">Clearing</option>
                 <option value="Forwarding">Forwarding</option>
                 <option value="Transport">Transport</option>
+                <option value="Clearing & Forwarding">Clearing & Forwarding</option>
+                <option value="Door to Door">Door to Door</option>
+                <option value="Customs Clearance">Customs Clearance</option>
+                <option value="Other">Other</option>
               </select>
+              {errors.shipment_sub_type && (
+                <div style={styles.error}>{errors.shipment_sub_type.message || 'Shipment Sub Type is required.'}</div>
+              )}
             </div>
 
             <div className="form-group">
@@ -1157,22 +1455,30 @@ const ShippingInquiryForm = ({
                 className="form-control form-control-sm"
                 style={styles.input}
                 disabled={disabled}
-                {...register('shipment_terms', { required: true })}
+                {...register('shipment_terms', { required: 'Shipment Terms are required.' })}
               >
                 <option value="FOB">FOB — Free On Board</option>
                 <option value="CIF">CIF — Cost, Insurance & Freight</option>
                 <option value="CFR">CFR — Cost & Freight</option>
                 <option value="EXW">EXW — Ex Works</option>
-                <option value="FCA">FCA</option>
-                <option value="DAP">DAP</option>
-                <option value="DDP">DDP</option>
-                <option value="Freight_Prepaid">Freight Prepaid</option>
-                <option value="Freight_Collect">Freight Collect</option>
+                <option value="FCA">FCA — Free Carrier</option>
+                <option value="DAP">DAP — Delivered At Place</option>
+                <option value="DDP">DDP — Delivered Duty Paid</option>
+                <option value="CIP">CIP — Carriage and Insurance Paid</option>
+                <option value="CPT">CPT — Carriage Paid To</option>
+                <option value="DAT">DAT — Delivered At Terminal</option>
+                <option value="DPU">DPU — Delivered at Place Unloaded</option>
+                <option value="Freight Prepaid">Freight Prepaid</option>
+                <option value="Freight Collect">Freight Collect</option>
                 <option value="Other">Other</option>
               </select>
+              {errors.shipment_terms && (
+                <div style={styles.error}>{errors.shipment_terms.message || 'Shipment Terms are required.'}</div>
+              )}
             </div>
           </div>
         </FloatingWrapper>
+
         {/* SECTION 6 — STUFFING & CARGO READINESS */}
         <FloatingWrapper>
           <div style={styles.sectionHeader}>
@@ -1212,6 +1518,7 @@ const ShippingInquiryForm = ({
                     style={styles.input}
                     disabled={disabled}
                     {...field}
+                    value={field.value || 'Factory'}
                     onChange={(e) => {
                       field.onChange(e.target.value);
                     }}
@@ -1312,6 +1619,7 @@ const ShippingInquiryForm = ({
             </div>
           )}
         </FloatingWrapper>
+
         {/* SECTION 7 — CARRIER & FREE DAYS */}
         <FloatingWrapper>
           <div style={styles.sectionHeader}>
@@ -1377,6 +1685,7 @@ const ShippingInquiryForm = ({
             </div>
           </div>
         </FloatingWrapper>
+
         {/* SECTION 8 — STATUS & NOTES */}
         <FloatingWrapper>
           <div style={styles.sectionHeader}>
@@ -1467,6 +1776,7 @@ const ShippingInquiryForm = ({
                 {...register('lashing_chocking')}
               />
             </div>
+
             <div className="form-group">
               <label className="text-sm font-medium" style={styles.label}>
                 Priority
@@ -1561,3 +1871,4 @@ const ShippingInquiryForm = ({
 };
 
 export default ShippingInquiryForm;
+
