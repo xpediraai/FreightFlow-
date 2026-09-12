@@ -16,7 +16,6 @@ export const getNavItems = (role) => {
 
   return [
     { name: 'Dashboard', path: '/company/dashboard', icon: LayoutDashboard, color: '#1976D2' },
-
     {
       name: 'Masters',
       icon: Package,

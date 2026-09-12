@@ -1,28 +1,16 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import Page from '../../../../../shared/components/Page';
 import PageHeader from '../../../../../shared/components/PageHeader';
 import MasterToolbar from '../../../../../shared/components/Master/MasterToolbar';
 import ExpandableForm from '../../../../../shared/components/Master/ExpandableForm';
 import QuotationList from './QuotationList';
 import QuotationForm from './QuotationForm';
+import { exportQuotationService } from './exportQuotation.service';
 
 const Quotations = () => {
-  const [quotations, setQuotations] = useState(() => {
-    try {
-      const saved = localStorage.getItem('freightflow_export_quotations');
-      if (saved) {
-        const parsed = JSON.parse(saved);
-        if (Array.isArray(parsed)) {
-          // Clean out any legacy sample records
-          const realRecords = parsed.filter(item => !String(item.id).startsWith('quot_sample_'));
-          return realRecords;
-        }
-      }
-    } catch (err) {
-      console.error('Failed to load saved export quotations:', err);
-    }
-    return [];
-  });
+  const [quotations, setQuotations] = useState([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState(null);
 
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [selectedQuotation, setSelectedQuotation] = useState(null);
@@ -30,14 +18,29 @@ const Quotations = () => {
   const [statusFilter, setStatusFilter] = useState('ALL STATUS');
   const [viewMode, setViewMode] = useState(() => localStorage.getItem('preferredQuotationViewMode') || 'table');
 
-  // Persist quotations to localStorage
-  useEffect(() => {
+  const fetchQuotations = useCallback(async () => {
+    setIsLoading(true);
+    setError(null);
     try {
-      localStorage.setItem('freightflow_export_quotations', JSON.stringify(quotations));
+      const response = await exportQuotationService.getQuotations({
+        limit: 1000,
+        search: searchTerm,
+        status: statusFilter,
+      });
+
+      const data = response?.data?.data?.quotations || response?.data?.quotations || response?.data || [];
+      setQuotations(Array.isArray(data) ? data : []);
     } catch (err) {
-      console.error('Failed to persist export quotations:', err);
+      console.error('Failed to fetch export quotations from backend:', err);
+      setError(err.response?.data?.message || err.message || 'Failed to load export quotations');
+    } finally {
+      setIsLoading(false);
     }
-  }, [quotations]);
+  }, [searchTerm, statusFilter]);
+
+  useEffect(() => {
+    fetchQuotations();
+  }, [fetchQuotations]);
 
   const handleCreateNew = () => {
     setSelectedQuotation(null);
@@ -55,20 +58,20 @@ const Quotations = () => {
     setSelectedQuotation(null);
   };
 
-  const handleSaveSuccess = (savedQuotation) => {
-    if (selectedQuotation) {
-      // Update existing
-      setQuotations(prev => prev.map(item => item.id === savedQuotation.id ? savedQuotation : item));
-    } else {
-      // Create new
-      setQuotations(prev => [savedQuotation, ...prev]);
-    }
+  const handleSaveSuccess = () => {
+    fetchQuotations();
     setIsFormOpen(false);
     setSelectedQuotation(null);
   };
 
-  const handleDelete = (id) => {
-    setQuotations(prev => prev.filter(item => item.id !== id));
+  const handleDelete = async (id) => {
+    try {
+      await exportQuotationService.deleteQuotation(id);
+      fetchQuotations();
+    } catch (err) {
+      console.error('Failed to delete quotation:', err);
+      alert(err.response?.data?.message || err.message || 'Failed to delete export quotation');
+    }
   };
 
   return (
@@ -104,8 +107,15 @@ const Quotations = () => {
             />
           </ExpandableForm>
 
+          {error && (
+            <div className="p-md text-center text-danger font-medium bg-red-50 border-b border-red-200">
+              {error}
+            </div>
+          )}
+
           <QuotationList
             quotations={quotations}
+            isLoading={isLoading}
             onEdit={handleEdit}
             onDelete={handleDelete}
             searchQuery={searchTerm}

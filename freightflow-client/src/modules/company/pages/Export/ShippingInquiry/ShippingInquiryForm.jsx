@@ -20,6 +20,7 @@ import { logisticsService } from '../../../../masters/services/logistics.service
 import { commonService } from '../../../../masters/services/common.service';
 import FactorySelectionModal from './FactorySelectionModal';
 import FloatingWrapper from '../../../../../shared/components/FloattingWrapper/FloatingWrapper';
+import { shippingInquiryService } from './shippingInquiry.service';
 
 // ============================================================
 // Helpers
@@ -586,7 +587,7 @@ const ShippingInquiryForm = ({
         return sum + (isNaN(n) ? 0 : n);
       }, 0);
 
-      // Aggregate weight string for legacy consumers (first cargo line)
+      // Aggregate weight string & primary cargo for legacy consumers
       const primaryCargo = values.cargoDetails?.[0];
       const finalWeight = primaryCargo?.weight_value
         ? `${primaryCargo.weight_value} ${primaryCargo.weight_uom || 'KG'}`.trim()
@@ -597,7 +598,7 @@ const ShippingInquiryForm = ({
         cargoDetails: values.cargoDetails,
         containerDetails: containers,
         gross_weight: finalWeight,
-        quantity: containerCount,
+        quantity: totalContainers || 1,
         weight: finalWeight,
         customer_id: values.exporter_id,
         customer_name: values.exporter_name,
@@ -612,16 +613,32 @@ const ShippingInquiryForm = ({
           factory_address: values.factory_address || factoryDetails?.factory_address || '',
           contact_person: values.factory_contact_person || factoryDetails?.contact_person || '',
         },
-        mode: 'Sea',
-        id: isEditMode ? initialData.id : `inq_${Date.now()}`,
-        created_at: isEditMode
-          ? initialData.created_at
-          : new Date().toISOString(),
       };
 
-      onSuccess?.(payload);
+      let response;
+      if (isEditMode && initialData?.id) {
+        response = await shippingInquiryService.updateInquiry(initialData.id, payload);
+      } else {
+        response = await shippingInquiryService.createInquiry(payload);
+      }
+
+      const savedData = response?.data?.data || response?.data || payload;
+      onSuccess?.(savedData);
     } catch (err) {
-      setSubmitError(err?.message || 'Failed to save Shipping Inquiry');
+      const respData = err?.response?.data;
+      let errMsg = 'Failed to save Shipping Inquiry';
+      if (typeof respData === 'string') {
+        if (respData.includes('Cannot POST') || respData.includes('Cannot GET')) {
+          errMsg = 'Backend route not found. Please restart your backend server (server.js / nodemon).';
+        } else {
+          errMsg = respData;
+        }
+      } else if (respData?.message) {
+        errMsg = respData.message;
+      } else if (err?.message) {
+        errMsg = err.message;
+      }
+      setSubmitError(errMsg);
     } finally {
       setIsSubmitting(false);
     }

@@ -7,6 +7,7 @@ import QuotationPreviewModal from './QuotationPreviewModal';
 
 const QuotationList = ({
   quotations = [],
+  isLoading = false,
   onEdit,
   onDelete,
   searchQuery = '',
@@ -270,7 +271,7 @@ const QuotationList = ({
       <TableView
         columns={columns}
         data={filteredQuotations}
-        isLoading={false}
+        isLoading={isLoading}
         emptyStateMsg="No export quotations found. Click '+ Create Quotation' to get started."
         onRowClick={(row) => onEdit && onEdit(row)}
       />

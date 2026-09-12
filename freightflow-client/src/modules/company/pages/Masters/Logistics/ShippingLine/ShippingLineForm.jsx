@@ -13,6 +13,9 @@ const ShippingLineForm = ({ onCancel, onSuccess, initialData }) => {
     shipping_line_name: '',
     scac_code: '',
     website: '',
+    tracking_url: '',
+    tracking_method: 'GENERIC_FETCH',
+    bic_prefix: '',
     email: '',
     phone: '',
     country_id: '',
@@ -33,6 +36,9 @@ const ShippingLineForm = ({ onCancel, onSuccess, initialData }) => {
         shipping_line_name: initialData.shipping_line_name || '',
         scac_code: initialData.scac_code || '',
         website: initialData.website || '',
+        tracking_url: initialData.tracking_url || '',
+        tracking_method: initialData.tracking_method || 'GENERIC_FETCH',
+        bic_prefix: initialData.bic_prefix || '',
         email: initialData.email || '',
         phone: initialData.phone || '',
         country_id: initialData.country_id || '',
@@ -225,6 +231,48 @@ const ShippingLineForm = ({ onCancel, onSuccess, initialData }) => {
               type="text" 
               name="website" 
               value={formData.website} 
+              onChange={handleChange} 
+              onBlur={handleBlur}
+              className="form-control form-control-sm" 
+            />
+          </div>
+          <div className="form-group col-span-2">
+            <label>Tracking URL Template <span className="text-muted text-xs">(Use {'{BL_NUMBER}'} placeholder)</span></label>
+            <input 
+              disabled={isLoading} 
+              type="text" 
+              name="tracking_url" 
+              placeholder="e.g. https://www.oocl.com/track?bl={BL_NUMBER}" 
+              value={formData.tracking_url} 
+              onChange={handleChange} 
+              onBlur={handleBlur}
+              className="form-control form-control-sm" 
+            />
+          </div>
+          <div className="form-group">
+            <label>Tracking Method</label>
+            <select
+              disabled={isLoading}
+              name="tracking_method"
+              value={formData.tracking_method}
+              onChange={handleChange}
+              onBlur={handleBlur}
+              className="form-control form-control-sm"
+            >
+              <option value="GENERIC_FETCH">Generic Dynamic Fetch</option>
+              <option value="PUPPETEER_SCRAPE">Puppeteer Browser Scrape</option>
+              <option value="REST_API">Carrier REST API</option>
+            </select>
+          </div>
+          <div className="form-group">
+            <label>BIC Container Prefix</label>
+            <input 
+              disabled={isLoading} 
+              type="text" 
+              name="bic_prefix" 
+              placeholder="e.g. OOLU, MSKU" 
+              maxLength={4}
+              value={formData.bic_prefix} 
               onChange={handleChange} 
               onBlur={handleBlur}
               className="form-control form-control-sm" 

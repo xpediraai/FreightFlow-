@@ -17,10 +17,12 @@ const deleteLogPath = path.join(__dirname, "../../../../../logs/ShippingLine/Del
 const createShippingLine = async (companyId, data, userId, reqInfo) => {
     const transaction = await sequelize.transaction();
     try {
+        const countryId = (data.country_id && typeof data.country_id === 'string' && data.country_id.trim() !== '') ? data.country_id.trim() : null;
+
         // Validate Country if provided
-        if (data.country_id) {
+        if (countryId) {
             const country = await Country.findOne({
-                where: { id: data.country_id, company_id: companyId },
+                where: { id: countryId, company_id: companyId },
                 transaction
             });
             if (!country) throw new Error("Invalid Country ID or Country does not belong to this company.");
@@ -42,6 +44,7 @@ const createShippingLine = async (companyId, data, userId, reqInfo) => {
 
         const dataToInsert = {
             ...data,
+            country_id: countryId,
             company_id: companyId,
             created_by: userId,
             updated_by: userId
@@ -51,12 +54,12 @@ const createShippingLine = async (companyId, data, userId, reqInfo) => {
 
         await transaction.commit();
 
-        writeLogToFile(`[${new Date().toISOString()}] Action: CREATE_SHIPPING_LINE | User: ${userId} | Company: ${companyId} | IP: ${reqInfo.ip} | Code: ${newRecord.shipping_line_code} | Success: true`, createLogPath);
+        writeLogToFile(`[${new Date().toISOString()}] Action: CREATE_SHIPPING_LINE | User: ${userId} | Company: ${companyId} | IP: ${reqInfo?.ip} | Code: ${newRecord.shipping_line_code} | Success: true`, createLogPath);
 
         return newRecord;
     } catch (error) {
         await transaction.rollback();
-        writeLogToFile(`[${new Date().toISOString()}] Action: CREATE_SHIPPING_LINE | User: ${userId} | Company: ${companyId} | IP: ${reqInfo.ip} | Success: false | Reason: ${error.message}`, createLogPath);
+        writeLogToFile(`[${new Date().toISOString()}] Action: CREATE_SHIPPING_LINE | User: ${userId} | Company: ${companyId} | IP: ${reqInfo?.ip} | Success: false | Reason: ${error.message}`, createLogPath);
         throw error;
     }
 };
@@ -125,9 +128,11 @@ const updateShippingLine = async (companyId, id, data, userId, reqInfo) => {
             throw new Error("Shipping Line not found.");
         }
 
-        if (data.country_id && data.country_id !== record.country_id) {
+        const countryId = (data.country_id && typeof data.country_id === 'string' && data.country_id.trim() !== '') ? data.country_id.trim() : null;
+
+        if (countryId && countryId !== record.country_id) {
             const country = await Country.findOne({
-                where: { id: data.country_id, company_id: companyId },
+                where: { id: countryId, company_id: companyId },
                 transaction
             });
             if (!country) throw new Error("Invalid Country ID or Country does not belong to this company.");
