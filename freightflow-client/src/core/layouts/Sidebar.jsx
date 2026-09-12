@@ -166,7 +166,7 @@ const Sidebar = ({ isOpen }) => {
           alignItems: 'center',
         }}
       >
-        <img object-fit={"fill"} height={'64px'} width={'200px'} src='\src\assets\FFLogoRed-removebg-preview.png' />
+        <img object-fit={"fill"} height={'64px'} width={'200px'} src='../../../../public/FFLogoRed-removebg-preview.png' />
       </div>
 
 
