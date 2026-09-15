@@ -22,7 +22,34 @@ const connectDB = async () => {
         await sequelize.authenticate();
         console.log("✅ PostgreSQL Connected Successfully");
 
-        // 2. Sync all models with the database (alter: true updates tables without dropping them)
+        // 2. Safely migrate any legacy column types before sync
+        try {
+            await sequelize.query(`
+                DO $$
+                BEGIN
+                    IF EXISTS (
+                        SELECT 1 FROM information_schema.columns 
+                        WHERE table_name = 'shipping_inquiries' 
+                        AND column_name = 'shipment_sub_type' 
+                        AND data_type IN ('character varying', 'text')
+                    ) THEN
+                        ALTER TABLE shipping_inquiries 
+                        ALTER COLUMN shipment_sub_type TYPE jsonb 
+                        USING (
+                            CASE 
+                                WHEN shipment_sub_type IS NULL OR shipment_sub_type = '' THEN '[]'::jsonb
+                                WHEN shipment_sub_type ~ '^\\s*\\[.*\\]\\s*$' THEN shipment_sub_type::jsonb
+                                ELSE jsonb_build_array(shipment_sub_type)
+                            END
+                        );
+                    END IF;
+                END $$;
+            `);
+        } catch (migrationErr) {
+            console.warn("⚠️ Column migration check notice:", migrationErr.message);
+        }
+
+        // 3. Sync all models with the database (alter: true updates tables without dropping them)
         await sequelize.sync({ alter: true });
         console.log('📂 Database & tables synced!');
     } catch (error) {

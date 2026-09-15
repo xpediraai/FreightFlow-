@@ -20,7 +20,18 @@ import { logisticsService } from '../../../../masters/services/logistics.service
 import { commonService } from '../../../../masters/services/common.service';
 import FactorySelectionModal from './FactorySelectionModal';
 import FloatingWrapper from '../../../../../shared/components/FloattingWrapper/FloatingWrapper';
+import { MultiSelectDropdown } from '../../../../../shared/components/Input';
 import { shippingInquiryService } from './shippingInquiry.service';
+
+export const SHIPMENT_SUB_TYPES = [
+  'Clearing',
+  'Forwarding',
+  'Transport',
+  'Clearing & Forwarding',
+  'Door to Door',
+  'Customs Clearance',
+  'Other',
+];
 
 // ============================================================
 // Helpers
@@ -157,7 +168,7 @@ const buildDefaultValues = (initialData, existingCount) => {
       pod: '',
       fpod: '',
       shipment_type: '',
-      shipment_sub_type: '',
+      shipment_sub_type: [],
       shipment_terms: 'FOB',
       cargo_ready_date: '',
       stuffing_location: 'Factory',
@@ -289,6 +300,21 @@ const buildDefaultValues = (initialData, existingCount) => {
     }
   }
 
+  let subTypes = [];
+  const rawSubType = initialData.shipment_sub_type || initialData.sub_type;
+  if (Array.isArray(rawSubType)) {
+    subTypes = rawSubType;
+  } else if (typeof rawSubType === 'string' && rawSubType.trim()) {
+    try {
+      const parsed = JSON.parse(rawSubType);
+      subTypes = Array.isArray(parsed) ? parsed : [rawSubType.trim()];
+    } catch {
+      subTypes = rawSubType.includes(',')
+        ? rawSubType.split(',').map((s) => s.trim()).filter(Boolean)
+        : [rawSubType.trim()];
+    }
+  }
+
   return {
     inquiry_no: initialData.inquiry_no || generateInquiryNo(existingCount),
     exporter_id: initialData.exporter_id || initialData.customer_id || '',
@@ -297,7 +323,7 @@ const buildDefaultValues = (initialData, existingCount) => {
     pod: initialData.pod || initialData.destination || initialData.port_of_discharge || '',
     fpod: initialData.fpod || initialData.final_destination || initialData.place_of_delivery || '',
     shipment_type: shipmentType,
-    shipment_sub_type: initialData.shipment_sub_type || initialData.sub_type || '',
+    shipment_sub_type: subTypes,
     shipment_terms: shipmentTerms,
     cargo_ready_date: formatReadyDate(initialData.cargo_ready_date || initialData.ready_date || initialData.expected_ready_date),
     stuffing_location: stuffingLocation,
@@ -823,7 +849,11 @@ const ShippingInquiryForm = ({
         pod: values.pod,
         fpod: values.fpod,
         shipment_type: values.shipment_type,
-        shipment_sub_type: values.shipment_sub_type,
+        shipment_sub_type: Array.isArray(values.shipment_sub_type)
+          ? values.shipment_sub_type
+          : values.shipment_sub_type
+          ? [values.shipment_sub_type]
+          : [],
         shipment_terms: values.shipment_terms,
         cargo_ready_date: values.cargo_ready_date || null,
         stuffing_location: values.stuffing_location,
@@ -1427,21 +1457,26 @@ const ShippingInquiryForm = ({
               <label className="text-sm font-medium" style={styles.label}>
                 Shipment Sub Type <span style={styles.required}>*</span>
               </label>
-              <select
-                className="form-control form-control-sm"
-                style={styles.input}
-                disabled={disabled}
-                {...register('shipment_sub_type', { required: 'Shipment Sub Type is required.' })}
-              >
-                <option value="">-- Select Shipment Sub Type --</option>
-                <option value="Clearing">Clearing</option>
-                <option value="Forwarding">Forwarding</option>
-                <option value="Transport">Transport</option>
-                <option value="Clearing & Forwarding">Clearing & Forwarding</option>
-                <option value="Door to Door">Door to Door</option>
-                <option value="Customs Clearance">Customs Clearance</option>
-                <option value="Other">Other</option>
-              </select>
+              <Controller
+                name="shipment_sub_type"
+                control={control}
+                rules={{
+                  validate: (val) =>
+                    (Array.isArray(val) && val.length > 0) ||
+                    (typeof val === 'string' && val.trim().length > 0) ||
+                    'Shipment Sub Type is required.',
+                }}
+                render={({ field }) => (
+                  <MultiSelectDropdown
+                    options={SHIPMENT_SUB_TYPES}
+                    value={field.value}
+                    onChange={field.onChange}
+                    placeholder="-- Select Shipment Sub Type --"
+                    disabled={disabled}
+                    error={!!errors.shipment_sub_type}
+                  />
+                )}
+              />
               {errors.shipment_sub_type && (
                 <div style={styles.error}>{errors.shipment_sub_type.message || 'Shipment Sub Type is required.'}</div>
               )}

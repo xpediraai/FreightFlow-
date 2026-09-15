@@ -48,8 +48,9 @@ const ShippingInquiry = sequelize.define("ShippingInquiry", {
     allowNull: true,
   },
   shipment_sub_type: {
-    type: DataTypes.STRING,
+    type: DataTypes.JSONB,
     allowNull: true,
+    defaultValue: [],
   },
   shipment_terms: {
     type: DataTypes.STRING,

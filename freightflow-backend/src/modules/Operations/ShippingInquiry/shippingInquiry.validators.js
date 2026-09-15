@@ -28,7 +28,10 @@ const createShippingInquirySchema = Joi.object({
   pod: Joi.string().allow("", null).optional(),
   fpod: Joi.string().allow("", null).optional(),
   shipment_type: Joi.string().allow("", null).optional(),
-  shipment_sub_type: Joi.string().allow("", null).optional(),
+  shipment_sub_type: Joi.alternatives().try(
+    Joi.array().items(Joi.string().allow("")),
+    Joi.string().allow("", null)
+  ).allow(null).optional(),
   shipment_terms: Joi.string().allow("", null).optional().default("FOB"),
   cargo_ready_date: Joi.date().iso().allow("", null).optional(),
   stuffing_location: Joi.string().allow("", null).optional().default("Factory"),
@@ -61,7 +64,10 @@ const updateShippingInquirySchema = Joi.object({
   pod: Joi.string().allow("", null).optional(),
   fpod: Joi.string().allow("", null).optional(),
   shipment_type: Joi.string().allow("", null).optional(),
-  shipment_sub_type: Joi.string().allow("", null).optional(),
+  shipment_sub_type: Joi.alternatives().try(
+    Joi.array().items(Joi.string().allow("")),
+    Joi.string().allow("", null)
+  ).allow(null).optional(),
   shipment_terms: Joi.string().allow("", null).optional(),
   cargo_ready_date: Joi.date().iso().allow("", null).optional(),
   stuffing_location: Joi.string().allow("", null).optional(),

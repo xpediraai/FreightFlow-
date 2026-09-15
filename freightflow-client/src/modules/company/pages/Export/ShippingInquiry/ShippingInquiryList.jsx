@@ -584,6 +584,43 @@ const ShippingInquiryList = ({
               {viewDetailsModal.fpod || 'N/A'}
             </div>
             <div>
+              <strong>Shipment Type:</strong>{' '}
+              {viewDetailsModal.shipment_type || 'N/A'}
+            </div>
+            <div>
+              <strong>Shipment Sub Type:</strong>{' '}
+              {(() => {
+                const subTypes = Array.isArray(viewDetailsModal.shipment_sub_type)
+                  ? viewDetailsModal.shipment_sub_type
+                  : typeof viewDetailsModal.shipment_sub_type === 'string' && viewDetailsModal.shipment_sub_type.trim()
+                  ? viewDetailsModal.shipment_sub_type.startsWith('[')
+                    ? (() => { try { return JSON.parse(viewDetailsModal.shipment_sub_type); } catch { return [viewDetailsModal.shipment_sub_type]; } })()
+                    : [viewDetailsModal.shipment_sub_type]
+                  : [];
+                if (!subTypes || subTypes.length === 0) return 'N/A';
+                return (
+                  <span style={{ display: 'inline-flex', flexWrap: 'wrap', gap: '4px', verticalAlign: 'middle' }}>
+                    {subTypes.map((st, i) => (
+                      <span
+                        key={i}
+                        style={{
+                          backgroundColor: '#e0f2fe',
+                          color: '#0369a1',
+                          padding: '1px 6px',
+                          borderRadius: '4px',
+                          fontSize: '0.75rem',
+                          fontWeight: 500,
+                          border: '1px solid #bae6fd',
+                        }}
+                      >
+                        {st}
+                      </span>
+                    ))}
+                  </span>
+                );
+              })()}
+            </div>
+            <div>
               <strong>Shipment Terms:</strong>{' '}
               {viewDetailsModal.shipment_terms || 'FOB'}
             </div>
