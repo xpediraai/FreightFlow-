@@ -8,6 +8,16 @@ import {
   ShoppingBag,
   Calendar,
   X,
+  Building2,
+  Ship,
+  ShieldCheck,
+  FileCheck,
+  Warehouse,
+  FileText,
+  Clock,
+  Layers,
+  Truck,
+  CheckCircle2,
 } from 'lucide-react';
 import TableView from '../../../../../shared/components/TableView/TableView';
 import Badge from '../../../../../shared/components/Badge/Badge';
@@ -495,7 +505,7 @@ const ShippingInquiryList = ({
             backgroundColor: '#ffffff',
             borderRadius: '8px',
             padding: '1.5rem',
-            maxWidth: '720px',
+            maxWidth: '820px',
             width: '92%',
             maxHeight: '90vh',
             overflowY: 'auto',
@@ -537,327 +547,531 @@ const ShippingInquiryList = ({
             </Button>
           </div>
 
-          {/* Header fields */}
-          <div
-            style={{
-              display: 'grid',
-              gridTemplateColumns: '1fr 1fr',
-              gap: '0.85rem',
-              fontSize: '0.875rem',
-            }}
-          >
-            <div>
-              <strong>Inquiry No:</strong>{' '}
-              <span style={{ color: '#1976D2', fontWeight: 600 }}>
-                {viewDetailsModal.inquiry_no}
-              </span>
-            </div>
-            <div>
-              <strong>Status:</strong>{' '}
-              <Badge variant={getStatusBadgeVariant(viewDetailsModal.status)}>
-                {viewDetailsModal.status || 'Pending'}
-              </Badge>
-            </div>
-            <div>
-              <strong>Exporter:</strong>{' '}
-              {viewDetailsModal.exporter_name ||
-                viewDetailsModal.customer_name}
-            </div>
-            <div>
-              <strong>Priority:</strong>{' '}
-              <Badge
-                variant={getPriorityBadgeVariant(viewDetailsModal.priority)}
-              >
-                {viewDetailsModal.priority || 'Medium'}
-              </Badge>
-            </div>
-            <div>
-              <strong>Port of Loading (POL):</strong>{' '}
-              {viewDetailsModal.pol || viewDetailsModal.origin || 'N/A'}
-            </div>
-            <div>
-              <strong>Port of Discharge (POD):</strong>{' '}
-              {viewDetailsModal.pod || viewDetailsModal.destination || 'N/A'}
-            </div>
-            <div>
-              <strong>Final Place of Delivery (FPOD):</strong>{' '}
-              {viewDetailsModal.fpod || 'N/A'}
-            </div>
-            <div>
-              <strong>Shipment Type:</strong>{' '}
-              {viewDetailsModal.shipment_type || 'N/A'}
-            </div>
-            <div>
-              <strong>Shipment Sub Type:</strong>{' '}
-              {(() => {
-                const subTypes = Array.isArray(viewDetailsModal.shipment_sub_type)
-                  ? viewDetailsModal.shipment_sub_type
-                  : typeof viewDetailsModal.shipment_sub_type === 'string' && viewDetailsModal.shipment_sub_type.trim()
-                  ? viewDetailsModal.shipment_sub_type.startsWith('[')
-                    ? (() => { try { return JSON.parse(viewDetailsModal.shipment_sub_type); } catch { return [viewDetailsModal.shipment_sub_type]; } })()
-                    : [viewDetailsModal.shipment_sub_type]
-                  : [];
-                if (!subTypes || subTypes.length === 0) return 'N/A';
-                return (
-                  <span style={{ display: 'inline-flex', flexWrap: 'wrap', gap: '4px', verticalAlign: 'middle' }}>
-                    {subTypes.map((st, i) => (
-                      <span
-                        key={i}
-                        style={{
-                          backgroundColor: '#e0f2fe',
-                          color: '#0369a1',
-                          padding: '1px 6px',
-                          borderRadius: '4px',
-                          fontSize: '0.75rem',
-                          fontWeight: 500,
-                          border: '1px solid #bae6fd',
-                        }}
-                      >
-                        {st}
-                      </span>
-                    ))}
-                  </span>
-                );
-              })()}
-            </div>
-            <div>
-              <strong>Shipment Terms:</strong>{' '}
-              {viewDetailsModal.shipment_terms || 'FOB'}
-            </div>
-            <div>
-              <strong>Expected Cargo Ready Date:</strong>{' '}
-              {viewDetailsModal.cargo_ready_date
-                ? new Date(
-                    viewDetailsModal.cargo_ready_date
-                  ).toLocaleDateString()
-                : 'N/A'}
-            </div>
-            <div>
-              <strong>Stuffing Location:</strong>{' '}
-              {viewDetailsModal.stuffing_location}
-              {viewDetailsModal.stuffing_location === 'Other' &&
-              viewDetailsModal.stuffing_location_other
-                ? ` (${viewDetailsModal.stuffing_location_other})`
-                : ''}
-              {(viewDetailsModal.factory_name ||
-                viewDetailsModal.factory_details?.factory_name) && (
-                <div
-                  style={{
-                    fontSize: '0.8rem',
-                    color: '#0288d1',
-                    marginTop: '0.25rem',
-                    backgroundColor: '#f0f9ff',
-                    padding: '0.35rem 0.5rem',
-                    borderRadius: '4px',
-                    border: '1px solid #bae6fd',
-                  }}
-                >
-                  🏭{' '}
-                  <strong>
-                    {viewDetailsModal.factory_name ||
-                      viewDetailsModal.factory_details?.factory_name}
-                  </strong>
-                  <div style={{ color: '#334155', marginTop: '1px' }}>
-                    📍{' '}
-                    {viewDetailsModal.factory_address ||
-                      viewDetailsModal.factory_details?.factory_address}
-                    {(viewDetailsModal.factory_city ||
-                      viewDetailsModal.factory_details?.city)
-                      ? `, ${
-                          viewDetailsModal.factory_city ||
-                          viewDetailsModal.factory_details?.city
-                        }`
-                      : ''}
-                  </div>
-                </div>
-              )}
-            </div>
-            <div>
-              <strong>Shipping Line Preference:</strong>{' '}
-              {viewDetailsModal.shipping_line_preference || 'Any Line'}
-            </div>
-            <div>
-              <strong>Free Days Required:</strong>{' '}
-              {viewDetailsModal.free_days_required
-                ? `${viewDetailsModal.free_days_required} Days`
-                : 'Standard'}
-            </div>
-            <div style={{ gridColumn: '1 / -1' }}>
-              <strong>Created Date:</strong>{' '}
-              {new Date(
-                viewDetailsModal.created_at || Date.now()
-              ).toLocaleString()}
-            </div>
-          </div>
-
-          {/* Cargo Details (multi) */}
-          <div style={{ marginTop: '1.25rem' }}>
+          {/* Details Content Container */}
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+            
+            {/* 1. Header Summary Card */}
             <div
               style={{
-                fontSize: '0.8rem',
-                fontWeight: 700,
-                textTransform: 'uppercase',
-                letterSpacing: '0.04em',
-                color: '#1976D2',
-                marginBottom: '0.5rem',
-                display: 'flex',
-                alignItems: 'center',
-                gap: '0.4rem',
+                backgroundColor: '#f8fafc',
+                border: '1px solid #e2e8f0',
+                borderRadius: '8px',
+                padding: '0.85rem 1rem',
+                display: 'grid',
+                gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',
+                gap: '0.75rem',
+                fontSize: '0.85rem',
               }}
             >
-              <ShoppingBag size={14} />
-              Cargo Details ({cargos.length || 0})
+              <div>
+                <span style={{ color: '#64748b', fontSize: '0.75rem', textTransform: 'uppercase', fontWeight: 600, display: 'block' }}>
+                  Inquiry No
+                </span>
+                <span style={{ color: '#1976D2', fontWeight: 700, fontSize: '0.95rem' }}>
+                  {viewDetailsModal.inquiry_no}
+                </span>
+              </div>
+              <div>
+                <span style={{ color: '#64748b', fontSize: '0.75rem', textTransform: 'uppercase', fontWeight: 600, display: 'block' }}>
+                  Exporter / Customer
+                </span>
+                <span style={{ fontWeight: 600, color: '#1e293b' }}>
+                  {viewDetailsModal.exporter_name || viewDetailsModal.customer_name || '—'}
+                </span>
+              </div>
+              <div>
+                <span style={{ color: '#64748b', fontSize: '0.75rem', textTransform: 'uppercase', fontWeight: 600, display: 'block' }}>
+                  Status
+                </span>
+                <Badge variant={getStatusBadgeVariant(viewDetailsModal.status)}>
+                  {viewDetailsModal.status || 'Pending'}
+                </Badge>
+              </div>
+              <div>
+                <span style={{ color: '#64748b', fontSize: '0.75rem', textTransform: 'uppercase', fontWeight: 600, display: 'block' }}>
+                  Priority
+                </span>
+                <Badge variant={getPriorityBadgeVariant(viewDetailsModal.priority)}>
+                  {viewDetailsModal.priority || 'Medium'}
+                </Badge>
+              </div>
+              <div>
+                <span style={{ color: '#64748b', fontSize: '0.75rem', textTransform: 'uppercase', fontWeight: 600, display: 'block' }}>
+                  Created Date
+                </span>
+                <span style={{ color: '#334155' }}>
+                  {new Date(viewDetailsModal.created_at || Date.now()).toLocaleString()}
+                </span>
+              </div>
             </div>
-            {cargos.length === 0 ? (
-              <div style={{ fontSize: '0.85rem', color: '#6b7280' }}>
-                No cargo lines
-              </div>
-            ) : (
-              <div
-                style={{
-                  display: 'flex',
-                  flexDirection: 'column',
-                  gap: '0.5rem',
-                }}
-              >
-                {cargos.map((c, idx) => (
-                  <div
-                    key={idx}
-                    style={{
-                      background: '#fafafa',
-                      border: '1px solid #e5e7eb',
-                      borderRadius: '6px',
-                      padding: '0.65rem 0.75rem',
-                      fontSize: '0.85rem',
-                    }}
-                  >
-                    <div
-                      style={{
-                        display: 'flex',
-                        justifyContent: 'space-between',
-                        gap: '0.5rem',
-                        flexWrap: 'wrap',
-                      }}
-                    >
-                      <span>
-                        <strong>
-                          {idx + 1}. {c.commodity || '—'}
-                        </strong>
-                      </span>
-                      <Badge
-                        variant={getCargoTypeBadgeVariant(
-                          c.cargo_type || 'General'
-                        )}
-                        style={{ fontSize: '0.7rem' }}
-                      >
-                        {c.cargo_type || 'General'}
-                      </Badge>
-                    </div>
-                    <div
-                      style={{
-                        marginTop: '0.25rem',
-                        color: '#4b5563',
-                        display: 'flex',
-                        gap: '1rem',
-                        flexWrap: 'wrap',
-                      }}
-                    >
-                      <span>HSN: {c.hsn_code || 'N/A'}</span>
-                      <span>
-                        Weight:{' '}
-                        {formatCargoWeight(c) ||
-                          viewDetailsModal.gross_weight ||
-                          viewDetailsModal.weight ||
-                          '—'}
-                      </span>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            )}
-          </div>
 
-          {/* Container Details (multi) */}
-          <div style={{ marginTop: '1.25rem' }}>
+            {/* 2. Routing & Shipment Parameters */}
             <div
               style={{
-                fontSize: '0.8rem',
-                fontWeight: 700,
-                textTransform: 'uppercase',
-                letterSpacing: '0.04em',
-                color: '#1976D2',
-                marginBottom: '0.5rem',
-                display: 'flex',
-                alignItems: 'center',
-                gap: '0.4rem',
+                border: '1px solid #e5e7eb',
+                borderRadius: '8px',
+                padding: '0.85rem 1rem',
+                backgroundColor: '#ffffff',
               }}
             >
-              <Package size={14} />
-              Container Requirements ({containers.length || 0})
-            </div>
-            {containers.length === 0 ? (
-              <div style={{ fontSize: '0.85rem', color: '#6b7280' }}>
-                No container lines
-              </div>
-            ) : (
               <div
                 style={{
+                  fontSize: '0.8rem',
+                  fontWeight: 700,
+                  textTransform: 'uppercase',
+                  letterSpacing: '0.04em',
+                  color: '#1976D2',
+                  marginBottom: '0.75rem',
+                  paddingBottom: '0.35rem',
+                  borderBottom: '1px solid #f1f5f9',
                   display: 'flex',
-                  flexDirection: 'column',
+                  alignItems: 'center',
                   gap: '0.4rem',
                 }}
               >
-                {containers.map((c, idx) => (
-                  <div
-                    key={idx}
-                    style={{
-                      background: '#fffbeb',
-                      border: '1px solid #fde68a',
-                      borderRadius: '6px',
-                      padding: '0.55rem 0.75rem',
-                      fontSize: '0.85rem',
-                      fontWeight: 600,
-                      color: '#d97706',
-                    }}
-                  >
-                    {idx + 1}. {formatContainerLine(c)}
-                  </div>
-                ))}
+                <Ship size={15} />
+                Routing & Shipment Terms
               </div>
-            )}
-          </div>
 
-          {(viewDetailsModal.special_requirements ||
-            viewDetailsModal.remarks) && (
-            <div
-              style={{
-                marginTop: '1rem',
-                background: '#f9fafb',
-                padding: '0.75rem',
-                borderRadius: '6px',
-                fontSize: '0.85rem',
-                border: '1px solid #e5e7eb',
-              }}
-            >
-              <strong>Special Requirements / Instructions:</strong>
-              <p
+              <div
                 style={{
-                  margin: '0.35rem 0 0 0',
-                  color: '#4b5563',
-                  whiteSpace: 'pre-wrap',
+                  display: 'grid',
+                  gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))',
+                  gap: '0.75rem',
+                  fontSize: '0.85rem',
                 }}
               >
-                {viewDetailsModal.special_requirements ||
-                  viewDetailsModal.remarks}
-              </p>
+                <div>
+                  <strong style={{ color: '#475569' }}>Port of Loading (POL):</strong>{' '}
+                  <span style={{ color: '#0f172a' }}>{viewDetailsModal.pol || viewDetailsModal.origin || 'N/A'}</span>
+                </div>
+                <div>
+                  <strong style={{ color: '#475569' }}>Port of Discharge (POD):</strong>{' '}
+                  <span style={{ color: '#0f172a' }}>{viewDetailsModal.pod || viewDetailsModal.destination || 'N/A'}</span>
+                </div>
+                <div>
+                  <strong style={{ color: '#475569' }}>Final Place of Delivery (FPOD):</strong>{' '}
+                  <span style={{ color: '#0f172a' }}>{viewDetailsModal.fpod || 'N/A'}</span>
+                </div>
+                <div>
+                  <strong style={{ color: '#475569' }}>Shipment Type:</strong>{' '}
+                  <span style={{ color: '#0f172a' }}>{viewDetailsModal.shipment_type || 'N/A'}</span>
+                </div>
+                <div style={{ gridColumn: 'span 2' }}>
+                  <strong style={{ color: '#475569' }}>Shipment Sub Type:</strong>{' '}
+                  {(() => {
+                    const subTypes = Array.isArray(viewDetailsModal.shipment_sub_type)
+                      ? viewDetailsModal.shipment_sub_type
+                      : typeof viewDetailsModal.shipment_sub_type === 'string' && viewDetailsModal.shipment_sub_type.trim()
+                      ? viewDetailsModal.shipment_sub_type.startsWith('[')
+                        ? (() => { try { return JSON.parse(viewDetailsModal.shipment_sub_type); } catch { return [viewDetailsModal.shipment_sub_type]; } })()
+                        : viewDetailsModal.shipment_sub_type.includes(',')
+                        ? viewDetailsModal.shipment_sub_type.split(',').map((s) => s.trim()).filter(Boolean)
+                        : [viewDetailsModal.shipment_sub_type]
+                      : [];
+                    if (!subTypes || subTypes.length === 0) return <span style={{ color: '#94a3b8' }}>N/A</span>;
+                    return (
+                      <span style={{ display: 'inline-flex', flexWrap: 'wrap', gap: '4px', verticalAlign: 'middle', marginLeft: '4px' }}>
+                        {subTypes.map((st, i) => (
+                          <span
+                            key={i}
+                            style={{
+                              backgroundColor: '#e0f2fe',
+                              color: '#0369a1',
+                              padding: '1px 6px',
+                              borderRadius: '4px',
+                              fontSize: '0.75rem',
+                              fontWeight: 500,
+                              border: '1px solid #bae6fd',
+                            }}
+                          >
+                            {st}
+                          </span>
+                        ))}
+                      </span>
+                    );
+                  })()}
+                </div>
+                <div>
+                  <strong style={{ color: '#475569' }}>Shipment Terms (Incoterms):</strong>{' '}
+                  <span style={{ color: '#0f172a', fontWeight: 600 }}>{viewDetailsModal.shipment_terms || 'FOB'}</span>
+                </div>
+                <div>
+                  <strong style={{ color: '#475569' }}>Expected Cargo Ready Date:</strong>{' '}
+                  <span style={{ color: '#0f172a' }}>
+                    {viewDetailsModal.cargo_ready_date
+                      ? new Date(viewDetailsModal.cargo_ready_date).toLocaleDateString()
+                      : 'N/A'}
+                  </span>
+                </div>
+                <div>
+                  <strong style={{ color: '#475569' }}>Shipping Line Preference:</strong>{' '}
+                  <span style={{ color: '#0f172a' }}>{viewDetailsModal.shipping_line_preference || 'Any Line'}</span>
+                </div>
+                <div>
+                  <strong style={{ color: '#475569' }}>Free Days Required:</strong>{' '}
+                  <span style={{ color: '#0f172a' }}>
+                    {viewDetailsModal.free_days_required ? `${viewDetailsModal.free_days_required} Days` : 'Standard'}
+                  </span>
+                </div>
+              </div>
             </div>
-          )}
+
+            {/* 3. Stuffing Location & Factory Information */}
+            <div
+              style={{
+                border: '1px solid #e5e7eb',
+                borderRadius: '8px',
+                padding: '0.85rem 1rem',
+                backgroundColor: '#ffffff',
+              }}
+            >
+              <div
+                style={{
+                  fontSize: '0.8rem',
+                  fontWeight: 700,
+                  textTransform: 'uppercase',
+                  letterSpacing: '0.04em',
+                  color: '#1976D2',
+                  marginBottom: '0.75rem',
+                  paddingBottom: '0.35rem',
+                  borderBottom: '1px solid #f1f5f9',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '0.4rem',
+                }}
+              >
+                <Warehouse size={15} />
+                Stuffing Location & Factory Information
+              </div>
+
+              <div style={{ fontSize: '0.85rem', display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+                <div>
+                  <strong style={{ color: '#475569' }}>Stuffing Location:</strong>{' '}
+                  <span style={{ fontWeight: 600, color: '#0f172a' }}>{viewDetailsModal.stuffing_location || 'Factory'}</span>
+                  {viewDetailsModal.stuffing_location === 'Other' && viewDetailsModal.stuffing_location_other && (
+                    <span style={{ color: '#64748b' }}> ({viewDetailsModal.stuffing_location_other})</span>
+                  )}
+                </div>
+
+                {(viewDetailsModal.factory_name ||
+                  viewDetailsModal.factory_address ||
+                  viewDetailsModal.factory_contact_person ||
+                  viewDetailsModal.factory_details?.factory_name) && (
+                  <div
+                    style={{
+                      backgroundColor: '#f0f9ff',
+                      border: '1px solid #bae6fd',
+                      borderRadius: '6px',
+                      padding: '0.65rem 0.85rem',
+                      display: 'flex',
+                      flexDirection: 'column',
+                      gap: '0.3rem',
+                    }}
+                  >
+                    <div style={{ color: '#0288d1', fontWeight: 600 }}>
+                      🏭 {viewDetailsModal.factory_name || viewDetailsModal.factory_details?.factory_name || 'Factory Plant'}
+                    </div>
+                    {(viewDetailsModal.factory_address || viewDetailsModal.factory_details?.factory_address) && (
+                      <div style={{ color: '#334155' }}>
+                        📍 <strong>Address:</strong> {viewDetailsModal.factory_address || viewDetailsModal.factory_details?.factory_address}
+                        {(viewDetailsModal.factory_city || viewDetailsModal.factory_details?.city) &&
+                          `, ${viewDetailsModal.factory_city || viewDetailsModal.factory_details?.city}`}
+                        {(viewDetailsModal.factory_state || viewDetailsModal.factory_details?.state) &&
+                          `, ${viewDetailsModal.factory_state || viewDetailsModal.factory_details?.state}`}
+                        {(viewDetailsModal.factory_pincode || viewDetailsModal.factory_details?.pincode) &&
+                          ` - ${viewDetailsModal.factory_pincode || viewDetailsModal.factory_details?.pincode}`}
+                      </div>
+                    )}
+                    {(viewDetailsModal.factory_contact_person || viewDetailsModal.factory_details?.contact_person) && (
+                      <div style={{ color: '#334155' }}>
+                        👤 <strong>Contact Person:</strong> {viewDetailsModal.factory_contact_person || viewDetailsModal.factory_details?.contact_person}
+                        {(viewDetailsModal.factory_details?.contact_phone) &&
+                          ` (${viewDetailsModal.factory_details?.contact_phone})`}
+                      </div>
+                    )}
+                    {viewDetailsModal.factory_details?.gstin && (
+                      <div style={{ color: '#334155' }}>
+                        🔖 <strong>GSTIN:</strong> {viewDetailsModal.factory_details?.gstin}
+                      </div>
+                    )}
+                  </div>
+                )}
+              </div>
+            </div>
+
+            {/* 4. Operations, Handling & Special Services */}
+            <div
+              style={{
+                border: '1px solid #e5e7eb',
+                borderRadius: '8px',
+                padding: '0.85rem 1rem',
+                backgroundColor: '#ffffff',
+              }}
+            >
+              <div
+                style={{
+                  fontSize: '0.8rem',
+                  fontWeight: 700,
+                  textTransform: 'uppercase',
+                  letterSpacing: '0.04em',
+                  color: '#1976D2',
+                  marginBottom: '0.75rem',
+                  paddingBottom: '0.35rem',
+                  borderBottom: '1px solid #f1f5f9',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '0.4rem',
+                }}
+              >
+                <ShieldCheck size={15} />
+                Handling, Compliance & Special Services
+              </div>
+
+              <div
+                style={{
+                  display: 'grid',
+                  gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))',
+                  gap: '0.65rem',
+                  fontSize: '0.825rem',
+                }}
+              >
+                <div style={{ backgroundColor: '#f8fafc', padding: '0.45rem 0.65rem', borderRadius: '4px', border: '1px solid #f1f5f9' }}>
+                  <strong style={{ color: '#475569', display: 'block', marginBottom: '2px' }}>Inspections:</strong>
+                  <span style={{ color: viewDetailsModal.inspections ? '#0f172a' : '#94a3b8' }}>
+                    {viewDetailsModal.inspections || 'None specified'}
+                  </span>
+                </div>
+                <div style={{ backgroundColor: '#f8fafc', padding: '0.45rem 0.65rem', borderRadius: '4px', border: '1px solid #f1f5f9' }}>
+                  <strong style={{ color: '#475569', display: 'block', marginBottom: '2px' }}>Certifications:</strong>
+                  <span style={{ color: viewDetailsModal.certifications ? '#0f172a' : '#94a3b8' }}>
+                    {viewDetailsModal.certifications || 'None specified'}
+                  </span>
+                </div>
+                <div style={{ backgroundColor: '#f8fafc', padding: '0.45rem 0.65rem', borderRadius: '4px', border: '1px solid #f1f5f9' }}>
+                  <strong style={{ color: '#475569', display: 'block', marginBottom: '2px' }}>Fumigations:</strong>
+                  <span style={{ color: viewDetailsModal.fumigations ? '#0f172a' : '#94a3b8' }}>
+                    {viewDetailsModal.fumigations || 'None specified'}
+                  </span>
+                </div>
+                <div style={{ backgroundColor: '#f8fafc', padding: '0.45rem 0.65rem', borderRadius: '4px', border: '1px solid #f1f5f9' }}>
+                  <strong style={{ color: '#475569', display: 'block', marginBottom: '2px' }}>Loading / Unloading:</strong>
+                  <span style={{ color: viewDetailsModal.loading_unloading ? '#0f172a' : '#94a3b8' }}>
+                    {viewDetailsModal.loading_unloading || 'Standard'}
+                  </span>
+                </div>
+                <div style={{ backgroundColor: '#f8fafc', padding: '0.45rem 0.65rem', borderRadius: '4px', border: '1px solid #f1f5f9' }}>
+                  <strong style={{ color: '#475569', display: 'block', marginBottom: '2px' }}>Palletization:</strong>
+                  <span style={{ color: viewDetailsModal.palletization ? '#0f172a' : '#94a3b8' }}>
+                    {viewDetailsModal.palletization || 'None specified'}
+                  </span>
+                </div>
+                <div style={{ backgroundColor: '#f8fafc', padding: '0.45rem 0.65rem', borderRadius: '4px', border: '1px solid #f1f5f9' }}>
+                  <strong style={{ color: '#475569', display: 'block', marginBottom: '2px' }}>Lashing & Chocking:</strong>
+                  <span style={{ color: viewDetailsModal.lashing_chocking ? '#0f172a' : '#94a3b8' }}>
+                    {viewDetailsModal.lashing_chocking || 'None specified'}
+                  </span>
+                </div>
+              </div>
+            </div>
+
+            {/* 5. Cargo Details (multi) */}
+            <div
+              style={{
+                border: '1px solid #e5e7eb',
+                borderRadius: '8px',
+                padding: '0.85rem 1rem',
+                backgroundColor: '#ffffff',
+              }}
+            >
+              <div
+                style={{
+                  fontSize: '0.8rem',
+                  fontWeight: 700,
+                  textTransform: 'uppercase',
+                  letterSpacing: '0.04em',
+                  color: '#1976D2',
+                  marginBottom: '0.65rem',
+                  paddingBottom: '0.35rem',
+                  borderBottom: '1px solid #f1f5f9',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '0.4rem',
+                }}
+              >
+                <ShoppingBag size={15} />
+                Cargo Details ({cargos.length || 0})
+              </div>
+              {cargos.length === 0 ? (
+                <div style={{ fontSize: '0.85rem', color: '#94a3b8', fontStyle: 'italic' }}>
+                  No cargo lines specified
+                </div>
+              ) : (
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+                  {cargos.map((c, idx) => (
+                    <div
+                      key={idx}
+                      style={{
+                        background: '#f8fafc',
+                        border: '1px solid #e2e8f0',
+                        borderRadius: '6px',
+                        padding: '0.65rem 0.85rem',
+                        fontSize: '0.85rem',
+                      }}
+                    >
+                      <div
+                        style={{
+                          display: 'flex',
+                          justifyContent: 'space-between',
+                          gap: '0.5rem',
+                          flexWrap: 'wrap',
+                          alignItems: 'center',
+                        }}
+                      >
+                        <span style={{ fontWeight: 600, color: '#1e293b' }}>
+                          {idx + 1}. {c.commodity || '—'}
+                        </span>
+                        <Badge
+                          variant={getCargoTypeBadgeVariant(c.cargo_type || 'General')}
+                          style={{ fontSize: '0.7rem' }}
+                        >
+                          {c.cargo_type || 'General'}
+                        </Badge>
+                      </div>
+                      <div
+                        style={{
+                          marginTop: '0.35rem',
+                          color: '#475569',
+                          display: 'flex',
+                          gap: '1.25rem',
+                          flexWrap: 'wrap',
+                          fontSize: '0.8rem',
+                        }}
+                      >
+                        <span>
+                          <strong>HSN Code:</strong> {c.hsn_code || 'N/A'}
+                        </span>
+                        <span>
+                          <strong>Weight:</strong>{' '}
+                          {formatCargoWeight(c) ||
+                            viewDetailsModal.gross_weight ||
+                            viewDetailsModal.weight ||
+                            '—'}
+                        </span>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+
+            {/* 6. Container Requirements (multi) */}
+            <div
+              style={{
+                border: '1px solid #e5e7eb',
+                borderRadius: '8px',
+                padding: '0.85rem 1rem',
+                backgroundColor: '#ffffff',
+              }}
+            >
+              <div
+                style={{
+                  fontSize: '0.8rem',
+                  fontWeight: 700,
+                  textTransform: 'uppercase',
+                  letterSpacing: '0.04em',
+                  color: '#1976D2',
+                  marginBottom: '0.65rem',
+                  paddingBottom: '0.35rem',
+                  borderBottom: '1px solid #f1f5f9',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '0.4rem',
+                }}
+              >
+                <Package size={15} />
+                Container Requirements ({containers.length || 0})
+              </div>
+              {containers.length === 0 ? (
+                <div style={{ fontSize: '0.85rem', color: '#94a3b8', fontStyle: 'italic' }}>
+                  No container lines specified
+                </div>
+              ) : (
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '0.4rem' }}>
+                  {containers.map((c, idx) => (
+                    <div
+                      key={idx}
+                      style={{
+                        background: '#fffbeb',
+                        border: '1px solid #fde68a',
+                        borderRadius: '6px',
+                        padding: '0.55rem 0.75rem',
+                        fontSize: '0.85rem',
+                        fontWeight: 600,
+                        color: '#b45309',
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '0.4rem',
+                      }}
+                    >
+                      <span>{idx + 1}.</span> {formatContainerLine(c)}
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+
+            {/* 7. Special Requirements / Instructions */}
+            {(viewDetailsModal.special_requirements || viewDetailsModal.remarks) && (
+              <div
+                style={{
+                  border: '1px solid #e5e7eb',
+                  borderRadius: '8px',
+                  padding: '0.85rem 1rem',
+                  backgroundColor: '#ffffff',
+                }}
+              >
+                <div
+                  style={{
+                    fontSize: '0.8rem',
+                    fontWeight: 700,
+                    textTransform: 'uppercase',
+                    letterSpacing: '0.04em',
+                    color: '#1976D2',
+                    marginBottom: '0.5rem',
+                    paddingBottom: '0.35rem',
+                    borderBottom: '1px solid #f1f5f9',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '0.4rem',
+                  }}
+                >
+                  <FileText size={15} />
+                  Special Requirements / Instructions
+                </div>
+                <p
+                  style={{
+                    margin: 0,
+                    color: '#334155',
+                    fontSize: '0.85rem',
+                    whiteSpace: 'pre-wrap',
+                    lineHeight: '1.5',
+                  }}
+                >
+                  {viewDetailsModal.special_requirements || viewDetailsModal.remarks}
+                </p>
+              </div>
+            )}
+
+          </div>
 
           <div
             style={{
-              marginTop: '1.5rem',
+              marginTop: '1.25rem',
               display: 'flex',
               justifyContent: 'flex-end',
+              borderTop: '1px solid #f1f5f9',
+              paddingTop: '0.75rem',
             }}
           >
             <Button
