@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { X, Check, FileText, Building2, MapPin, Package, Box, Calendar, Ship, ShieldCheck, DollarSign, Calculator, ChevronDown, ChevronUp, AlertCircle, Plus, Trash2, RotateCcw } from 'lucide-react';
+import { X, Check, FileText, Building2, MapPin, Package, Box, Calendar, Ship, ShieldCheck, DollarSign, Calculator, ChevronDown, ChevronUp, AlertCircle, Plus, Trash2, RotateCcw, Info } from 'lucide-react';
 import Button from '../../../../../shared/components/Button';
 import { businessService } from '../../../../masters/services/business.service';
 import { logisticsService } from '../../../../masters/services/logistics.service';
@@ -17,9 +17,9 @@ export const generateQuotationNo = (existingCount = 0) => {
 
 export const INITIAL_CHARGE_HEADS = [];
 
-const DEFAULT_CARRIER_A = { line: 'Maersk Line', freight: 85000, local: 16000, notes: 'Direct weekly service, 14 days transit' };
-const DEFAULT_CARRIER_B = { line: 'MSC Line', freight: 82000, local: 17500, notes: 'Transshipment via Colombo, 18 days transit' };
-const DEFAULT_CARRIER_C = { line: 'CMA CGM', freight: 87000, local: 15500, notes: 'Direct service, strong local equipment' };
+const DEFAULT_CARRIER_A = { line: '', freight: '', local: '', notes: '' };
+const DEFAULT_CARRIER_B = { line: '', freight: '', local: '', notes: '' };
+const DEFAULT_CARRIER_C = { line: '', freight: '', local: '', notes: '' };
 
 const DEFAULT_UOMS = [
   { id: 'uom_1', uom_code: 'KG', uom_name: 'Kilograms (KG)' },
@@ -92,8 +92,8 @@ const QuotationForm = ({ onCancel, onSuccess, initialData, existingCount = 0 }) 
     carrier_option_a: DEFAULT_CARRIER_A,
     carrier_option_b: DEFAULT_CARRIER_B,
     carrier_option_c: DEFAULT_CARRIER_C,
-    selected_carrier: 'Maersk Line',
-    carrier_selection_notes: 'Selected Option A for optimal transit time & reliability on sector.',
+    selected_carrier: '',
+    carrier_selection_notes: '',
 
     // Status
     status: 'Prepared',
@@ -284,28 +284,30 @@ const QuotationForm = ({ onCancel, onSuccess, initialData, existingCount = 0 }) 
 
   // Select Option Action Handler
   const handleSelectCarrierOption = (optionObj) => {
-    if (!optionObj) return;
+    if (!optionObj || !optionObj.line) return;
     setFormData(prev => ({
       ...prev,
       selected_carrier: optionObj.line || '',
-      carrier_selection_notes: `Selected ${optionObj.line || 'Carrier'} (Freight Rate: ₹${optionObj.freight || 0}). ${optionObj.notes || ''}`
+      carrier_selection_notes: `Selected ${optionObj.line || 'Carrier'}${optionObj.freight ? ` (Freight: ₹${optionObj.freight})` : ''}. ${optionObj.notes || ''}`.trim()
     }));
 
-    // Update Ocean Freight charge line rate automatically
-    setCharges(prevCharges => 
-      prevCharges.map(item => {
-        if (item.id === 'ch1' || item.name.includes('Ocean Freight')) {
-          const newRate = Number(optionObj.freight) || item.rate;
-          return {
-            ...item,
-            applicable: true,
-            rate: newRate,
-            amount: item.quantity * newRate
-          };
-        }
-        return item;
-      })
-    );
+    // Update Ocean Freight charge line rate automatically if rate is present
+    if (optionObj.freight) {
+      setCharges(prevCharges => 
+        prevCharges.map(item => {
+          if (item.id === 'ch1' || item.name.includes('Ocean Freight')) {
+            const newRate = Number(optionObj.freight) || item.rate;
+            return {
+              ...item,
+              applicable: true,
+              rate: newRate,
+              amount: item.quantity * newRate
+            };
+          }
+          return item;
+        })
+      );
+    }
   };
 
   // Charge Line Item Handlers
@@ -791,136 +793,183 @@ const QuotationForm = ({ onCancel, onSuccess, initialData, existingCount = 0 }) 
           <Ship size={16} color="#1976D2" />
           <span>Section 4 — Shipping Line Freight Rates & Carrier Comparison</span>
         </div>
-        
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))', gap: '1rem', marginBottom: '1.25rem' }}>
-          
-          {/* OPTION A */}
-          <div style={{ border: formData.selected_carrier === carrierA.line ? '2px solid #0288d1' : '1px solid #e2e8f0', borderRadius: '8px', padding: '1rem', backgroundColor: formData.selected_carrier === carrierA.line ? '#f0f9ff' : '#ffffff' }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.5rem' }}>
-              <strong style={{ fontSize: '0.9rem', color: '#0288d1' }}>Carrier Option A</strong>
-              <Button type="button" variant={formData.selected_carrier === carrierA.line ? "primary" : "outline"} size="sm" onClick={() => handleSelectCarrierOption(carrierA)}>
-                {formData.selected_carrier === carrierA.line ? "Selected" : "Select Option A"}
-              </Button>
-            </div>
-            <div style={{ fontSize: '0.8rem', display: 'flex', flexDirection: 'column', gap: '0.4rem' }}>
-              <input
-                type="text"
-                placeholder="Shipping Line (e.g. Maersk)"
-                value={carrierA.line}
-                onChange={(e) => handleCarrierOptionChange('carrier_option_a', 'line', e.target.value)}
-                style={{ width: '100%', padding: '0.35rem', borderRadius: '4px', border: '1px solid #cbd5e1' }}
-              />
-              <div style={{ display: 'flex', gap: '0.4rem' }}>
-                <input
-                  type="number"
-                  placeholder="Freight (₹)"
-                  value={carrierA.freight}
-                  onChange={(e) => handleCarrierOptionChange('carrier_option_a', 'freight', Number(e.target.value))}
-                  style={{ width: '50%', padding: '0.35rem', borderRadius: '4px', border: '1px solid #cbd5e1' }}
-                />
-                <input
-                  type="number"
-                  placeholder="Local (₹)"
-                  value={carrierA.local}
-                  onChange={(e) => handleCarrierOptionChange('carrier_option_a', 'local', Number(e.target.value))}
-                  style={{ width: '50%', padding: '0.35rem', borderRadius: '4px', border: '1px solid #cbd5e1' }}
-                />
-              </div>
-              <input
-                type="text"
-                placeholder="Transit time & Sector notes"
-                value={carrierA.notes}
-                onChange={(e) => handleCarrierOptionChange('carrier_option_a', 'notes', e.target.value)}
-                style={{ width: '100%', padding: '0.35rem', borderRadius: '4px', border: '1px solid #cbd5e1', fontSize: '0.78rem' }}
-              />
-            </div>
-          </div>
 
-          {/* OPTION B */}
-          <div style={{ border: formData.selected_carrier === carrierB.line ? '2px solid #0288d1' : '1px solid #e2e8f0', borderRadius: '8px', padding: '1rem', backgroundColor: formData.selected_carrier === carrierB.line ? '#f0f9ff' : '#ffffff' }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.5rem' }}>
-              <strong style={{ fontSize: '0.9rem', color: '#0288d1' }}>Carrier Option B</strong>
-              <Button type="button" variant={formData.selected_carrier === carrierB.line ? "primary" : "outline"} size="sm" onClick={() => handleSelectCarrierOption(carrierB)}>
-                {formData.selected_carrier === carrierB.line ? "Selected" : "Select Option B"}
-              </Button>
-            </div>
-            <div style={{ fontSize: '0.8rem', display: 'flex', flexDirection: 'column', gap: '0.4rem' }}>
-              <input
-                type="text"
-                placeholder="Shipping Line (e.g. MSC)"
-                value={carrierB.line}
-                onChange={(e) => handleCarrierOptionChange('carrier_option_b', 'line', e.target.value)}
-                style={{ width: '100%', padding: '0.35rem', borderRadius: '4px', border: '1px solid #cbd5e1' }}
-              />
-              <div style={{ display: 'flex', gap: '0.4rem' }}>
-                <input
-                  type="number"
-                  placeholder="Freight (₹)"
-                  value={carrierB.freight}
-                  onChange={(e) => handleCarrierOptionChange('carrier_option_b', 'freight', Number(e.target.value))}
-                  style={{ width: '50%', padding: '0.35rem', borderRadius: '4px', border: '1px solid #cbd5e1' }}
-                />
-                <input
-                  type="number"
-                  placeholder="Local (₹)"
-                  value={carrierB.local}
-                  onChange={(e) => handleCarrierOptionChange('carrier_option_b', 'local', Number(e.target.value))}
-                  style={{ width: '50%', padding: '0.35rem', borderRadius: '4px', border: '1px solid #cbd5e1' }}
-                />
-              </div>
-              <input
-                type="text"
-                placeholder="Transit time & Sector notes"
-                value={carrierB.notes}
-                onChange={(e) => handleCarrierOptionChange('carrier_option_b', 'notes', e.target.value)}
-                style={{ width: '100%', padding: '0.35rem', borderRadius: '4px', border: '1px solid #cbd5e1', fontSize: '0.78rem' }}
-              />
-            </div>
-          </div>
-
-          {/* OPTION C */}
-          <div style={{ border: formData.selected_carrier === carrierC.line ? '2px solid #0288d1' : '1px solid #e2e8f0', borderRadius: '8px', padding: '1rem', backgroundColor: formData.selected_carrier === carrierC.line ? '#f0f9ff' : '#ffffff' }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.5rem' }}>
-              <strong style={{ fontSize: '0.9rem', color: '#0288d1' }}>Carrier Option C</strong>
-              <Button type="button" variant={formData.selected_carrier === carrierC.line ? "primary" : "outline"} size="sm" onClick={() => handleSelectCarrierOption(carrierC)}>
-                {formData.selected_carrier === carrierC.line ? "Selected" : "Select Option C"}
-              </Button>
-            </div>
-            <div style={{ fontSize: '0.8rem', display: 'flex', flexDirection: 'column', gap: '0.4rem' }}>
-              <input
-                type="text"
-                placeholder="Shipping Line (e.g. CMA CGM)"
-                value={carrierC.line}
-                onChange={(e) => handleCarrierOptionChange('carrier_option_c', 'line', e.target.value)}
-                style={{ width: '100%', padding: '0.35rem', borderRadius: '4px', border: '1px solid #cbd5e1' }}
-              />
-              <div style={{ display: 'flex', gap: '0.4rem' }}>
-                <input
-                  type="number"
-                  placeholder="Freight (₹)"
-                  value={carrierC.freight}
-                  onChange={(e) => handleCarrierOptionChange('carrier_option_c', 'freight', Number(e.target.value))}
-                  style={{ width: '50%', padding: '0.35rem', borderRadius: '4px', border: '1px solid #cbd5e1' }}
-                />
-                <input
-                  type="number"
-                  placeholder="Local (₹)"
-                  value={carrierC.local}
-                  onChange={(e) => handleCarrierOptionChange('carrier_option_c', 'local', Number(e.target.value))}
-                  style={{ width: '50%', padding: '0.35rem', borderRadius: '4px', border: '1px solid #cbd5e1' }}
-                />
-              </div>
-              <input
-                type="text"
-                placeholder="Transit time & Sector notes"
-                value={carrierC.notes}
-                onChange={(e) => handleCarrierOptionChange('carrier_option_c', 'notes', e.target.value)}
-                style={{ width: '100%', padding: '0.35rem', borderRadius: '4px', border: '1px solid #cbd5e1', fontSize: '0.78rem' }}
-              />
-            </div>
-          </div>
-
+        {/* Informative Note for Carrier Options */}
+        <div
+          style={{
+            backgroundColor: '#f0f9ff',
+            border: '1px solid #bae6fd',
+            borderRadius: '6px',
+            padding: '0.5rem 0.85rem',
+            marginBottom: '0.85rem',
+            display: 'flex',
+            alignItems: 'center',
+            gap: '0.5rem',
+            fontSize: '0.8rem',
+            color: '#0369a1',
+          }}
+        >
+          <Info size={16} style={{ flexShrink: 0 }} />
+          <span>
+            <strong>Carrier Rate Comparison:</strong> Enter quotes from up to 3 shipping lines to compare freight rates & transit times, then click <strong>"Select"</strong> on your chosen option. If you only have one carrier, simply fill <strong>Carrier Option A</strong> and click <strong>"Select Option A"</strong>.
+          </span>
         </div>
+        
+        {(() => {
+          const isOptionASelected = Boolean(carrierA.line && formData.selected_carrier === carrierA.line);
+          const isOptionBSelected = Boolean(carrierB.line && formData.selected_carrier === carrierB.line);
+          const isOptionCSelected = Boolean(carrierC.line && formData.selected_carrier === carrierC.line);
+
+          return (
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))', gap: '1rem', marginBottom: '1.25rem' }}>
+              
+              {/* OPTION A */}
+              <div style={{ border: isOptionASelected ? '2px solid #0288d1' : '1px solid #e2e8f0', borderRadius: '8px', padding: '1rem', backgroundColor: isOptionASelected ? '#f0f9ff' : '#ffffff' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.5rem' }}>
+                  <strong style={{ fontSize: '0.9rem', color: '#0288d1' }}>Carrier Option A</strong>
+                  <Button
+                    type="button"
+                    variant={isOptionASelected ? "primary" : "outline"}
+                    size="sm"
+                    disabled={!carrierA.line}
+                    onClick={() => handleSelectCarrierOption(carrierA)}
+                  >
+                    {isOptionASelected ? "Selected" : "Select Option A"}
+                  </Button>
+                </div>
+                <div style={{ fontSize: '0.8rem', display: 'flex', flexDirection: 'column', gap: '0.4rem' }}>
+                  <input
+                    type="text"
+                    placeholder="Shipping Line (e.g. Maersk Line)"
+                    value={carrierA.line}
+                    onChange={(e) => handleCarrierOptionChange('carrier_option_a', 'line', e.target.value)}
+                    style={{ width: '100%', padding: '0.35rem', borderRadius: '4px', border: '1px solid #cbd5e1' }}
+                  />
+                  <div style={{ display: 'flex', gap: '0.4rem' }}>
+                    <input
+                      type="number"
+                      placeholder="Freight Rate (₹)"
+                      value={carrierA.freight}
+                      onChange={(e) => handleCarrierOptionChange('carrier_option_a', 'freight', e.target.value === '' ? '' : Number(e.target.value))}
+                      style={{ width: '50%', padding: '0.35rem', borderRadius: '4px', border: '1px solid #cbd5e1' }}
+                    />
+                    <input
+                      type="number"
+                      placeholder="Local Charges (₹)"
+                      value={carrierA.local}
+                      onChange={(e) => handleCarrierOptionChange('carrier_option_a', 'local', e.target.value === '' ? '' : Number(e.target.value))}
+                      style={{ width: '50%', padding: '0.35rem', borderRadius: '4px', border: '1px solid #cbd5e1' }}
+                    />
+                  </div>
+                  <input
+                    type="text"
+                    placeholder="e.g. Direct weekly service, 14 days transit"
+                    value={carrierA.notes}
+                    onChange={(e) => handleCarrierOptionChange('carrier_option_a', 'notes', e.target.value)}
+                    style={{ width: '100%', padding: '0.35rem', borderRadius: '4px', border: '1px solid #cbd5e1', fontSize: '0.78rem' }}
+                  />
+                </div>
+              </div>
+
+              {/* OPTION B */}
+              <div style={{ border: isOptionBSelected ? '2px solid #0288d1' : '1px solid #e2e8f0', borderRadius: '8px', padding: '1rem', backgroundColor: isOptionBSelected ? '#f0f9ff' : '#ffffff' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.5rem' }}>
+                  <strong style={{ fontSize: '0.9rem', color: '#0288d1' }}>Carrier Option B</strong>
+                  <Button
+                    type="button"
+                    variant={isOptionBSelected ? "primary" : "outline"}
+                    size="sm"
+                    disabled={!carrierB.line}
+                    onClick={() => handleSelectCarrierOption(carrierB)}
+                  >
+                    {isOptionBSelected ? "Selected" : "Select Option B"}
+                  </Button>
+                </div>
+                <div style={{ fontSize: '0.8rem', display: 'flex', flexDirection: 'column', gap: '0.4rem' }}>
+                  <input
+                    type="text"
+                    placeholder="Shipping Line (e.g. MSC Line)"
+                    value={carrierB.line}
+                    onChange={(e) => handleCarrierOptionChange('carrier_option_b', 'line', e.target.value)}
+                    style={{ width: '100%', padding: '0.35rem', borderRadius: '4px', border: '1px solid #cbd5e1' }}
+                  />
+                  <div style={{ display: 'flex', gap: '0.4rem' }}>
+                    <input
+                      type="number"
+                      placeholder="Freight Rate (₹)"
+                      value={carrierB.freight}
+                      onChange={(e) => handleCarrierOptionChange('carrier_option_b', 'freight', e.target.value === '' ? '' : Number(e.target.value))}
+                      style={{ width: '50%', padding: '0.35rem', borderRadius: '4px', border: '1px solid #cbd5e1' }}
+                    />
+                    <input
+                      type="number"
+                      placeholder="Local Charges (₹)"
+                      value={carrierB.local}
+                      onChange={(e) => handleCarrierOptionChange('carrier_option_b', 'local', e.target.value === '' ? '' : Number(e.target.value))}
+                      style={{ width: '50%', padding: '0.35rem', borderRadius: '4px', border: '1px solid #cbd5e1' }}
+                    />
+                  </div>
+                  <input
+                    type="text"
+                    placeholder="e.g. Transshipment via Colombo, 18 days transit"
+                    value={carrierB.notes}
+                    onChange={(e) => handleCarrierOptionChange('carrier_option_b', 'notes', e.target.value)}
+                    style={{ width: '100%', padding: '0.35rem', borderRadius: '4px', border: '1px solid #cbd5e1', fontSize: '0.78rem' }}
+                  />
+                </div>
+              </div>
+
+              {/* OPTION C */}
+              <div style={{ border: isOptionCSelected ? '2px solid #0288d1' : '1px solid #e2e8f0', borderRadius: '8px', padding: '1rem', backgroundColor: isOptionCSelected ? '#f0f9ff' : '#ffffff' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.5rem' }}>
+                  <strong style={{ fontSize: '0.9rem', color: '#0288d1' }}>Carrier Option C</strong>
+                  <Button
+                    type="button"
+                    variant={isOptionCSelected ? "primary" : "outline"}
+                    size="sm"
+                    disabled={!carrierC.line}
+                    onClick={() => handleSelectCarrierOption(carrierC)}
+                  >
+                    {isOptionCSelected ? "Selected" : "Select Option C"}
+                  </Button>
+                </div>
+                <div style={{ fontSize: '0.8rem', display: 'flex', flexDirection: 'column', gap: '0.4rem' }}>
+                  <input
+                    type="text"
+                    placeholder="Shipping Line (e.g. CMA CGM / Hapag)"
+                    value={carrierC.line}
+                    onChange={(e) => handleCarrierOptionChange('carrier_option_c', 'line', e.target.value)}
+                    style={{ width: '100%', padding: '0.35rem', borderRadius: '4px', border: '1px solid #cbd5e1' }}
+                  />
+                  <div style={{ display: 'flex', gap: '0.4rem' }}>
+                    <input
+                      type="number"
+                      placeholder="Freight Rate (₹)"
+                      value={carrierC.freight}
+                      onChange={(e) => handleCarrierOptionChange('carrier_option_c', 'freight', e.target.value === '' ? '' : Number(e.target.value))}
+                      style={{ width: '50%', padding: '0.35rem', borderRadius: '4px', border: '1px solid #cbd5e1' }}
+                    />
+                    <input
+                      type="number"
+                      placeholder="Local Charges (₹)"
+                      value={carrierC.local}
+                      onChange={(e) => handleCarrierOptionChange('carrier_option_c', 'local', e.target.value === '' ? '' : Number(e.target.value))}
+                      style={{ width: '50%', padding: '0.35rem', borderRadius: '4px', border: '1px solid #cbd5e1' }}
+                    />
+                  </div>
+                  <input
+                    type="text"
+                    placeholder="e.g. Direct service, strong local equipment"
+                    value={carrierC.notes}
+                    onChange={(e) => handleCarrierOptionChange('carrier_option_c', 'notes', e.target.value)}
+                    style={{ width: '100%', padding: '0.35rem', borderRadius: '4px', border: '1px solid #cbd5e1', fontSize: '0.78rem' }}
+                  />
+                </div>
+              </div>
+
+            </div>
+          );
+        })()}
 
         {/* Selected Carrier Rationale */}
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem', marginBottom: '1rem' }}>
@@ -929,6 +978,7 @@ const QuotationForm = ({ onCancel, onSuccess, initialData, existingCount = 0 }) 
             <input
               type="text"
               name="selected_carrier"
+              placeholder="e.g. Maersk Line / MSC / CMA CGM"
               value={formData.selected_carrier}
               onChange={handleChange}
               style={{ width: '100%', padding: '0.45rem 0.65rem', borderRadius: '4px', border: '1px solid #d1d5db', fontWeight: 700, color: '#0288d1' }}
@@ -941,7 +991,7 @@ const QuotationForm = ({ onCancel, onSuccess, initialData, existingCount = 0 }) 
               name="carrier_selection_notes"
               value={formData.carrier_selection_notes}
               onChange={handleChange}
-              placeholder="Explain commercial & operational reasons for selecting carrier..."
+              placeholder="e.g. Selected Option A for optimal transit time & reliability on sector..."
               style={{ width: '100%', padding: '0.45rem 0.65rem', borderRadius: '4px', border: '1px solid #d1d5db' }}
             />
           </div>
