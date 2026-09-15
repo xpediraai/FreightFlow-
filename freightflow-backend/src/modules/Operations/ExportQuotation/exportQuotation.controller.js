@@ -109,6 +109,36 @@ const changeStatus = async (req, res) => {
   }
 };
 
+const uploadAttachments = async (req, res) => {
+  try {
+    if (!req.files || req.files.length === 0) {
+      return res.status(400).json(errorResponse("NO_FILES_PROVIDED", "No files were uploaded."));
+    }
+
+    const companyId = (req.user && req.user.company_id) || 'temp';
+    const context = req.uploadContext || "Quotations";
+
+    const uploadedFiles = req.files.map((file) => {
+      const fileUrl = `/uploads/${context}/${companyId}/${file.fieldname}/${file.filename}`;
+      return {
+        id: `att_${Date.now()}_${Math.random().toString(36).substring(2, 9)}`,
+        name: file.originalname,
+        filename: file.filename,
+        file_url: fileUrl,
+        size: file.size,
+        mimetype: file.mimetype,
+        uploaded_at: new Date().toISOString(),
+      };
+    });
+
+    return res.status(200).json(
+      successResponse("FILES_UPLOADED", "Files uploaded successfully.", "Uploaded.", uploadedFiles)
+    );
+  } catch (err) {
+    return res.status(500).json(errorResponse("INTERNAL_SERVER_ERROR", err.message, "Failed to upload attachments."));
+  }
+};
+
 module.exports = {
   create,
   list,
@@ -116,4 +146,5 @@ module.exports = {
   update,
   remove,
   changeStatus,
+  uploadAttachments,
 };

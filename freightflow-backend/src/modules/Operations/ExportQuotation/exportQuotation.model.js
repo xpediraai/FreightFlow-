@@ -178,6 +178,11 @@ const ExportQuotation = sequelize.define("ExportQuotation", {
     type: DataTypes.TEXT,
     allowNull: true,
   },
+  attachments: {
+    type: DataTypes.JSONB,
+    allowNull: true,
+    defaultValue: [],
+  },
 
   // Totals & Status
   total_amount: {

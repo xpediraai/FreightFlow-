@@ -7,4 +7,8 @@ export const exportQuotationService = {
   updateQuotation: (id, data) => api.put(`/export-quotation/${id}`, data),
   updateStatus: (id, status) => api.patch(`/export-quotation/${id}/status`, { status }),
   deleteQuotation: (id) => api.delete(`/export-quotation/${id}`),
+  uploadAttachments: (formData) => api.post('/export-quotation/upload', formData, {
+    headers: { 'Content-Type': 'multipart/form-data' },
+  }),
 };
+

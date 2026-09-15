@@ -29,8 +29,15 @@ app.use(express.json());
 // Enables Cross-Origin Resource Sharing (CORS) to allow requests from external domains/frontends
 app.use(cors());
 
-// Enhances application security by setting various HTTP headers (guards against XSS, clickjacking, etc.)
-app.use(helmet());
+// Enhances application security by setting various HTTP headers
+app.use(
+    helmet({
+        crossOriginResourcePolicy: { policy: "cross-origin" }
+    })
+);
+
+// Statically serve uploaded files from the uploads directory
+app.use("/uploads", express.static(path.join(__dirname, "uploads")));
 
 // Parses cookie headers and populates req.cookies with an object keyed by the cookie names
 app.use(cookieParser());

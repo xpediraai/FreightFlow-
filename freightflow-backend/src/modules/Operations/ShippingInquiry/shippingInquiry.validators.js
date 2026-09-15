@@ -51,6 +51,7 @@ const createShippingInquirySchema = Joi.object({
   priority: Joi.string().valid("Low", "Medium", "High").default("Medium").optional(),
   status: Joi.string().valid("Pending", "Quoted", "Confirmed", "In Progress", "Cancelled").default("Pending").optional(),
 
+  attachments: Joi.array().allow(null).optional().default([]),
   cargoDetails: Joi.array().items(cargoItemSchema).optional().default([]),
   containerDetails: Joi.array().items(containerItemSchema).optional().default([]),
 }).unknown(true);
@@ -87,9 +88,11 @@ const updateShippingInquirySchema = Joi.object({
   priority: Joi.string().valid("Low", "Medium", "High").optional(),
   status: Joi.string().valid("Pending", "Quoted", "Confirmed", "In Progress", "Cancelled").optional(),
 
+  attachments: Joi.array().allow(null).optional(),
   cargoDetails: Joi.array().items(cargoItemSchema).optional(),
   containerDetails: Joi.array().items(containerItemSchema).optional(),
 }).min(1).unknown(true);
+
 
 const statusChangeSchema = Joi.object({
   status: Joi.string().valid("Pending", "Quoted", "Confirmed", "In Progress", "Cancelled").required(),

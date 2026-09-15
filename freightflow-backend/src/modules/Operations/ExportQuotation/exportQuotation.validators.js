@@ -67,6 +67,7 @@ const createExportQuotationSchema = Joi.object({
   priority: Joi.string().valid("Low", "Medium", "High").default("Medium").optional(),
   status: Joi.string().valid("Draft", "Prepared", "Sent", "Accepted", "Rejected", "Cancelled").default("Prepared").optional(),
 
+  attachments: Joi.array().allow(null).optional().default([]),
   charges: Joi.array().items(chargeItemSchema).optional().default([]),
 }).unknown(true);
 
@@ -115,6 +116,7 @@ const updateExportQuotationSchema = Joi.object({
   priority: Joi.string().valid("Low", "Medium", "High").optional(),
   status: Joi.string().valid("Draft", "Prepared", "Sent", "Accepted", "Rejected", "Cancelled").optional(),
 
+  attachments: Joi.array().allow(null).optional(),
   charges: Joi.array().items(chargeItemSchema).optional(),
 }).min(1).unknown(true);
 

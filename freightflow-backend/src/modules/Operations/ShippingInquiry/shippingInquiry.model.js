@@ -134,6 +134,11 @@ const ShippingInquiry = sequelize.define("ShippingInquiry", {
     type: DataTypes.UUID,
     allowNull: true,
   },
+  attachments: {
+    type: DataTypes.JSONB,
+    allowNull: true,
+    defaultValue: [],
+  },
 }, {
   tableName: "shipping_inquiries",
   timestamps: true,

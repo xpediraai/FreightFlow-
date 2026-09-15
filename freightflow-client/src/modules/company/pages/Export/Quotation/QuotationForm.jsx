@@ -1,5 +1,5 @@
-import React, { useState, useEffect } from 'react';
-import { X, Check, FileText, Building2, MapPin, Package, Box, Calendar, Ship, ShieldCheck, DollarSign, Calculator, ChevronDown, ChevronUp, AlertCircle, Plus, Trash2, RotateCcw, Info } from 'lucide-react';
+import React, { useState, useEffect, useRef } from 'react';
+import { X, Check, FileText, Building2, MapPin, Package, Box, Calendar, Ship, ShieldCheck, DollarSign, Calculator, ChevronDown, ChevronUp, AlertCircle, Plus, Trash2, RotateCcw, Info, Paperclip, Upload, ExternalLink, File, Download, FileSpreadsheet, Image as ImageIcon, Loader2 } from 'lucide-react';
 import Button from '../../../../../shared/components/Button';
 import { businessService } from '../../../../masters/services/business.service';
 import { logisticsService } from '../../../../masters/services/logistics.service';
@@ -42,10 +42,41 @@ const parseWeightString = (str = '') => {
   return { val: cleaned, uom: 'KG' };
 };
 
+const formatFileSize = (bytes) => {
+  if (!bytes || bytes === 0) return '0 B';
+  const k = 1024;
+  const sizes = ['B', 'KB', 'MB', 'GB'];
+  const i = Math.floor(Math.log(bytes) / Math.log(k));
+  return `${parseFloat((bytes / Math.pow(k, i)).toFixed(1))} ${sizes[i]}`;
+};
+
+const getFileIcon = (mimetype = '', name = '') => {
+  const ext = (name.split('.').pop() || '').toLowerCase();
+  if (mimetype.startsWith('image/') || ['jpg', 'jpeg', 'png', 'svg', 'webp', 'gif'].includes(ext)) {
+    return <ImageIcon size={20} color="#0288d1" />;
+  }
+  if (mimetype.includes('pdf') || ext === 'pdf') {
+    return <FileText size={20} color="#dc2626" />;
+  }
+  if (mimetype.includes('sheet') || mimetype.includes('excel') || mimetype.includes('csv') || ['xls', 'xlsx', 'csv'].includes(ext)) {
+    return <FileSpreadsheet size={20} color="#16a34a" />;
+  }
+  return <File size={20} color="#64748b" />;
+};
+
+const getFullFileUrl = (url) => {
+  if (!url) return '#';
+  if (url.startsWith('http://') || url.startsWith('https://')) return url;
+  const backendBase = (import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000/api').replace(/\/api\/?$/, '');
+  return `${backendBase}${url.startsWith('/') ? '' : '/'}${url}`;
+};
+
 const QuotationForm = ({ onCancel, onSuccess, initialData, existingCount = 0 }) => {
   const isEditMode = !!initialData;
   const [isLoading, setIsLoading] = useState(false);
+  const [isUploadingFiles, setIsUploadingFiles] = useState(false);
   const [globalError, setGlobalError] = useState('');
+  const fileInputRef = useRef(null);
 
   // Loaded Shipping Inquiries for Dropdown Linkage
   const [savedInquiries, setSavedInquiries] = useState([]);
@@ -95,10 +126,14 @@ const QuotationForm = ({ onCancel, onSuccess, initialData, existingCount = 0 }) 
     selected_carrier: '',
     carrier_selection_notes: '',
 
+    // Attachments
+    attachments: [],
+
     // Status
     status: 'Prepared',
     priority: 'Medium'
   });
+
 
   // Line Item Charges State (Loaded dynamically from Charge Master)
   const [charges, setCharges] = useState([]);
@@ -182,6 +217,18 @@ const QuotationForm = ({ onCancel, onSuccess, initialData, existingCount = 0 }) 
     if (initialData) {
       const rawWeight = initialData.gross_weight || initialData.weight || '';
       const parsedWeight = parseWeightString(rawWeight);
+
+      let initialAttachments = [];
+      if (Array.isArray(initialData.attachments)) {
+        initialAttachments = initialData.attachments;
+      } else if (typeof initialData.attachments === 'string' && initialData.attachments.trim()) {
+        try {
+          initialAttachments = JSON.parse(initialData.attachments);
+        } catch (e) {
+          initialAttachments = [];
+        }
+      }
+
       setFormData(prev => ({
         ...prev,
         ...initialData,
@@ -191,6 +238,7 @@ const QuotationForm = ({ onCancel, onSuccess, initialData, existingCount = 0 }) 
         carrier_option_a: initialData.carrier_option_a || DEFAULT_CARRIER_A,
         carrier_option_b: initialData.carrier_option_b || DEFAULT_CARRIER_B,
         carrier_option_c: initialData.carrier_option_c || DEFAULT_CARRIER_C,
+        attachments: initialAttachments,
         quotation_date: initialData.quotation_date ? initialData.quotation_date.split('T')[0] : new Date().toISOString().split('T')[0]
       }));
       if (Array.isArray(initialData.charges)) {
@@ -203,6 +251,49 @@ const QuotationForm = ({ onCancel, onSuccess, initialData, existingCount = 0 }) 
       }));
     }
   }, [initialData, existingCount]);
+
+  // Handle Multi-File Attachment Upload
+  const handleFileUpload = async (e) => {
+    const files = Array.from(e.target.files || []);
+    if (files.length === 0) return;
+
+    setIsUploadingFiles(true);
+    setGlobalError('');
+    try {
+      const fd = new FormData();
+      files.forEach((file) => {
+        fd.append('attachments', file);
+      });
+
+      const res = await exportQuotationService.uploadAttachments(fd);
+      const newFiles = res?.data?.data || res?.data || [];
+      if (Array.isArray(newFiles)) {
+        setFormData(prev => ({
+          ...prev,
+          attachments: [...(prev.attachments || []), ...newFiles]
+        }));
+      }
+    } catch (err) {
+      console.error('Failed to upload attachments:', err);
+      const msg = err.response?.data?.message || err.response?.data?.error || err.message || 'Failed to upload attachments.';
+      setGlobalError(msg);
+    } finally {
+      setIsUploadingFiles(false);
+      if (fileInputRef.current) {
+        fileInputRef.current.value = '';
+      }
+    }
+  };
+
+  const handleRemoveAttachment = (attIdOrUrl) => {
+    setFormData(prev => ({
+      ...prev,
+      attachments: (prev.attachments || []).filter(
+        att => (att.id || att.file_url) !== attIdOrUrl && att.file_url !== attIdOrUrl
+      )
+    }));
+  };
+
 
   // Handle Inquiry Selection -> Auto Populate Shipment Fields & Quantities
   const handleInquirySelect = (e) => {
@@ -1283,10 +1374,171 @@ const QuotationForm = ({ onCancel, onSuccess, initialData, existingCount = 0 }) 
           />
         </div>
 
+        {/* SECTION 7 — ATTACHMENTS & SUPPORTING DOCUMENTS */}
+        <div style={sectionHeaderStyle}>
+          <Paperclip size={16} color="#1976D2" />
+          <span>Section 7 — Attachments & Supporting Documents</span>
+        </div>
+
+        <div style={{ marginBottom: '1.5rem' }}>
+          {/* Hidden File Input */}
+          <input
+            type="file"
+            ref={fileInputRef}
+            onChange={handleFileUpload}
+            multiple
+            accept=".pdf,.doc,.docx,.xls,.xlsx,.csv,.txt,.jpg,.jpeg,.png,.svg,.webp"
+            style={{ display: 'none' }}
+          />
+
+          {/* Upload Drop / Browse Area */}
+          <div
+            onClick={() => !isUploadingFiles && fileInputRef.current && fileInputRef.current.click()}
+            style={{
+              border: '2px dashed #93c5fd',
+              borderRadius: '8px',
+              padding: '1.25rem 1.5rem',
+              backgroundColor: '#f8fafc',
+              textAlign: 'center',
+              cursor: isUploadingFiles ? 'not-allowed' : 'pointer',
+              transition: 'all 0.2s ease',
+              marginBottom: '1rem',
+              display: 'flex',
+              flexDirection: 'column',
+              alignItems: 'center',
+              justifyContent: 'center',
+              gap: '0.4rem',
+            }}
+          >
+            {isUploadingFiles ? (
+              <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', color: '#0288d1', fontWeight: 600 }}>
+                <Loader2 size={24} className="animate-spin" style={{ animation: 'spin 1s linear infinite' }} />
+                <span>Uploading attachment(s) to uploads folder...</span>
+              </div>
+            ) : (
+              <>
+                <div style={{ width: '42px', height: '42px', borderRadius: '50%', backgroundColor: '#e0f2fe', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#0288d1', marginBottom: '0.2rem' }}>
+                  <Upload size={22} />
+                </div>
+                <div style={{ fontSize: '0.9rem', fontWeight: 600, color: '#1e293b' }}>
+                  Click to browse or drop files to attach
+                </div>
+                <div style={{ fontSize: '0.78rem', color: '#64748b' }}>
+                  Add as many documents as needed (PDF, Word, Excel, CSV, Images). All files are stored directly in the <strong>uploads</strong> folder.
+                </div>
+              </>
+            )}
+          </div>
+
+          {/* Attached Files List / Grid */}
+          {formData.attachments && formData.attachments.length > 0 ? (
+            <div>
+              <div style={{ fontSize: '0.8rem', fontWeight: 600, color: '#475569', marginBottom: '0.5rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <span>Attached Files ({formData.attachments.length}):</span>
+                <span style={{ fontSize: '0.75rem', color: '#0288d1', fontWeight: 500 }}>Showing active files for this quotation</span>
+              </div>
+
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: '0.75rem' }}>
+                {formData.attachments.map((file, idx) => {
+                  const fileName = file.name || file.filename || `Attachment_${idx + 1}`;
+                  const fileUrl = getFullFileUrl(file.file_url);
+                  const fileSize = formatFileSize(file.size);
+                  const uploadDate = file.uploaded_at ? new Date(file.uploaded_at).toLocaleDateString('en-GB') : '';
+
+                  return (
+                    <div
+                      key={file.id || file.file_url || idx}
+                      style={{
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'space-between',
+                        padding: '0.65rem 0.85rem',
+                        backgroundColor: '#ffffff',
+                        border: '1px solid #e2e8f0',
+                        borderRadius: '6px',
+                        boxShadow: '0 1px 2px 0 rgba(0, 0, 0, 0.05)',
+                        gap: '0.5rem',
+                      }}
+                    >
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '0.65rem', minWidth: 0, flex: 1 }}>
+                        <div style={{ flexShrink: 0 }}>
+                          {getFileIcon(file.mimetype, fileName)}
+                        </div>
+                        <div style={{ minWidth: 0, flex: 1 }}>
+                          <div
+                            title={fileName}
+                            style={{
+                              fontSize: '0.825rem',
+                              fontWeight: 600,
+                              color: '#1e293b',
+                              overflow: 'hidden',
+                              textOverflow: 'ellipsis',
+                              whiteSpace: 'nowrap',
+                            }}
+                          >
+                            {fileName}
+                          </div>
+                          <div style={{ fontSize: '0.72rem', color: '#64748b' }}>
+                            {fileSize} {uploadDate ? `• ${uploadDate}` : ''}
+                          </div>
+                        </div>
+                      </div>
+
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '0.35rem', flexShrink: 0 }}>
+                        <a
+                          href={fileUrl}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          title="Open / Download Attachment"
+                          style={{
+                            display: 'inline-flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            padding: '0.35rem 0.45rem',
+                            borderRadius: '4px',
+                            backgroundColor: '#e0f2fe',
+                            color: '#0288d1',
+                            textDecoration: 'none',
+                            fontSize: '0.75rem',
+                          }}
+                        >
+                          <ExternalLink size={14} />
+                        </a>
+                        <button
+                          type="button"
+                          onClick={() => handleRemoveAttachment(file.id || file.file_url)}
+                          title="Remove Attachment"
+                          style={{
+                            border: 'none',
+                            background: '#fee2e2',
+                            color: '#dc2626',
+                            padding: '0.35rem 0.45rem',
+                            borderRadius: '4px',
+                            cursor: 'pointer',
+                            display: 'inline-flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                          }}
+                        >
+                          <Trash2 size={14} />
+                        </button>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          ) : (
+            <div style={{ fontSize: '0.78rem', color: '#94a3b8', fontStyle: 'italic', textAlign: 'center', padding: '0.5rem' }}>
+              No attachments uploaded yet. You can attach invoices, packing lists, rate confirmations, or cargo photos.
+            </div>
+          )}
+        </div>
+
         {/* Actions */}
         <div className="form-actions" style={{ display: 'flex', gap: '0.5rem', justifyContent: 'flex-end', paddingTop: '1rem', borderTop: '1px solid #e0e0e0' }}>
-          <Button variant="outline" type="button" onClick={onCancel} disabled={isLoading}>Cancel</Button>
-          <Button variant="primary" type="submit" disabled={isLoading} isLoading={isLoading} leftIcon={Check}>
+          <Button variant="outline" type="button" onClick={onCancel} disabled={isLoading || isUploadingFiles}>Cancel</Button>
+          <Button variant="primary" type="submit" disabled={isLoading || isUploadingFiles} isLoading={isLoading} leftIcon={Check}>
             {isEditMode ? 'Update Export Quotation' : 'Save Export Quotation'}
           </Button>
         </div>
@@ -1297,3 +1549,4 @@ const QuotationForm = ({ onCancel, onSuccess, initialData, existingCount = 0 }) 
 };
 
 export default QuotationForm;
+

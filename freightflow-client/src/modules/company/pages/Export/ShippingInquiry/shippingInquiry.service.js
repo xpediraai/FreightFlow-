@@ -7,4 +7,8 @@ export const shippingInquiryService = {
   updateInquiry: (id, data) => api.put(`/shipping-inquiry/${id}`, data),
   updateStatus: (id, status) => api.patch(`/shipping-inquiry/${id}/status`, { status }),
   deleteInquiry: (id) => api.delete(`/shipping-inquiry/${id}`),
+  uploadAttachments: (formData) => api.post('/shipping-inquiry/upload', formData, {
+    headers: { 'Content-Type': 'multipart/form-data' },
+  }),
 };
+

@@ -7,7 +7,21 @@ const router = express.Router();
 const shippingInquiryController = require("./shippingInquiry.controller");
 const { authenticateToken } = require("../../../middlewares/auth.middleware");
 
+const { upload, handleUpload } = require("../../../middlewares/upload.middleware");
+
 router.use(authenticateToken);
+
+const setUploadContext = (req, res, next) => {
+  req.uploadContext = "ShippingInquiries";
+  next();
+};
+
+router.post(
+  "/upload",
+  setUploadContext,
+  handleUpload(upload.array("attachments", 50)),
+  shippingInquiryController.uploadAttachments
+);
 
 router.post("/", shippingInquiryController.create);
 router.get("/", shippingInquiryController.list);
@@ -17,3 +31,4 @@ router.patch("/:id/status", shippingInquiryController.changeStatus);
 router.delete("/:id", shippingInquiryController.remove);
 
 module.exports = router;
+

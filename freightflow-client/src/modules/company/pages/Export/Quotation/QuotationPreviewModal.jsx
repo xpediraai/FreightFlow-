@@ -1,10 +1,40 @@
 import React, { useState } from 'react';
-import { X, Printer, Download, Ship, MapPin, Package, FileText, CheckCircle2, Building2 } from 'lucide-react';
+import { X, Printer, Download, Ship, MapPin, Package, FileText, CheckCircle2, Building2, Paperclip, ExternalLink, FileSpreadsheet, Image as ImageIcon, File } from 'lucide-react';
 import html2pdf from 'html2pdf.js';
 import Button from '../../../../../shared/components/Button';
 import Badge from '../../../../../shared/components/Badge/Badge';
 
+const formatFileSize = (bytes) => {
+  if (!bytes || bytes === 0) return '0 B';
+  const k = 1024;
+  const sizes = ['B', 'KB', 'MB', 'GB'];
+  const i = Math.floor(Math.log(bytes) / Math.log(k));
+  return `${parseFloat((bytes / Math.pow(k, i)).toFixed(1))} ${sizes[i]}`;
+};
+
+const getFileIcon = (mimetype = '', name = '') => {
+  const ext = (name.split('.').pop() || '').toLowerCase();
+  if (mimetype.startsWith('image/') || ['jpg', 'jpeg', 'png', 'svg', 'webp', 'gif'].includes(ext)) {
+    return <ImageIcon size={15} color="#0288d1" />;
+  }
+  if (mimetype.includes('pdf') || ext === 'pdf') {
+    return <FileText size={15} color="#dc2626" />;
+  }
+  if (mimetype.includes('sheet') || mimetype.includes('excel') || mimetype.includes('csv') || ['xls', 'xlsx', 'csv'].includes(ext)) {
+    return <FileSpreadsheet size={15} color="#16a34a" />;
+  }
+  return <File size={15} color="#64748b" />;
+};
+
+const getFullFileUrl = (url) => {
+  if (!url) return '#';
+  if (url.startsWith('http://') || url.startsWith('https://')) return url;
+  const backendBase = (import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000/api').replace(/\/api\/?$/, '');
+  return `${backendBase}${url.startsWith('/') ? '' : '/'}${url}`;
+};
+
 const QuotationPreviewModal = ({ quotation, onClose }) => {
+
   const [isExporting, setIsExporting] = useState(false);
 
   if (!quotation) return null;
@@ -350,7 +380,62 @@ const QuotationPreviewModal = ({ quotation, onClose }) => {
                   </span>
                 </div>
               )}
+
+              {/* Attached Supporting Documents */}
+              {(() => {
+                let atts = quotation.attachments;
+                if (typeof atts === 'string' && atts.trim()) {
+                  try { atts = JSON.parse(atts); } catch (e) { atts = []; }
+                }
+                if (!Array.isArray(atts) || atts.length === 0) return null;
+
+                return (
+                  <div style={{ backgroundColor: '#f8fafc', border: '1px solid #e2e8f0', borderRadius: '5px', padding: '0.5rem 0.75rem', marginBottom: '0.75rem', pageBreakInside: 'avoid', breakInside: 'avoid' }}>
+                    <div style={{ fontSize: '0.75rem', fontWeight: 700, color: '#1976D2', textTransform: 'uppercase', marginBottom: '0.35rem', display: 'flex', alignItems: 'center', gap: '0.35rem' }}>
+                      <Paperclip size={13} />
+                      <span>Attached Supporting Documents ({atts.length})</span>
+                    </div>
+                    <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.5rem' }}>
+                      {atts.map((file, i) => {
+                        const fileName = file.name || file.filename || `File ${i + 1}`;
+                        const fileUrl = getFullFileUrl(file.file_url);
+                        const fileSize = formatFileSize(file.size);
+
+                        return (
+                          <a
+                            key={file.id || i}
+                            href={fileUrl}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            style={{
+                              display: 'inline-flex',
+                              alignItems: 'center',
+                              gap: '0.4rem',
+                              padding: '0.3rem 0.55rem',
+                              backgroundColor: '#ffffff',
+                              border: '1px solid #cbd5e1',
+                              borderRadius: '4px',
+                              fontSize: '0.75rem',
+                              color: '#1e293b',
+                              textDecoration: 'none',
+                              fontWeight: 500,
+                            }}
+                          >
+                            {getFileIcon(file.mimetype, fileName)}
+                            <span style={{ maxWidth: '160px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                              {fileName}
+                            </span>
+                            {fileSize ? <span style={{ color: '#64748b', fontSize: '0.68rem' }}>({fileSize})</span> : null}
+                            <ExternalLink size={12} color="#0288d1" />
+                          </a>
+                        );
+                      })}
+                    </div>
+                  </div>
+                );
+              })()}
             </div>
+
 
             {/* Formal Signature & Footer Block (Anchored via flex) */}
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', borderTop: '1px solid #cbd5e1', paddingTop: '0.65rem', marginTop: 'auto', fontSize: '0.72rem', color: '#64748b', pageBreakInside: 'avoid', breakInside: 'avoid' }}>

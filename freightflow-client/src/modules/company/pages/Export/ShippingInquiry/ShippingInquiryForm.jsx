@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useMemo } from 'react';
+import React, { useEffect, useState, useMemo, useRef } from 'react';
 import { useForm, useFieldArray, Controller } from 'react-hook-form';
 import {
   X,
@@ -13,6 +13,13 @@ import {
   AlertCircle,
   Plus,
   Trash2,
+  Paperclip,
+  Upload,
+  ExternalLink,
+  File,
+  FileSpreadsheet,
+  Image as ImageIcon,
+  Loader2,
 } from 'lucide-react';
 import Button from '../../../../../shared/components/Button';
 import { businessService } from '../../../../masters/services/business.service';
@@ -37,6 +44,35 @@ export const SHIPMENT_SUB_TYPES = [
 // Helpers
 // ============================================================
 
+const formatFileSize = (bytes) => {
+  if (!bytes || bytes === 0) return '0 B';
+  const k = 1024;
+  const sizes = ['B', 'KB', 'MB', 'GB'];
+  const i = Math.floor(Math.log(bytes) / Math.log(k));
+  return `${parseFloat((bytes / Math.pow(k, i)).toFixed(1))} ${sizes[i]}`;
+};
+
+const getFileIcon = (mimetype = '', name = '') => {
+  const ext = (name.split('.').pop() || '').toLowerCase();
+  if (mimetype.startsWith('image/') || ['jpg', 'jpeg', 'png', 'svg', 'webp', 'gif'].includes(ext)) {
+    return <ImageIcon size={20} color="#0288d1" />;
+  }
+  if (mimetype.includes('pdf') || ext === 'pdf') {
+    return <FileText size={20} color="#dc2626" />;
+  }
+  if (mimetype.includes('sheet') || mimetype.includes('excel') || mimetype.includes('csv') || ['xls', 'xlsx', 'csv'].includes(ext)) {
+    return <FileSpreadsheet size={20} color="#16a34a" />;
+  }
+  return <File size={20} color="#64748b" />;
+};
+
+const getFullFileUrl = (url) => {
+  if (!url) return '#';
+  if (url.startsWith('http://') || url.startsWith('https://')) return url;
+  const backendBase = (import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000/api').replace(/\/api\/?$/, '');
+  return `${backendBase}${url.startsWith('/') ? '' : '/'}${url}`;
+};
+
 export const generateInquiryNo = (existingCount = 0) => {
   const now = new Date();
   const month = String(now.getMonth() + 1).padStart(2, '0');
@@ -57,6 +93,7 @@ export const parseWeightString = (str = '') => {
   }
   return { val: cleaned, uom: 'KG' };
 };
+
 
 const extractList = (res) => {
   if (res?.status !== 'fulfilled' || !res.value) return [];
@@ -187,6 +224,7 @@ const buildDefaultValues = (initialData, existingCount) => {
       lashing_chocking: '',
       priority: 'Medium',
       status: 'Pending',
+      attachments: [],
       cargoDetails: [emptyCargo()],
       containerDetails: [emptyContainer()]
     };
@@ -194,6 +232,18 @@ const buildDefaultValues = (initialData, existingCount) => {
 
   const rawWeight = initialData.gross_weight || initialData.weight || '';
   const parsedWeight = parseWeightString(rawWeight);
+
+  let initialAttachments = [];
+  if (Array.isArray(initialData.attachments)) {
+    initialAttachments = initialData.attachments;
+  } else if (typeof initialData.attachments === 'string' && initialData.attachments.trim()) {
+    try {
+      initialAttachments = JSON.parse(initialData.attachments);
+    } catch (e) {
+      initialAttachments = [];
+    }
+  }
+
 
   // Normalize cargo details
   let rawCargos = initialData.cargoDetails || initialData.cargos || initialData.cargo_details;
@@ -346,6 +396,7 @@ const buildDefaultValues = (initialData, existingCount) => {
     lashing_chocking: initialData.lashing_chocking || '',
     priority: priority,
     status: initialData.status || 'Pending',
+    attachments: initialAttachments,
     cargoDetails,
     containerDetails
   };
@@ -499,6 +550,9 @@ const ShippingInquiryForm = ({
   const [isDropdownsLoading, setIsDropdownsLoading] = useState(true);
   const [submitError, setSubmitError] = useState('');
   const [isFactoryModalOpen, setIsFactoryModalOpen] = useState(false);
+  const [isUploadingFiles, setIsUploadingFiles] = useState(false);
+  const fileInputRef = useRef(null);
+
 
   const [factoryDetails, setFactoryDetails] = useState(() => {
     let fact = initialData?.factory_details;
@@ -617,10 +671,13 @@ const ShippingInquiryForm = ({
     }
   }, [exporterId, exporters, setValue]);
 
+  const [attachments, setAttachments] = useState(() => defaultValues.attachments || []);
+
   // Reset form and factory state when switching create/edit record
   useEffect(() => {
     const values = buildDefaultValues(initialData, existingCount);
     reset(values);
+    setAttachments(values.attachments || []);
 
     let fact = initialData?.factory_details;
     if (typeof fact === 'string') {
@@ -641,6 +698,43 @@ const ShippingInquiryForm = ({
       setFactoryDetails(null);
     }
   }, [initialData, existingCount, reset]);
+
+  // Handle Multi-File Attachment Upload
+  const handleFileUpload = async (e) => {
+    const files = Array.from(e.target.files || []);
+    if (files.length === 0) return;
+
+    setIsUploadingFiles(true);
+    setSubmitError('');
+    try {
+      const fd = new FormData();
+      files.forEach((file) => {
+        fd.append('attachments', file);
+      });
+
+      const res = await shippingInquiryService.uploadAttachments(fd);
+      const newFiles = res?.data?.data || res?.data || [];
+      if (Array.isArray(newFiles)) {
+        setAttachments(prev => [...(prev || []), ...newFiles]);
+      }
+    } catch (err) {
+      console.error('Failed to upload attachments:', err);
+      const msg = err.response?.data?.message || err.response?.data?.error || err.message || 'Failed to upload attachments.';
+      setSubmitError(msg);
+    } finally {
+      setIsUploadingFiles(false);
+      if (fileInputRef.current) {
+        fileInputRef.current.value = '';
+      }
+    }
+  };
+
+  const handleRemoveAttachment = (attIdOrUrl) => {
+    setAttachments(prev => (prev || []).filter(
+      att => (att.id || att.file_url) !== attIdOrUrl && att.file_url !== attIdOrUrl
+    ));
+  };
+
 
   // Master dropdowns
   useEffect(() => {
@@ -869,6 +963,7 @@ const ShippingInquiryForm = ({
         destination: values.pod,
         remarks: values.special_requirements,
         special_requirements: values.special_requirements,
+        attachments: attachments || [],
         free_days_required: values.free_days_required ? parseInt(values.free_days_required, 10) : null,
         factory_name: isFactory ? (values.factory_name || factoryDetails?.factory_name || '') : '',
         factory_address: isFactory ? (values.factory_address || factoryDetails?.factory_address || '') : '',
@@ -1861,20 +1956,183 @@ const ShippingInquiryForm = ({
               {...register('special_requirements')}
             />
           </div>
+        </FloatingWrapper>
+
+        {/* SECTION 9 — ATTACHMENTS & SUPPORTING DOCUMENTS */}
+        <FloatingWrapper>
+          <div style={styles.sectionHeader}>
+            <Paperclip size={16} color="#1976D2" />
+            <span>Section 9 — Attachments & Supporting Documents</span>
+          </div>
+
+          <div style={{ marginBottom: '1rem' }}>
+            {/* Hidden File Input */}
+            <input
+              type="file"
+              ref={fileInputRef}
+              onChange={handleFileUpload}
+              multiple
+              accept=".pdf,.doc,.docx,.xls,.xlsx,.csv,.txt,.jpg,.jpeg,.png,.svg,.webp"
+              style={{ display: 'none' }}
+            />
+
+            {/* Upload Drop / Browse Area */}
+            <div
+              onClick={() => !isUploadingFiles && fileInputRef.current && fileInputRef.current.click()}
+              style={{
+                border: '2px dashed #93c5fd',
+                borderRadius: '8px',
+                padding: '1.25rem 1.5rem',
+                backgroundColor: '#f8fafc',
+                textAlign: 'center',
+                cursor: isUploadingFiles ? 'not-allowed' : 'pointer',
+                transition: 'all 0.2s ease',
+                marginBottom: '1rem',
+                display: 'flex',
+                flexDirection: 'column',
+                alignItems: 'center',
+                justifyContent: 'center',
+                gap: '0.4rem',
+              }}
+            >
+              {isUploadingFiles ? (
+                <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', color: '#0288d1', fontWeight: 600 }}>
+                  <Loader2 size={24} style={{ animation: 'spin 1s linear infinite' }} />
+                  <span>Uploading attachment(s) to uploads folder...</span>
+                </div>
+              ) : (
+                <>
+                  <div style={{ width: '42px', height: '42px', borderRadius: '50%', backgroundColor: '#e0f2fe', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#0288d1', marginBottom: '0.2rem' }}>
+                    <Upload size={22} />
+                  </div>
+                  <div style={{ fontSize: '0.9rem', fontWeight: 600, color: '#1e293b' }}>
+                    Click to browse or drop files to attach
+                  </div>
+                  <div style={{ fontSize: '0.78rem', color: '#64748b' }}>
+                    Add as many documents as needed (PDF, Word, Excel, CSV, Images). All files are stored directly in the <strong>uploads</strong> folder.
+                  </div>
+                </>
+              )}
+            </div>
+
+            {/* Attached Files List / Grid */}
+            {attachments && attachments.length > 0 ? (
+              <div>
+                <div style={{ fontSize: '0.8rem', fontWeight: 600, color: '#475569', marginBottom: '0.5rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                  <span>Attached Files ({attachments.length}):</span>
+                  <span style={{ fontSize: '0.75rem', color: '#0288d1', fontWeight: 500 }}>Showing active files for this shipment inquiry</span>
+                </div>
+
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: '0.75rem' }}>
+                  {attachments.map((file, idx) => {
+                    const fileName = file.name || file.filename || `Attachment_${idx + 1}`;
+                    const fileUrl = getFullFileUrl(file.file_url);
+                    const fileSize = formatFileSize(file.size);
+                    const uploadDate = file.uploaded_at ? new Date(file.uploaded_at).toLocaleDateString('en-GB') : '';
+
+                    return (
+                      <div
+                        key={file.id || file.file_url || idx}
+                        style={{
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'space-between',
+                          padding: '0.65rem 0.85rem',
+                          backgroundColor: '#ffffff',
+                          border: '1px solid #e2e8f0',
+                          borderRadius: '6px',
+                          boxShadow: '0 1px 2px 0 rgba(0, 0, 0, 0.05)',
+                          gap: '0.5rem',
+                        }}
+                      >
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.65rem', minWidth: 0, flex: 1 }}>
+                          <div style={{ flexShrink: 0 }}>
+                            {getFileIcon(file.mimetype, fileName)}
+                          </div>
+                          <div style={{ minWidth: 0, flex: 1 }}>
+                            <div
+                              title={fileName}
+                              style={{
+                                fontSize: '0.825rem',
+                                fontWeight: 600,
+                                color: '#1e293b',
+                                overflow: 'hidden',
+                                textOverflow: 'ellipsis',
+                                whiteSpace: 'nowrap',
+                              }}
+                            >
+                              {fileName}
+                            </div>
+                            <div style={{ fontSize: '0.72rem', color: '#64748b' }}>
+                              {fileSize} {uploadDate ? `• ${uploadDate}` : ''}
+                            </div>
+                          </div>
+                        </div>
+
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.35rem', flexShrink: 0 }}>
+                          <a
+                            href={fileUrl}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            title="Open / Download Attachment"
+                            style={{
+                              display: 'inline-flex',
+                              alignItems: 'center',
+                              justifyContent: 'center',
+                              padding: '0.35rem 0.45rem',
+                              borderRadius: '4px',
+                              backgroundColor: '#e0f2fe',
+                              color: '#0288d1',
+                              textDecoration: 'none',
+                              fontSize: '0.75rem',
+                            }}
+                          >
+                            <ExternalLink size={14} />
+                          </a>
+                          <button
+                            type="button"
+                            onClick={() => handleRemoveAttachment(file.id || file.file_url)}
+                            title="Remove Attachment"
+                            style={{
+                              border: 'none',
+                              background: '#fee2e2',
+                              color: '#dc2626',
+                              padding: '0.35rem 0.45rem',
+                              borderRadius: '4px',
+                              cursor: 'pointer',
+                              display: 'inline-flex',
+                              alignItems: 'center',
+                              justifyContent: 'center',
+                            }}
+                          >
+                            <Trash2 size={14} />
+                          </button>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            ) : (
+              <div style={{ fontSize: '0.78rem', color: '#94a3b8', fontStyle: 'italic', textAlign: 'center', padding: '0.5rem' }}>
+                No attachments uploaded yet. You can attach inquiry sheets, cargo packing details, or technical specs.
+              </div>
+            )}
+          </div>
 
           <div className="form-actions" style={styles.actions}>
             <Button
               variant="outline"
               type="button"
               onClick={onCancel}
-              disabled={isSubmitting}
+              disabled={isSubmitting || isUploadingFiles}
             >
               Cancel
             </Button>
             <Button
               variant="primary"
               type="submit"
-              disabled={disabled}
+              disabled={disabled || isUploadingFiles}
               isLoading={isSubmitting}
               leftIcon={Check}
             >

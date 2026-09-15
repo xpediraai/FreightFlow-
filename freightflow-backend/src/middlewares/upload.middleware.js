@@ -12,7 +12,20 @@ const { errorResponse } = require("../utils/response");
 const MAX_SIZE = 16 * 1024 * 1024;
 
 // Allowed file extensions
-const ALLOWED_MIME_TYPES = ["image/jpeg", "image/png", "image/jpg", "image/svg+xml", "application/pdf"];
+const ALLOWED_MIME_TYPES = [
+    "image/jpeg",
+    "image/png",
+    "image/jpg",
+    "image/svg+xml",
+    "image/webp",
+    "application/pdf",
+    "application/msword",
+    "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+    "application/vnd.ms-excel",
+    "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+    "text/plain",
+    "text/csv"
+];
 
 /**
  * Multer storage configuration for Company uploads.
