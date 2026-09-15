@@ -101,9 +101,9 @@ const VehicleList = ({ onEdit, searchQuery = '', viewMode = 'table', refreshTrig
       render: (row) => row.vehicle_owner || '-'
     },
     {
-      header: 'Capacity (kg)',
+      header: 'Capacity (Tons)',
       key: 'vehicle_capacity',
-      render: (row) => row.vehicle_capacity || '-'
+      render: (row) => row.vehicle_capacity ? `${row.vehicle_capacity} Tons` : '-'
     },
     {
       header: 'GPS',

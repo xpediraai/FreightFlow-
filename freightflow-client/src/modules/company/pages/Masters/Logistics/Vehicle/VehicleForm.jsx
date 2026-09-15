@@ -1,9 +1,26 @@
 import React, { useState, useEffect } from 'react';
-import { X } from 'lucide-react';
+import { X, Truck, ShieldCheck } from 'lucide-react';
 import Button from '../../../../../../shared/components/Button';
 import { logisticsService } from '../../../../../masters/services/logistics.service';
 import { businessService } from '../../../../../masters/services/business.service';
 import StatusToggle from '../../../../../../shared/components/Input/StatusToggle';
+
+const VEHICLE_TYPES = [
+  'Trailer 20ft',
+  'Trailer 40ft',
+  'Flatbed',
+  'Closed Container',
+  'Open Truck',
+  'LCV / Mini Truck',
+  'Tanker',
+  'Other'
+];
+
+const VEHICLE_OWNERS = [
+  'Own',
+  'Vendor',
+  'Attached'
+];
 
 const VehicleForm = ({ onCancel, onSuccess, initialData }) => {
   const isEditMode = !!initialData;
@@ -20,7 +37,7 @@ const VehicleForm = ({ onCancel, onSuccess, initialData }) => {
     vehicle_number: '',
     vehicle_type: '',
     vehicle_capacity: '',
-    vehicle_owner: '',
+    vehicle_owner: 'Own',
     vendor_id: '',
     registration_number: '',
     registration_expiry: '',
@@ -44,7 +61,7 @@ const VehicleForm = ({ onCancel, onSuccess, initialData }) => {
         vehicle_number: initialData.vehicle_number || '',
         vehicle_type: initialData.vehicle_type || '',
         vehicle_capacity: initialData.vehicle_capacity || '',
-        vehicle_owner: initialData.vehicle_owner || '',
+        vehicle_owner: initialData.vehicle_owner || 'Own',
         vendor_id: initialData.vendor_id || '',
         registration_number: initialData.registration_number || '',
         registration_expiry: formatDateForInput(initialData.registration_expiry),
@@ -115,7 +132,11 @@ const VehicleForm = ({ onCancel, onSuccess, initialData }) => {
     setIsLoading(true);
     
     try {
-      const payload = { ...formData };
+      const payload = {
+        ...formData,
+        vehicle_capacity: formData.vehicle_capacity !== '' && !isNaN(Number(formData.vehicle_capacity)) ? Number(formData.vehicle_capacity) : null,
+        vendor_id: formData.vendor_id || null
+      };
       
       // Nullify empty date strings for Sequelize
       const dateFields = ['registration_expiry', 'insurance_expiry', 'fitness_expiry', 'pollution_expiry'];
@@ -139,107 +160,217 @@ const VehicleForm = ({ onCancel, onSuccess, initialData }) => {
   return (
     <div className="bg-surface border-light rounded-lg shadow-sm p-lg">
       <div className="flex justify-between align-center border-b-light pb-sm mb-md">
-        <h2 className="text-lg font-semibold m-0">{isEditMode ? 'Edit Vehicle' : 'Create New Vehicle'}</h2>
+        <h2 className="text-lg font-semibold m-0 flex items-center gap-xs">
+          <Truck size={20} className="text-primary" />
+          {isEditMode ? 'Edit Vehicle Master' : 'Create New Vehicle Master'}
+        </h2>
         <Button variant="ghost" onClick={onCancel} leftIcon={X} size="sm">Close</Button>
       </div>
 
       {globalError && <div className="alert alert-danger mb-md p-sm">{globalError}</div>}
 
       <form onSubmit={handleSubmit} className="dense-form">
-        <div className="form-grid">
-          <div className="form-group">
-            <label>Vehicle Number <span className="text-danger">*</span></label>
-            <input 
-              disabled={isLoading || isEditMode} 
-              type="text" 
-              name="vehicle_number" 
-              value={formData.vehicle_number} 
-              onChange={handleChange} 
-              onBlur={handleBlur}
-              className="form-control form-control-sm uppercase" 
-            />
-            {errors.vehicle_number && <div className="text-danger text-xs mt-xs">{errors.vehicle_number}</div>}
-          </div>
-          <div className="form-group">
-            <label>Vehicle Type</label>
-            <input 
-              disabled={isLoading} 
-              type="text" 
-              name="vehicle_type" 
-              value={formData.vehicle_type} 
-              onChange={handleChange} 
-              onBlur={handleBlur}
-              className="form-control form-control-sm" 
-            />
-          </div>
-          <div className="form-group">
-            <label>Capacity (kg/tons)</label>
-            <input 
-              disabled={isLoading} 
-              type="number" 
-              step="0.01"
-              name="vehicle_capacity" 
-              value={formData.vehicle_capacity} 
-              onChange={handleChange} 
-              onBlur={handleBlur}
-              className="form-control form-control-sm" 
-            />
-          </div>
-          <div className="form-group">
-            <label>Vehicle Owner</label>
-            <input 
-              disabled={isLoading} 
-              type="text" 
-              name="vehicle_owner" 
-              value={formData.vehicle_owner} 
-              onChange={handleChange} 
-              onBlur={handleBlur}
-              className="form-control form-control-sm" 
-            />
-          </div>
-          <div className="form-group">
-            <label>Vendor</label>
-            <select
-              disabled={isLoading}
-              name="vendor_id"
-              value={formData.vendor_id}
-              onChange={handleChange}
-              onBlur={handleBlur}
-              className="form-control form-control-sm"
-            >
-              <option value="">Select Vendor</option>
-              {vendors
-                .filter(v => v.status === 'Active' || v.id === formData.vendor_id)
-                .map(v => (
-                  <option key={v.id} value={v.id}>
-                    {v.vendor_name} ({v.vendor_code})
-                  </option>
-              ))}
-            </select>
-          </div>
+        {/* Section 1: Vehicle Basic Details */}
+        <div className="mb-sm">
+          <h4 className="text-sm font-semibold text-secondary mb-xs">Vehicle Details</h4>
+          <div className="form-grid">
+            <div className="form-group">
+              <label>Vehicle Number <span className="text-danger">*</span></label>
+              <input 
+                disabled={isLoading || isEditMode} 
+                type="text" 
+                name="vehicle_number" 
+                value={formData.vehicle_number} 
+                onChange={handleChange} 
+                onBlur={handleBlur}
+                placeholder="e.g. GJ05AB1234"
+                className="form-control form-control-sm uppercase" 
+              />
+              {errors.vehicle_number && <div className="text-danger text-xs mt-xs">{errors.vehicle_number}</div>}
+            </div>
 
-          <div className="form-group">
-            <label>GPS Enabled</label>
-            <select
-              disabled={isLoading}
-              name="gps_enabled"
-              value={formData.gps_enabled}
-              onChange={handleChange}
-              onBlur={handleBlur}
-              className="form-control form-control-sm"
-            >
-              <option value="Yes">Yes</option>
-              <option value="No">No</option>
-            </select>
-          </div>
+            <div className="form-group">
+              <label>Vehicle Type</label>
+              <select
+                disabled={isLoading}
+                name="vehicle_type"
+                value={formData.vehicle_type}
+                onChange={handleChange}
+                onBlur={handleBlur}
+                className="form-control form-control-sm"
+              >
+                <option value="">Select Vehicle Type</option>
+                {VEHICLE_TYPES.map(type => (
+                  <option key={type} value={type}>{type}</option>
+                ))}
+              </select>
+            </div>
 
-          <div className="form-group">
-            <label>Status</label>
-            <StatusToggle 
-              value={formData.status} 
-              onChange={(val) => handleChange({ target: { name: 'status', value: val } })}
-              disabled={isLoading}
-            />
+            <div className="form-group">
+              <label>Vehicle Capacity (Tons)</label>
+              <input 
+                disabled={isLoading} 
+                type="number" 
+                step="0.01"
+                min="0"
+                name="vehicle_capacity" 
+                value={formData.vehicle_capacity} 
+                onChange={handleChange} 
+                onBlur={handleBlur}
+                placeholder="e.g. 32.5"
+                className="form-control form-control-sm" 
+              />
+            </div>
+
+            <div className="form-group">
+              <label>Vehicle Owner</label>
+              <select
+                disabled={isLoading}
+                name="vehicle_owner"
+                value={formData.vehicle_owner}
+                onChange={handleChange}
+                onBlur={handleBlur}
+                className="form-control form-control-sm"
+              >
+                {VEHICLE_OWNERS.map(owner => (
+                  <option key={owner} value={owner}>{owner}</option>
+                ))}
+              </select>
+            </div>
+
+            <div className="form-group">
+              <label>Vendor</label>
+              <select
+                disabled={isLoading}
+                name="vendor_id"
+                value={formData.vendor_id}
+                onChange={handleChange}
+                onBlur={handleBlur}
+                className="form-control form-control-sm"
+              >
+                <option value="">Select Vendor (if applicable)</option>
+                {vendors
+                  .filter(v => v.status === 'Active' || v.id === formData.vendor_id)
+                  .map(v => (
+                    <option key={v.id} value={v.id}>
+                      {v.vendor_name} ({v.vendor_code})
+                    </option>
+                ))}
+              </select>
+            </div>
+
+            <div className="form-group">
+              <label>GPS Enabled</label>
+              <select
+                disabled={isLoading}
+                name="gps_enabled"
+                value={formData.gps_enabled}
+                onChange={handleChange}
+                onBlur={handleBlur}
+                className="form-control form-control-sm"
+              >
+                <option value="Yes">Yes</option>
+                <option value="No">No</option>
+              </select>
+            </div>
+          </div>
+        </div>
+
+        {/* Section 2: Registration & Compliance Details */}
+        <div className="mt-md mb-sm pt-sm border-t-light">
+          <h4 className="text-sm font-semibold text-secondary mb-xs flex items-center gap-xs">
+            <ShieldCheck size={16} className="text-primary" />
+            Registration & Compliance Details
+          </h4>
+          <div className="form-grid">
+            <div className="form-group">
+              <label>Registration Number</label>
+              <input 
+                disabled={isLoading} 
+                type="text" 
+                name="registration_number" 
+                value={formData.registration_number} 
+                onChange={handleChange} 
+                onBlur={handleBlur}
+                placeholder="e.g. GJ05AB1234"
+                className="form-control form-control-sm uppercase" 
+              />
+            </div>
+
+            <div className="form-group">
+              <label>Registration Expiry</label>
+              <input 
+                disabled={isLoading} 
+                type="date" 
+                name="registration_expiry" 
+                value={formData.registration_expiry} 
+                onChange={handleChange} 
+                onBlur={handleBlur}
+                className="form-control form-control-sm" 
+              />
+            </div>
+
+            <div className="form-group">
+              <label>Insurance Number</label>
+              <input 
+                disabled={isLoading} 
+                type="text" 
+                name="insurance_number" 
+                value={formData.insurance_number} 
+                onChange={handleChange} 
+                onBlur={handleBlur}
+                placeholder="e.g. POL-99887766"
+                className="form-control form-control-sm" 
+              />
+            </div>
+
+            <div className="form-group">
+              <label>Insurance Expiry</label>
+              <input 
+                disabled={isLoading} 
+                type="date" 
+                name="insurance_expiry" 
+                value={formData.insurance_expiry} 
+                onChange={handleChange} 
+                onBlur={handleBlur}
+                className="form-control form-control-sm" 
+              />
+            </div>
+
+            <div className="form-group">
+              <label>Fitness Expiry</label>
+              <input 
+                disabled={isLoading} 
+                type="date" 
+                name="fitness_expiry" 
+                value={formData.fitness_expiry} 
+                onChange={handleChange} 
+                onBlur={handleBlur}
+                className="form-control form-control-sm" 
+              />
+            </div>
+
+            <div className="form-group">
+              <label>Pollution Expiry</label>
+              <input 
+                disabled={isLoading} 
+                type="date" 
+                name="pollution_expiry" 
+                value={formData.pollution_expiry} 
+                onChange={handleChange} 
+                onBlur={handleBlur}
+                className="form-control form-control-sm" 
+              />
+            </div>
+
+            <div className="form-group">
+              <label>Status</label>
+              <StatusToggle 
+                value={formData.status} 
+                onChange={(val) => handleChange({ target: { name: 'status', value: val } })}
+                disabled={isLoading}
+              />
+            </div>
           </div>
         </div>
 

@@ -82,12 +82,33 @@ const CommodityForm = ({ onCancel, onSuccess, initialData }) => {
         </div>
         <div className="form-group">
           <label>Hazardous</label>
-          <StatusToggle 
-              value={formData.status} 
-              onChange={(val) => handleChange({ target: { name: 'status', value: val } })}
-              disabled={isLoading}
-            />
+          <select disabled={isLoading} name="hazardous" value={formData.hazardous} onChange={handleChange} className="form-control form-control-sm">
+            <option value="No">No</option>
+            <option value="Yes">Yes</option>
+          </select>
+        </div>
+        {formData.hazardous === 'Yes' && (
+          <div className="form-group">
+            <label>Hazard Class</label>
+            <input disabled={isLoading} type="text" name="hazard_class" value={formData.hazard_class} onChange={handleChange} className="form-control form-control-sm" placeholder="e.g. Class 3 - Flammable Liquid" />
           </div>
+        )}
+        <div className="form-group">
+          <label>Default Unit</label>
+          <input disabled={isLoading} type="text" name="default_unit" value={formData.default_unit} onChange={handleChange} className="form-control form-control-sm" placeholder="e.g. MT, KGS, SQM" />
+        </div>
+        <div className="form-group" style={{ gridColumn: '1 / -1' }}>
+          <label>Description</label>
+          <textarea disabled={isLoading} name="description" value={formData.description} onChange={handleChange} className="form-control form-control-sm" rows="2" placeholder="Cargo packing and handling details..." />
+        </div>
+        <div className="form-group">
+          <label>Status</label>
+          <StatusToggle 
+            value={formData.status} 
+            onChange={(val) => handleChange({ target: { name: 'status', value: val } })}
+            disabled={isLoading}
+          />
+        </div>
         
         <div className="form-actions flex justify-end gap-sm" style={{ gridColumn: '1 / -1' }}>
           <Button variant="outline" type="button" onClick={onCancel} disabled={isLoading}>Cancel</Button>

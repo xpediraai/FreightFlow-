@@ -1,7 +1,7 @@
 import * as XLSX from 'xlsx';
 
 /**
- * Master Schema Registry - Strictly matched to Form & Sequelize Model Fields
+ * Master Schema Registry - Strictly matched to Form & Sequelize Model Fields for all 22 Master modules
  */
 export const MASTER_SCHEMAS = {
   charge: {
@@ -10,18 +10,42 @@ export const MASTER_SCHEMAS = {
     uniqueKeys: ['charge_code'],
     headers: [
       { key: 'charge_code', label: 'Charge Code *', required: true, type: 'string' },
-      { key: 'charge_name', label: 'Charge Name *', required: true, type: 'string' },
+      { key: 'charge_name', label: 'Charge / Service Description *', required: true, type: 'string' },
+      { 
+        key: 'basis', 
+        label: 'Basis / Unit *', 
+        required: true, 
+        type: 'select', 
+        options: ['Per Container', 'Per BL Set', 'Flat / Lump sum', 'Per Vehicle', 'Per Set', 'Per CBM', 'Per MT', 'Per KG', 'Per Document', 'Per Day'] 
+      },
+      { key: 'default_rate', label: 'Default Rate', required: false, type: 'number' },
+      { key: 'default_qty', label: 'Default Quantity', required: false, type: 'number' },
+      { key: 'charge_type', label: 'Charge Type', required: false, type: 'select', options: ['Revenue', 'Expense'] },
+      { key: 'default_applicable', label: 'Default Applicable in Quotation', required: false, type: 'select', options: ['Yes', 'No'] },
+      { key: 'description', label: 'Description', required: false, type: 'string' },
       { key: 'status', label: 'Status', required: false, type: 'select', options: ['Active', 'Inactive'] }
     ],
     sampleData: [
       {
-        'Charge Code *': 'CHG-FREIGHT',
-        'Charge Name *': 'Ocean Freight Charge',
+        'Charge Code *': 'OF',
+        'Charge / Service Description *': 'Ocean Freight [POL to POD]',
+        'Basis / Unit *': 'Per Container',
+        'Default Rate': 85000,
+        'Default Quantity': 1,
+        'Charge Type': 'Revenue',
+        'Default Applicable in Quotation': 'Yes',
+        'Description': 'Standard Ocean Freight charges',
         'Status': 'Active'
       },
       {
-        'Charge Code *': 'CHG-DOC',
-        'Charge Name *': 'Documentation Fee',
+        'Charge Code *': 'THC',
+        'Charge / Service Description *': 'Terminal Handling Charge',
+        'Basis / Unit *': 'Per Container',
+        'Default Rate': 9500,
+        'Default Quantity': 1,
+        'Charge Type': 'Expense',
+        'Default Applicable in Quotation': 'Yes',
+        'Description': 'Origin Terminal Handling Charges',
         'Status': 'Active'
       }
     ]
@@ -38,15 +62,21 @@ export const MASTER_SCHEMAS = {
     ],
     sampleData: [
       {
+        'Country Code *': 'IN',
+        'Country Name *': 'India',
+        'Phone Code': '+91',
+        'Status': 'Active'
+      },
+      {
         'Country Code *': 'US',
         'Country Name *': 'United States',
         'Phone Code': '+1',
         'Status': 'Active'
       },
       {
-        'Country Code *': 'IN',
-        'Country Name *': 'India',
-        'Phone Code': '+91',
+        'Country Code *': 'AE',
+        'Country Name *': 'United Arab Emirates',
+        'Phone Code': '+971',
         'Status': 'Active'
       }
     ]
@@ -71,10 +101,10 @@ export const MASTER_SCHEMAS = {
         'Status': 'Active'
       },
       {
-        'Country *': 'United States',
-        'State Code *': 'CA',
-        'State Name *': 'California',
-        'GST State Code': '06',
+        'Country *': 'India',
+        'State Code *': 'GJ',
+        'State Name *': 'Gujarat',
+        'GST State Code': '24',
         'Status': 'Active'
       }
     ]
@@ -101,6 +131,15 @@ export const MASTER_SCHEMAS = {
         'GST Code': '27',
         'Pincode': '400001',
         'Status': 'Active'
+      },
+      {
+        'Country *': 'India',
+        'State *': 'GJ',
+        'City Code *': 'AMD',
+        'City Name *': 'Ahmedabad',
+        'GST Code': '24',
+        'Pincode': '380001',
+        'Status': 'Active'
       }
     ]
   },
@@ -119,11 +158,20 @@ export const MASTER_SCHEMAS = {
     ],
     sampleData: [
       {
-        'Port Code *': 'INBOM',
-        'Port Name *': 'Jawaharlal Nehru Port (Nhava Sheva)',
+        'Port Code *': 'INNSA',
+        'Port Name *': 'Nhava Sheva (JNPT)',
         'Country *': 'India',
-        'State': 'MH',
-        'City': 'Mumbai',
+        'State': 'Maharashtra',
+        'City': 'Navi Mumbai',
+        'Time Zone': 'Asia/Kolkata',
+        'Status': 'Active'
+      },
+      {
+        'Port Code *': 'INMUN',
+        'Port Name *': 'Mundra Port',
+        'Country *': 'India',
+        'State': 'Gujarat',
+        'City': 'Mundra',
         'Time Zone': 'Asia/Kolkata',
         'Status': 'Active'
       }
@@ -146,12 +194,22 @@ export const MASTER_SCHEMAS = {
     sampleData: [
       {
         'Container Code *': '20GP',
-        'Container Name *': '20ft General Purpose',
+        'Container Name *': '20ft General Purpose Dry',
         'ISO Code *': '22G1',
         'Size (FT) *': '20',
         'Category *': 'Dry',
         'Capacity (CBM)': 33.2,
         'Max Weight (KG)': 28000,
+        'Status': 'Active'
+      },
+      {
+        'Container Code *': '40HC',
+        'Container Name *': '40ft High Cube Dry',
+        'ISO Code *': '45G1',
+        'Size (FT) *': '40',
+        'Category *': 'Dry',
+        'Capacity (CBM)': 76.4,
+        'Max Weight (KG)': 28600,
         'Status': 'Active'
       }
     ]
@@ -170,7 +228,13 @@ export const MASTER_SCHEMAS = {
       {
         'Department Code *': 'LOG-OPS',
         'Department Name *': 'Logistics Operations',
-        'Description': 'Freight forwarding operations',
+        'Description': 'Freight forwarding and shipping operations',
+        'Status': 'Active'
+      },
+      {
+        'Department Code *': 'SALES',
+        'Department Name *': 'Sales & Marketing',
+        'Description': 'Client acquisition and export rate quotes',
         'Status': 'Active'
       }
     ]
@@ -182,6 +246,7 @@ export const MASTER_SCHEMAS = {
     headers: [
       { key: 'designation_code', label: 'Designation Code *', required: true, type: 'string' },
       { key: 'designation_name', label: 'Designation Name *', required: true, type: 'string' },
+      { key: 'department_code', label: 'Department', required: false, type: 'string' },
       { key: 'description', label: 'Description', required: false, type: 'string' },
       { key: 'status', label: 'Status', required: false, type: 'select', options: ['Active', 'Inactive'] }
     ],
@@ -189,7 +254,15 @@ export const MASTER_SCHEMAS = {
       {
         'Designation Code *': 'OPS-MGR',
         'Designation Name *': 'Operations Manager',
-        'Description': 'Manages daily shipment flows',
+        'Department': 'Logistics Operations',
+        'Description': 'Oversees daily shipments and custom documentation',
+        'Status': 'Active'
+      },
+      {
+        'Designation Code *': 'DOC-EXEC',
+        'Designation Name *': 'Documentation Executive',
+        'Department': 'Logistics Operations',
+        'Description': 'Handles BL release and shipping invoices',
         'Status': 'Active'
       }
     ]
@@ -201,6 +274,7 @@ export const MASTER_SCHEMAS = {
     headers: [
       { key: 'incoterm_code', label: 'Incoterm Code *', required: true, type: 'string' },
       { key: 'incoterm_name', label: 'Incoterm Name *', required: true, type: 'string' },
+      { key: 'transport_mode', label: 'Transport Mode', required: false, type: 'string' },
       { key: 'description', label: 'Description', required: false, type: 'string' },
       { key: 'status', label: 'Status', required: false, type: 'select', options: ['Active', 'Inactive'] }
     ],
@@ -208,7 +282,22 @@ export const MASTER_SCHEMAS = {
       {
         'Incoterm Code *': 'FOB',
         'Incoterm Name *': 'Free On Board',
-        'Description': 'Seller delivers when goods pass ship rail',
+        'Transport Mode': 'Sea',
+        'Description': 'Seller delivers when goods pass the ship rail at named port',
+        'Status': 'Active'
+      },
+      {
+        'Incoterm Code *': 'CIF',
+        'Incoterm Name *': 'Cost, Insurance and Freight',
+        'Transport Mode': 'Sea',
+        'Description': 'Seller pays freight and marine insurance to destination',
+        'Status': 'Active'
+      },
+      {
+        'Incoterm Code *': 'EXW',
+        'Incoterm Name *': 'Ex Works',
+        'Transport Mode': 'All',
+        'Description': 'Buyer handles all transport from seller premises',
         'Status': 'Active'
       }
     ]
@@ -221,13 +310,31 @@ export const MASTER_SCHEMAS = {
       { key: 'commodity_code', label: 'Commodity Code *', required: true, type: 'string' },
       { key: 'commodity_name', label: 'Commodity Name *', required: true, type: 'string' },
       { key: 'hs_code', label: 'HS Code', required: false, type: 'string' },
+      { key: 'description', label: 'Description', required: false, type: 'string' },
+      { key: 'hazardous', label: 'Hazardous', required: false, type: 'select', options: ['Yes', 'No'] },
+      { key: 'hazard_class', label: 'Hazard Class', required: false, type: 'string' },
+      { key: 'default_unit', label: 'Default Unit', required: false, type: 'string' },
       { key: 'status', label: 'Status', required: false, type: 'select', options: ['Active', 'Inactive'] }
     ],
     sampleData: [
       {
-        'Commodity Code *': 'CMD-ELEC',
-        'Commodity Name *': 'Consumer Electronics',
-        'HS Code': '85171200',
+        'Commodity Code *': 'CMD-CERAMIC',
+        'Commodity Name *': 'Ceramic Tiles & Sanitaryware',
+        'HS Code': '69072100',
+        'Description': 'Polished vitrified floor tiles in wooden pallets',
+        'Hazardous': 'No',
+        'Hazard Class': '',
+        'Default Unit': 'SQM',
+        'Status': 'Active'
+      },
+      {
+        'Commodity Code *': 'CMD-CHEM',
+        'Commodity Name *': 'Industrial Solvents',
+        'HS Code': '29051100',
+        'Description': 'Methanol in ISO tank containers',
+        'Hazardous': 'Yes',
+        'Hazard Class': 'Class 3 - Flammable Liquid',
+        'Default Unit': 'MT',
         'Status': 'Active'
       }
     ]
@@ -239,14 +346,30 @@ export const MASTER_SCHEMAS = {
     headers: [
       { key: 'uom_code', label: 'UOM Code *', required: true, type: 'string' },
       { key: 'uom_name', label: 'UOM Name *', required: true, type: 'string' },
-      { key: 'uom_type', label: 'UOM Type', required: false, type: 'string' },
+      { key: 'symbol', label: 'Symbol', required: false, type: 'string' },
+      { key: 'description', label: 'Description', required: false, type: 'string' },
       { key: 'status', label: 'Status', required: false, type: 'select', options: ['Active', 'Inactive'] }
     ],
     sampleData: [
       {
         'UOM Code *': 'KGS',
         'UOM Name *': 'Kilograms',
-        'UOM Type': 'Weight',
+        'Symbol': 'kg',
+        'Description': 'Metric kilogram unit of weight',
+        'Status': 'Active'
+      },
+      {
+        'UOM Code *': 'CBM',
+        'UOM Name *': 'Cubic Meter',
+        'Symbol': 'm³',
+        'Description': 'Volume measurement for cargo packing',
+        'Status': 'Active'
+      },
+      {
+        'UOM Code *': 'CONT',
+        'UOM Name *': 'Container',
+        'Symbol': 'ctr',
+        'Description': 'Per container unit',
         'Status': 'Active'
       }
     ]
@@ -258,16 +381,50 @@ export const MASTER_SCHEMAS = {
     headers: [
       { key: 'customer_code', label: 'Customer Code *', required: true, type: 'string' },
       { key: 'customer_name', label: 'Customer Name *', required: true, type: 'string' },
+      { 
+        key: 'customer_type', 
+        label: 'Customer Type', 
+        required: false, 
+        type: 'select', 
+        options: ['Shipper / Exporter', 'Consignee / Importer', 'Notify Party', 'Freight Forwarder', 'CHA / Custom Broker', 'Overseas Agent', 'Domestic Client', 'Other'] 
+      },
+      { 
+        key: 'customer_category', 
+        label: 'Customer Category', 
+        required: false, 
+        type: 'select', 
+        options: ['Regular', 'VIP', 'Corporate', 'Occasional'] 
+      },
       { key: 'gst_number', label: 'GST Number', required: false, type: 'string' },
       { key: 'pan_number', label: 'PAN Number', required: false, type: 'string' },
+      { key: 'iec_code', label: 'IEC Code', required: false, type: 'string' },
+      { key: 'cin_number', label: 'CIN Number', required: false, type: 'string' },
+      { key: 'tan_number', label: 'TAN Number', required: false, type: 'string' },
+      { key: 'credit_limit', label: 'Credit Limit', required: false, type: 'number' },
+      { 
+        key: 'payment_terms', 
+        label: 'Payment Terms', 
+        required: false, 
+        type: 'select', 
+        options: ['Advance / Prepaid', 'Net 7 Days', 'Net 15 Days', 'Net 30 Days', 'Net 45 Days', 'Net 60 Days', 'CAD (Cash Against Documents)', 'Letter of Credit (LC)', 'Custom'] 
+      },
+      { key: 'currency_code', label: 'Currency', required: false, type: 'string' },
       { key: 'status', label: 'Status', required: false, type: 'select', options: ['Active', 'Inactive'] }
     ],
     sampleData: [
       {
         'Customer Code *': 'CUST-001',
-        'Customer Name *': 'Global Trading Corp',
-        'GST Number': '27AAAAA0000A1Z5',
-        'PAN Number': 'AAAAA0000A',
+        'Customer Name *': 'Orient Ceramics Export Ltd',
+        'Customer Type': 'Shipper / Exporter',
+        'Customer Category': 'Corporate',
+        'GST Number': '24AAACC1234F1Z5',
+        'PAN Number': 'AAACC1234F',
+        'IEC Code': '0812345678',
+        'CIN Number': 'U26933GJ2015PLC081234',
+        'TAN Number': 'AHMC12345A',
+        'Credit Limit': 500000,
+        'Payment Terms': 'Net 30 Days',
+        'Currency': 'INR',
         'Status': 'Active'
       }
     ]
@@ -279,16 +436,42 @@ export const MASTER_SCHEMAS = {
     headers: [
       { key: 'vendor_code', label: 'Vendor Code *', required: true, type: 'string' },
       { key: 'vendor_name', label: 'Vendor Name *', required: true, type: 'string' },
-      { key: 'vendor_type', label: 'Vendor Type', required: false, type: 'string' },
+      { 
+        key: 'vendor_type', 
+        label: 'Vendor Type', 
+        required: false, 
+        type: 'select', 
+        options: ['Shipping Line', 'Airlines', 'Transporter / Fleet', 'CHA / Customs Broker', 'CFS / ICD Yard', 'Overseas Agent', 'Warehouse Operator', 'Surveyor / Inspection', 'Other'] 
+      },
       { key: 'gst_number', label: 'GST Number', required: false, type: 'string' },
+      { key: 'pan_number', label: 'PAN Number', required: false, type: 'string' },
+      { key: 'contact_person', label: 'Contact Person', required: false, type: 'string' },
+      { key: 'mobile', label: 'Mobile Number', required: false, type: 'string' },
+      { key: 'email', label: 'Email', required: false, type: 'email' },
+      { key: 'country_code', label: 'Country', required: false, type: 'string' },
+      { key: 'state_code', label: 'State', required: false, type: 'string' },
+      { key: 'city_name', label: 'City', required: false, type: 'string' },
+      { key: 'address', label: 'Address', required: false, type: 'string' },
+      { key: 'currency_code', label: 'Currency', required: false, type: 'string' },
+      { key: 'payment_terms', label: 'Payment Terms', required: false, type: 'string' },
       { key: 'status', label: 'Status', required: false, type: 'select', options: ['Active', 'Inactive'] }
     ],
     sampleData: [
       {
         'Vendor Code *': 'VND-001',
-        'Vendor Name *': 'Maersk Line India',
+        'Vendor Name *': 'Maersk Line India Pvt Ltd',
         'Vendor Type': 'Shipping Line',
-        'GST Number': '27BBBBB0000B1Z6',
+        'GST Number': '27AAACM1234A1Z1',
+        'PAN Number': 'AAACM1234A',
+        'Contact Person': 'Rajesh Deshmukh',
+        'Mobile Number': '9876543210',
+        'Email': 'in.import@maersk.com',
+        'Country': 'India',
+        'State': 'Maharashtra',
+        'City': 'Mumbai',
+        'Address': 'One International Center, Tower 2, Senapati Bapat Marg, Prabhadevi',
+        'Currency': 'INR',
+        'Payment Terms': 'Net 15 Days',
         'Status': 'Active'
       }
     ]
@@ -301,10 +484,35 @@ export const MASTER_SCHEMAS = {
       { key: 'currency_code', label: 'Currency Code *', required: true, type: 'string' },
       { key: 'currency_name', label: 'Currency Name *', required: true, type: 'string' },
       { key: 'symbol', label: 'Symbol', required: false, type: 'string' },
+      { key: 'exchange_rate', label: 'Exchange Rate', required: false, type: 'number' },
+      { key: 'base_currency', label: 'Base Currency', required: false, type: 'select', options: ['Yes', 'No'] },
       { key: 'status', label: 'Status', required: false, type: 'select', options: ['Active', 'Inactive'] }
     ],
     sampleData: [
-      { 'Currency Code *': 'USD', 'Currency Name *': 'US Dollar', 'Symbol': '$', 'Status': 'Active' }
+      {
+        'Currency Code *': 'USD',
+        'Currency Name *': 'United States Dollar',
+        'Symbol': '$',
+        'Exchange Rate': 86.50,
+        'Base Currency': 'No',
+        'Status': 'Active'
+      },
+      {
+        'Currency Code *': 'INR',
+        'Currency Name *': 'Indian Rupee',
+        'Symbol': '₹',
+        'Exchange Rate': 1.00,
+        'Base Currency': 'Yes',
+        'Status': 'Active'
+      },
+      {
+        'Currency Code *': 'EUR',
+        'Currency Name *': 'Euro',
+        'Symbol': '€',
+        'Exchange Rate': 94.20,
+        'Base Currency': 'No',
+        'Status': 'Active'
+      }
     ]
   },
   paymentTerm: {
@@ -319,7 +527,20 @@ export const MASTER_SCHEMAS = {
       { key: 'status', label: 'Status', required: false, type: 'select', options: ['Active', 'Inactive'] }
     ],
     sampleData: [
-      { 'Payment Term Code *': 'NET30', 'Payment Term Name *': 'Net 30 Days', 'Credit Days': 30, 'Description': '30 Days Net Payment', 'Status': 'Active' }
+      {
+        'Payment Term Code *': 'NET30',
+        'Payment Term Name *': 'Net 30 Days Credit',
+        'Credit Days': 30,
+        'Description': 'Payment due 30 days after invoice issuance',
+        'Status': 'Active'
+      },
+      {
+        'Payment Term Code *': 'ADV',
+        'Payment Term Name *': '100% Advance Payment',
+        'Credit Days': 0,
+        'Description': 'Full payment required before booking release',
+        'Status': 'Active'
+      }
     ]
   },
   shippingLine: {
@@ -330,10 +551,45 @@ export const MASTER_SCHEMAS = {
       { key: 'shipping_line_code', label: 'Shipping Line Code *', required: true, type: 'string' },
       { key: 'shipping_line_name', label: 'Shipping Line Name *', required: true, type: 'string' },
       { key: 'scac_code', label: 'SCAC Code', required: false, type: 'string' },
+      { key: 'country_code', label: 'Country', required: false, type: 'string' },
+      { key: 'contact_person', label: 'Contact Person', required: false, type: 'string' },
+      { key: 'email', label: 'Email', required: false, type: 'email' },
+      { key: 'phone', label: 'Phone Number', required: false, type: 'string' },
+      { key: 'website', label: 'Website', required: false, type: 'string' },
+      { key: 'tracking_url', label: 'Tracking URL', required: false, type: 'string' },
+      { key: 'tracking_method', label: 'Tracking Method', required: false, type: 'select', options: ['GENERIC_FETCH', 'PUPPETEER_SCRAPE', 'REST_API'] },
+      { key: 'bic_prefix', label: 'BIC Prefix', required: false, type: 'string' },
       { key: 'status', label: 'Status', required: false, type: 'select', options: ['Active', 'Inactive'] }
     ],
     sampleData: [
-      { 'Shipping Line Code *': 'MAEU', 'Shipping Line Name *': 'Maersk Line', 'SCAC Code': 'MAEU', 'Status': 'Active' }
+      {
+        'Shipping Line Code *': 'MSK',
+        'Shipping Line Name *': 'Maersk Line',
+        'SCAC Code': 'MAEU',
+        'Country': 'Denmark',
+        'Contact Person': 'Operations Desk',
+        'Email': 'customer.service@maersk.com',
+        'Phone Number': '+45 3363 3363',
+        'Website': 'https://www.maersk.com',
+        'Tracking URL': 'https://www.maersk.com/tracking/{container_no}',
+        'Tracking Method': 'GENERIC_FETCH',
+        'BIC Prefix': 'MSKU,MRKU',
+        'Status': 'Active'
+      },
+      {
+        'Shipping Line Code *': 'MSC',
+        'Shipping Line Name *': 'Mediterranean Shipping Company',
+        'SCAC Code': 'MSCU',
+        'Country': 'Switzerland',
+        'Contact Person': 'Customer Care',
+        'Email': 'info@msc.com',
+        'Phone Number': '+41 227038888',
+        'Website': 'https://www.msc.com',
+        'Tracking URL': 'https://www.msc.com/track-a-shipment?number={container_no}',
+        'Tracking Method': 'GENERIC_FETCH',
+        'BIC Prefix': 'MSCU,MEDU',
+        'Status': 'Active'
+      }
     ]
   },
   driver: {
@@ -341,13 +597,42 @@ export const MASTER_SCHEMAS = {
     filename: 'Driver_Master_Template.xlsx',
     uniqueKeys: ['license_number'],
     headers: [
+      { key: 'driver_code', label: 'Driver Code *', required: true, type: 'string' },
       { key: 'driver_name', label: 'Driver Name *', required: true, type: 'string' },
+      { key: 'mobile', label: 'Mobile Number', required: false, type: 'string' },
+      { key: 'alternate_mobile', label: 'Alternate Mobile', required: false, type: 'string' },
+      { key: 'email', label: 'Email', required: false, type: 'email' },
+      { key: 'address', label: 'Address', required: false, type: 'string' },
+      { key: 'country_code', label: 'Country', required: false, type: 'string' },
+      { key: 'state_code', label: 'State', required: false, type: 'string' },
+      { key: 'city_name', label: 'City', required: false, type: 'string' },
       { key: 'license_number', label: 'License Number *', required: true, type: 'string' },
-      { key: 'mobile_number', label: 'Mobile Number', required: false, type: 'string' },
+      { key: 'license_type', label: 'License Type', required: false, type: 'string' },
+      { key: 'license_expiry', label: 'License Expiry (YYYY-MM-DD)', required: false, type: 'string' },
+      { key: 'aadhaar_number', label: 'Aadhaar Number', required: false, type: 'string' },
+      { key: 'pan_number', label: 'PAN Number', required: false, type: 'string' },
+      { key: 'vendor_code', label: 'Vendor', required: false, type: 'string' },
       { key: 'status', label: 'Status', required: false, type: 'select', options: ['Active', 'Inactive'] }
     ],
     sampleData: [
-      { 'Driver Name *': 'Rajesh Kumar', 'License Number *': 'DL-1420110012345', 'Mobile Number': '9876543210', 'Status': 'Active' }
+      {
+        'Driver Code *': 'DRV-001',
+        'Driver Name *': 'Ramesh Kumar Patel',
+        'Mobile Number': '9825012345',
+        'Alternate Mobile': '9825054321',
+        'Email': 'ramesh.patel@gmail.com',
+        'Address': 'B-12 Shanti Nagar, Ring Road',
+        'Country': 'India',
+        'State': 'Gujarat',
+        'City': 'Surat',
+        'License Number *': 'GJ-0520150012345',
+        'License Type': 'Heavy Motor Vehicle (HMV)',
+        'License Expiry (YYYY-MM-DD)': '2030-05-15',
+        'Aadhaar Number': '123456789012',
+        'PAN Number': 'ABCDE1234F',
+        'Vendor': 'VND-001',
+        'Status': 'Active'
+      }
     ]
   },
   vehicle: {
@@ -356,12 +641,47 @@ export const MASTER_SCHEMAS = {
     uniqueKeys: ['vehicle_number'],
     headers: [
       { key: 'vehicle_number', label: 'Vehicle Number *', required: true, type: 'string' },
-      { key: 'vehicle_type', label: 'Vehicle Type', required: false, type: 'string' },
-      { key: 'capacity_tons', label: 'Capacity (Tons)', required: false, type: 'number' },
+      { 
+        key: 'vehicle_type', 
+        label: 'Vehicle Type', 
+        required: false, 
+        type: 'select', 
+        options: ['Trailer 20ft', 'Trailer 40ft', 'Flatbed', 'Closed Container', 'Open Truck', 'LCV / Mini Truck', 'Tanker', 'Other'] 
+      },
+      { key: 'vehicle_capacity', label: 'Vehicle Capacity (Tons)', required: false, type: 'number' },
+      { 
+        key: 'vehicle_owner', 
+        label: 'Vehicle Owner', 
+        required: false, 
+        type: 'select', 
+        options: ['Own', 'Vendor', 'Attached'] 
+      },
+      { key: 'vendor_code', label: 'Vendor', required: false, type: 'string' },
+      { key: 'registration_number', label: 'Registration Number', required: false, type: 'string' },
+      { key: 'registration_expiry', label: 'Registration Expiry (YYYY-MM-DD)', required: false, type: 'string' },
+      { key: 'insurance_number', label: 'Insurance Number', required: false, type: 'string' },
+      { key: 'insurance_expiry', label: 'Insurance Expiry (YYYY-MM-DD)', required: false, type: 'string' },
+      { key: 'fitness_expiry', label: 'Fitness Expiry (YYYY-MM-DD)', required: false, type: 'string' },
+      { key: 'pollution_expiry', label: 'Pollution Expiry (YYYY-MM-DD)', required: false, type: 'string' },
+      { key: 'gps_enabled', label: 'GPS Enabled', required: false, type: 'select', options: ['Yes', 'No'] },
       { key: 'status', label: 'Status', required: false, type: 'select', options: ['Active', 'Inactive'] }
     ],
     sampleData: [
-      { 'Vehicle Number *': 'MH04AB1234', 'Vehicle Type': 'Trailer 40ft', 'Capacity (Tons)': 25, 'Status': 'Active' }
+      {
+        'Vehicle Number *': 'GJ05AB1234',
+        'Vehicle Type': 'Trailer 40ft',
+        'Vehicle Capacity (Tons)': 32.5,
+        'Vehicle Owner': 'Own',
+        'Vendor': '',
+        'Registration Number': 'GJ05AB1234',
+        'Registration Expiry (YYYY-MM-DD)': '2028-12-31',
+        'Insurance Number': 'POL-99887766',
+        'Insurance Expiry (YYYY-MM-DD)': '2027-06-30',
+        'Fitness Expiry (YYYY-MM-DD)': '2026-11-15',
+        'Pollution Expiry (YYYY-MM-DD)': '2026-10-01',
+        'GPS Enabled': 'Yes',
+        'Status': 'Active'
+      }
     ]
   },
   warehouse: {
@@ -371,11 +691,40 @@ export const MASTER_SCHEMAS = {
     headers: [
       { key: 'warehouse_code', label: 'Warehouse Code *', required: true, type: 'string' },
       { key: 'warehouse_name', label: 'Warehouse Name *', required: true, type: 'string' },
+      { 
+        key: 'warehouse_type', 
+        label: 'Warehouse Type', 
+        required: false, 
+        type: 'select', 
+        options: ['Bonded Warehouse', 'General / Non-Bonded', 'Cold Storage / Reefer', 'CFS / ICD Yard', 'Open Yard / Bulk', 'Hazardous Cargo', 'Buffer Yard'] 
+      },
+      { key: 'country_code', label: 'Country', required: false, type: 'string' },
+      { key: 'state_code', label: 'State', required: false, type: 'string' },
+      { key: 'city_name', label: 'City', required: false, type: 'string' },
+      { key: 'address', label: 'Address', required: false, type: 'string' },
       { key: 'pincode', label: 'Pincode', required: false, type: 'string' },
+      { key: 'contact_person', label: 'Contact Person', required: false, type: 'string' },
+      { key: 'mobile', label: 'Mobile Number', required: false, type: 'string' },
+      { key: 'email', label: 'Email', required: false, type: 'email' },
+      { key: 'capacity', label: 'Capacity (SQFT / CBM)', required: false, type: 'number' },
       { key: 'status', label: 'Status', required: false, type: 'select', options: ['Active', 'Inactive'] }
     ],
     sampleData: [
-      { 'Warehouse Code *': 'WH-BOM01', 'Warehouse Name *': 'Nhava Sheva CFS Warehouse', 'Pincode': '400707', 'Status': 'Active' }
+      {
+        'Warehouse Code *': 'WH-MUM-01',
+        'Warehouse Name *': 'Nhava Sheva CFS Logistics Hub',
+        'Warehouse Type': 'CFS / ICD Yard',
+        'Country': 'India',
+        'State': 'Maharashtra',
+        'City': 'Navi Mumbai',
+        'Address': 'Sector 10, Dronagiri Node, Uran',
+        'Pincode': '400707',
+        'Contact Person': 'Sunil Rane',
+        'Mobile Number': '9820011223',
+        'Email': 'sunil.rane@logistics.com',
+        'Capacity (SQFT / CBM)': 50000,
+        'Status': 'Active'
+      }
     ]
   },
   packageType: {
@@ -389,7 +738,24 @@ export const MASTER_SCHEMAS = {
       { key: 'status', label: 'Status', required: false, type: 'select', options: ['Active', 'Inactive'] }
     ],
     sampleData: [
-      { 'Package Type Code *': 'PLT', 'Package Type Name *': 'Wooden Pallet', 'Description': 'Standard Euro Pallet', 'Status': 'Active' }
+      {
+        'Package Type Code *': 'PLT',
+        'Package Type Name *': 'Wooden Pallet',
+        'Description': 'Standard Euro treated export pallet',
+        'Status': 'Active'
+      },
+      {
+        'Package Type Code *': 'CTN',
+        'Package Type Name *': 'Corrugated Carton Box',
+        'Description': 'Heavy duty 5-ply cardboard carton',
+        'Status': 'Active'
+      },
+      {
+        'Package Type Code *': 'DRM',
+        'Package Type Name *': 'Steel / Plastic Drum',
+        'Description': '200L liquid storage drum',
+        'Status': 'Active'
+      }
     ]
   },
   transportMode: {
@@ -399,10 +765,34 @@ export const MASTER_SCHEMAS = {
     headers: [
       { key: 'mode_code', label: 'Mode Code *', required: true, type: 'string' },
       { key: 'mode_name', label: 'Mode Name *', required: true, type: 'string' },
+      { key: 'description', label: 'Description', required: false, type: 'string' },
       { key: 'status', label: 'Status', required: false, type: 'select', options: ['Active', 'Inactive'] }
     ],
     sampleData: [
-      { 'Mode Code *': 'SEA', 'Mode Name *': 'Sea Freight', 'Status': 'Active' }
+      {
+        'Mode Code *': 'SEA',
+        'Mode Name *': 'Sea Freight',
+        'Description': 'Ocean containerized and bulk shipment',
+        'Status': 'Active'
+      },
+      {
+        'Mode Code *': 'AIR',
+        'Mode Name *': 'Air Freight',
+        'Description': 'Express air cargo transportation',
+        'Status': 'Active'
+      },
+      {
+        'Mode Code *': 'ROAD',
+        'Mode Name *': 'Road Transport',
+        'Description': 'Inland trucking and trailer fleet',
+        'Status': 'Active'
+      },
+      {
+        'Mode Code *': 'RAIL',
+        'Mode Name *': 'Rail Freight',
+        'Description': 'ICD container train rake movements',
+        'Status': 'Active'
+      }
     ]
   },
   employee: {
@@ -412,13 +802,60 @@ export const MASTER_SCHEMAS = {
     headers: [
       { key: 'employee_code', label: 'Employee Code *', required: true, type: 'string' },
       { key: 'first_name', label: 'First Name *', required: true, type: 'string' },
+      { key: 'middle_name', label: 'Middle Name', required: false, type: 'string' },
       { key: 'last_name', label: 'Last Name', required: false, type: 'string' },
-      { key: 'email', label: 'Email', required: false, type: 'email' },
+      { key: 'gender', label: 'Gender', required: false, type: 'select', options: ['Male', 'Female', 'Other'] },
+      { key: 'dob', label: 'Date of Birth (YYYY-MM-DD)', required: false, type: 'string' },
+      { key: 'doj', label: 'Date of Joining (YYYY-MM-DD)', required: false, type: 'string' },
+      { key: 'blood_group', label: 'Blood Group', required: false, type: 'select', options: ['A+', 'A-', 'B+', 'B-', 'AB+', 'AB-', 'O+', 'O-'] },
+      { key: 'department_code', label: 'Department *', required: true, type: 'string' },
+      { key: 'designation_code', label: 'Designation *', required: true, type: 'string' },
+      { key: 'employment_type', label: 'Employment Type', required: false, type: 'select', options: ['Full-Time', 'Part-Time', 'Contract', 'Intern'] },
+      { key: 'reporting_manager', label: 'Reporting Manager', required: false, type: 'string' },
       { key: 'mobile', label: 'Mobile Number', required: false, type: 'string' },
+      { key: 'alternate_mobile', label: 'Alternate Mobile', required: false, type: 'string' },
+      { key: 'email', label: 'Email', required: false, type: 'email' },
+      { key: 'address_line_1', label: 'Address Line 1', required: false, type: 'string' },
+      { key: 'address_line_2', label: 'Address Line 2', required: false, type: 'string' },
+      { key: 'country_code', label: 'Country', required: false, type: 'string' },
+      { key: 'state_code', label: 'State', required: false, type: 'string' },
+      { key: 'city_name', label: 'City', required: false, type: 'string' },
+      { key: 'pincode', label: 'Pincode', required: false, type: 'string' },
+      { key: 'aadhaar', label: 'Aadhaar Number', required: false, type: 'string' },
+      { key: 'pan', label: 'PAN Number', required: false, type: 'string' },
+      { key: 'passport', label: 'Passport Number', required: false, type: 'string' },
+      { key: 'emergency_contact', label: 'Emergency Contact', required: false, type: 'string' },
       { key: 'status', label: 'Status', required: false, type: 'select', options: ['Active', 'Inactive'] }
     ],
     sampleData: [
-      { 'Employee Code *': 'EMP-001', 'First Name *': 'Amit', 'Last Name': 'Sharma', 'Email': 'amit.sharma@company.com', 'Mobile Number': '9876543210', 'Status': 'Active' }
+      {
+        'Employee Code *': 'EMP-001',
+        'First Name *': 'Amit',
+        'Middle Name': 'Kumar',
+        'Last Name': 'Sharma',
+        'Gender': 'Male',
+        'Date of Birth (YYYY-MM-DD)': '1990-08-15',
+        'Date of Joining (YYYY-MM-DD)': '2023-01-10',
+        'Blood Group': 'O+',
+        'Department *': 'Logistics Operations',
+        'Designation *': 'Operations Manager',
+        'Employment Type': 'Full-Time',
+        'Reporting Manager': '',
+        'Mobile Number': '9876543210',
+        'Alternate Mobile': '9876500000',
+        'Email': 'amit.sharma@freightflow.com',
+        'Address Line 1': 'A-404, Green Heights',
+        'Address Line 2': 'Andheri East',
+        'Country': 'India',
+        'State': 'Maharashtra',
+        'City': 'Mumbai',
+        'Pincode': '400069',
+        'Aadhaar Number': '123456789012',
+        'PAN Number': 'ABCPS1234D',
+        'Passport Number': 'N1234567',
+        'Emergency Contact': '9876543211',
+        'Status': 'Active'
+      }
     ]
   }
 };
@@ -436,7 +873,7 @@ export const downloadTemplate = (entityType) => {
   
   // Apply auto column widths
   const colWidths = schema.headers.map(h => ({
-    wch: Math.max(h.label.length + 4, 15)
+    wch: Math.max(h.label.length + 4, 16)
   }));
   worksheet['!cols'] = colWidths;
 
@@ -481,7 +918,7 @@ export const parseExcelFile = (file) => {
  */
 const normalizeHeader = (str) => {
   if (!str) return '';
-  return String(str).replace(/\*/g, '').trim().toLowerCase();
+  return String(str).replace(/\*/g, '').replace(/[\(\)\[\]\/\-_]/g, ' ').replace(/\s+/g, ' ').trim().toLowerCase();
 };
 
 /**
@@ -502,7 +939,7 @@ export const validateMasterRows = (entityType, rawRows, existingDbRecords = []) 
     const compositeDbKey = schema.uniqueKeys
       .map(k => String(record[k] || '').trim().toLowerCase())
       .join('::');
-    if (compositeDbKey) {
+    if (compositeDbKey && compositeDbKey !== schema.uniqueKeys.map(() => '').join('::')) {
       dbIndexMap.set(compositeDbKey, record.id || record._id);
     }
   });
@@ -516,12 +953,17 @@ export const validateMasterRows = (entityType, rawRows, existingDbRecords = []) 
       let rawVal = undefined;
 
       // Check if rawRow has direct internal key value (from live UI inline edit)
-      if (rawRow[header.key] !== undefined && rawRow[header.key] !== null) {
+      if (rawRow[header.key] !== undefined && rawRow[header.key] !== null && rawRow[header.key] !== '') {
         rawVal = rawRow[header.key];
       } else {
         // Find matching key in rawRow ignoring casing/spaces/*
         const rawHeaderKey = Object.keys(rawRow).find(
-          (rk) => normalizeHeader(rk) === normalizeHeader(header.label) || normalizeHeader(rk) === normalizeHeader(header.key)
+          (rk) => {
+            const normRk = normalizeHeader(rk);
+            const normLabel = normalizeHeader(header.label);
+            const normKey = normalizeHeader(header.key);
+            return normRk === normLabel || normRk === normKey;
+          }
         );
         if (rawHeaderKey !== undefined) {
           rawVal = rawRow[rawHeaderKey];
@@ -536,8 +978,8 @@ export const validateMasterRows = (entityType, rawRows, existingDbRecords = []) 
 
       // Convert Boolean select strings if applicable
       if (header.type === 'select' && (header.options.includes('Yes') || header.options.includes('No'))) {
-        if (rawVal.toLowerCase() === 'true' || rawVal.toLowerCase() === 'yes') rawVal = 'Yes';
-        if (rawVal.toLowerCase() === 'false' || rawVal.toLowerCase() === 'no') rawVal = 'No';
+        if (rawVal.toLowerCase() === 'true' || rawVal.toLowerCase() === 'yes' || rawVal.toLowerCase() === 'y' || rawVal === '1') rawVal = 'Yes';
+        if (rawVal.toLowerCase() === 'false' || rawVal.toLowerCase() === 'no' || rawVal.toLowerCase() === 'n' || rawVal === '0') rawVal = 'No';
       }
 
       mappedData[header.key] = rawVal;

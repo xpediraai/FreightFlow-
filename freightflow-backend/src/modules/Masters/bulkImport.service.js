@@ -66,6 +66,21 @@ const generateSmartCountryCode = (name) => {
 };
 
 /**
+ * Normalize vendor type to match Vendor model ENUM
+ */
+const normalizeVendorType = (val) => {
+  if (!val) return 'Other';
+  const str = String(val).toLowerCase();
+  if (str.includes('shipping')) return 'Shipping Line';
+  if (str.includes('transporter') || str.includes('fleet')) return 'Transporter';
+  if (str.includes('cha') || str.includes('customs')) return 'CHA';
+  if (str.includes('cfs') || str.includes('icd')) return 'CFS';
+  if (str.includes('warehouse')) return 'Warehouse';
+  if (str.includes('surveyor') || str.includes('inspection')) return 'Surveyor';
+  return 'Other';
+};
+
+/**
  * Service to execute bulk import transactional operations with automatic foreign key resolution & upserting
  */
 const executeBulkImport = async (entityType, rows, user) => {
@@ -91,9 +106,14 @@ const executeBulkImport = async (entityType, rows, user) => {
   let createdCount = 0;
   let updatedCount = 0;
 
-  // In-memory resolution caches to prevent duplicate DB calls and race conditions within the transaction
+  // In-memory resolution caches to prevent duplicate DB lookups within transaction
   const countryCache = new Map();
   const stateCache = new Map();
+  const cityCache = new Map();
+  const departmentCache = new Map();
+  const designationCache = new Map();
+  const vendorCache = new Map();
+  const currencyCache = new Map();
 
   try {
     for (const row of rows) {
@@ -106,135 +126,420 @@ const executeBulkImport = async (entityType, rows, user) => {
         updated_by: userId
       };
 
-      // Set model defaults for mandatory non-null database fields
+      // ----------------------------------------------------
+      // A. Foreign Key: Country Resolution & Auto-Creation
+      // ----------------------------------------------------
+      const countryVal = data.country_code || data.country_id || data.country;
+      if (countryVal) {
+        const strCountry = String(countryVal).trim();
+        const countryCacheKey = strCountry.toLowerCase();
+        let countryObj = countryCache.get(countryCacheKey);
+
+        if (!countryObj) {
+          countryObj = await Country.findOne({
+            where: {
+              company_id: companyId,
+              [Op.or]: [
+                { country_code: { [Op.iLike]: strCountry } },
+                { country_name: { [Op.iLike]: strCountry } }
+              ]
+            },
+            transaction
+          });
+        }
+
+        if (!countryObj && (entityType === 'state' || entityType === 'city' || entityType === 'port' || entityType === 'shippingLine' || entityType === 'driver' || entityType === 'warehouse' || entityType === 'employee' || entityType === 'vendor')) {
+          let code = generateSmartCountryCode(strCountry);
+          let attempts = 0;
+          while (await Country.findOne({ where: { company_id: companyId, country_code: code }, transaction })) {
+            attempts++;
+            code = `${strCountry.substring(0, 2).toUpperCase()}${attempts}`;
+          }
+
+          countryObj = await Country.create({
+            company_id: companyId,
+            country_code: code,
+            country_name: strCountry,
+            status: 'Active',
+            created_by: userId,
+            updated_by: userId
+          }, { transaction });
+        }
+
+        if (countryObj) {
+          countryCache.set(countryCacheKey, countryObj);
+          recordData.country_id = countryObj.id;
+        }
+      }
+      delete recordData.country_code;
+      delete recordData.country;
+
+      // ----------------------------------------------------
+      // B. Foreign Key: State Resolution & Auto-Creation
+      // ----------------------------------------------------
+      const stateVal = data.state_code || data.state_id || data.state;
+      if (stateVal) {
+        const strState = String(stateVal).trim();
+        const stateCacheKey = `${recordData.country_id || 'ANY'}::${strState.toLowerCase()}`;
+        let stateObj = stateCache.get(stateCacheKey);
+
+        if (!stateObj) {
+          const stateWhere = {
+            company_id: companyId,
+            [Op.or]: [
+              { state_code: { [Op.iLike]: strState } },
+              { state_name: { [Op.iLike]: strState } }
+            ]
+          };
+          if (recordData.country_id) {
+            stateWhere.country_id = recordData.country_id;
+          }
+
+          stateObj = await State.findOne({ where: stateWhere, transaction });
+        }
+
+        if (!stateObj && recordData.country_id) {
+          let code = strState.substring(0, 3).toUpperCase();
+          let attempts = 0;
+          while (await State.findOne({ where: { company_id: companyId, country_id: recordData.country_id, state_code: code }, transaction })) {
+            attempts++;
+            code = `${strState.substring(0, 2).toUpperCase()}${attempts}`;
+          }
+
+          stateObj = await State.create({
+            company_id: companyId,
+            country_id: recordData.country_id,
+            state_code: code,
+            state_name: strState,
+            status: 'Active',
+            created_by: userId,
+            updated_by: userId
+          }, { transaction });
+        }
+
+        if (stateObj) {
+          stateCache.set(stateCacheKey, stateObj);
+          recordData.state_id = stateObj.id;
+        }
+      }
+      delete recordData.state_code;
+      delete recordData.state;
+
+      // ----------------------------------------------------
+      // C. Foreign Key: City Resolution & Auto-Creation
+      // ----------------------------------------------------
+      const cityVal = data.city_name || data.city_code || data.city_id || data.city;
+      if (cityVal && entityType !== 'city') {
+        const strCity = String(cityVal).trim();
+        const cityCacheKey = `${recordData.state_id || 'ANY'}::${strCity.toLowerCase()}`;
+        let cityObj = cityCache.get(cityCacheKey);
+
+        if (!cityObj) {
+          const cityWhere = {
+            company_id: companyId,
+            [Op.or]: [
+              { city_name: { [Op.iLike]: strCity } },
+              { city_code: { [Op.iLike]: strCity } }
+            ]
+          };
+          if (recordData.state_id) {
+            cityWhere.state_id = recordData.state_id;
+          }
+
+          cityObj = await City.findOne({ where: cityWhere, transaction });
+        }
+
+        if (!cityObj && recordData.state_id && recordData.country_id) {
+          let code = strCity.substring(0, 3).toUpperCase();
+          let attempts = 0;
+          while (await City.findOne({ where: { company_id: companyId, state_id: recordData.state_id, city_code: code }, transaction })) {
+            attempts++;
+            code = `${strCity.substring(0, 2).toUpperCase()}${attempts}`;
+          }
+
+          cityObj = await City.create({
+            company_id: companyId,
+            country_id: recordData.country_id,
+            state_id: recordData.state_id,
+            city_code: code,
+            city_name: strCity,
+            status: 'Active',
+            created_by: userId,
+            updated_by: userId
+          }, { transaction });
+        }
+
+        if (cityObj) {
+          cityCache.set(cityCacheKey, cityObj);
+          recordData.city_id = cityObj.id;
+        }
+        delete recordData.city_name;
+        delete recordData.city;
+      }
+
+      // ----------------------------------------------------
+      // D. Foreign Key: Department Resolution & Auto-Creation
+      // ----------------------------------------------------
+      const deptVal = data.department_code || data.department_name || data.department_id || data.department;
+      if (deptVal) {
+        const strDept = String(deptVal).trim();
+        const deptCacheKey = strDept.toLowerCase();
+        let deptObj = departmentCache.get(deptCacheKey);
+
+        if (!deptObj) {
+          deptObj = await Department.findOne({
+            where: {
+              company_id: companyId,
+              [Op.or]: [
+                { department_code: { [Op.iLike]: strDept } },
+                { department_name: { [Op.iLike]: strDept } }
+              ]
+            },
+            transaction
+          });
+        }
+
+        if (!deptObj && (entityType === 'designation' || entityType === 'employee')) {
+          let code = strDept.substring(0, 4).toUpperCase();
+          let attempts = 0;
+          while (await Department.findOne({ where: { company_id: companyId, department_code: code }, transaction })) {
+            attempts++;
+            code = `${strDept.substring(0, 3).toUpperCase()}${attempts}`;
+          }
+
+          deptObj = await Department.create({
+            company_id: companyId,
+            department_code: code,
+            department_name: strDept,
+            status: 'Active',
+            created_by: userId,
+            updated_by: userId
+          }, { transaction });
+        }
+
+        if (deptObj) {
+          departmentCache.set(deptCacheKey, deptObj);
+          recordData.department_id = deptObj.id;
+        }
+      }
+      delete recordData.department_code;
+      delete recordData.department_name;
+      delete recordData.department;
+
+      // ----------------------------------------------------
+      // E. Foreign Key: Designation Resolution & Auto-Creation
+      // ----------------------------------------------------
+      const desigVal = data.designation_code || data.designation_name || data.designation_id || data.designation;
+      if (desigVal) {
+        const strDesig = String(desigVal).trim();
+        const desigCacheKey = strDesig.toLowerCase();
+        let desigObj = designationCache.get(desigCacheKey);
+
+        if (!desigObj) {
+          desigObj = await Designation.findOne({
+            where: {
+              company_id: companyId,
+              [Op.or]: [
+                { designation_code: { [Op.iLike]: strDesig } },
+                { designation_name: { [Op.iLike]: strDesig } }
+              ]
+            },
+            transaction
+          });
+        }
+
+        if (!desigObj && entityType === 'employee') {
+          let code = strDesig.substring(0, 4).toUpperCase();
+          let attempts = 0;
+          while (await Designation.findOne({ where: { company_id: companyId, designation_code: code }, transaction })) {
+            attempts++;
+            code = `${strDesig.substring(0, 3).toUpperCase()}${attempts}`;
+          }
+
+          desigObj = await Designation.create({
+            company_id: companyId,
+            department_id: recordData.department_id || null,
+            designation_code: code,
+            designation_name: strDesig,
+            status: 'Active',
+            created_by: userId,
+            updated_by: userId
+          }, { transaction });
+        }
+
+        if (desigObj) {
+          designationCache.set(desigCacheKey, desigObj);
+          recordData.designation_id = desigObj.id;
+        }
+      }
+      delete recordData.designation_code;
+      delete recordData.designation_name;
+      delete recordData.designation;
+
+      // ----------------------------------------------------
+      // F. Foreign Key: Vendor Resolution
+      // ----------------------------------------------------
+      const vendorVal = data.vendor_code || data.vendor_name || data.vendor_id || data.vendor;
+      if (vendorVal && (entityType === 'vehicle' || entityType === 'driver')) {
+        const strVendor = String(vendorVal).trim();
+        const vendorCacheKey = strVendor.toLowerCase();
+        let vendorObj = vendorCache.get(vendorCacheKey);
+
+        if (!vendorObj) {
+          vendorObj = await Vendor.findOne({
+            where: {
+              company_id: companyId,
+              [Op.or]: [
+                { vendor_code: { [Op.iLike]: strVendor } },
+                { vendor_name: { [Op.iLike]: strVendor } }
+              ]
+            },
+            transaction
+          });
+        }
+
+        if (vendorObj) {
+          vendorCache.set(vendorCacheKey, vendorObj);
+          recordData.vendor_id = vendorObj.id;
+        }
+      }
+      delete recordData.vendor_code;
+      delete recordData.vendor;
+
+      // ----------------------------------------------------
+      // G. Foreign Key: Currency Resolution
+      // ----------------------------------------------------
+      const currVal = data.currency_code || data.currency_name || data.currency_id || data.currency || data.default_currency;
+      if (currVal && (entityType === 'customer' || entityType === 'vendor' || entityType === 'charge')) {
+        const strCurr = String(currVal).trim();
+        const currCacheKey = strCurr.toLowerCase();
+        let currObj = currencyCache.get(currCacheKey);
+
+        if (!currObj) {
+          currObj = await Currency.findOne({
+            where: {
+              company_id: companyId,
+              [Op.or]: [
+                { currency_code: { [Op.iLike]: strCurr } },
+                { currency_name: { [Op.iLike]: strCurr } },
+                { symbol: { [Op.iLike]: strCurr } }
+              ]
+            },
+            transaction
+          });
+        }
+
+        if (currObj) {
+          currencyCache.set(currCacheKey, currObj);
+          if (entityType === 'charge') {
+            recordData.default_currency = currObj.id;
+          } else {
+            recordData.currency_id = currObj.id;
+          }
+        }
+      }
+      delete recordData.currency_code;
+      delete recordData.currency;
+
+      // ----------------------------------------------------
+      // H. Entity-Specific Field Formatting & Defaults
+      // ----------------------------------------------------
       if (entityType === 'charge') {
         if (!recordData.charge_type) recordData.charge_type = 'Revenue';
         if (!recordData.applicable_module) recordData.applicable_module = 'Quotation';
-        if (recordData.basis === undefined) recordData.basis = 'Per Container';
-        if (recordData.default_rate === undefined) recordData.default_rate = 0;
-        if (recordData.default_qty === undefined) recordData.default_qty = 1;
-        if (recordData.default_applicable === undefined) recordData.default_applicable = true;
+        if (recordData.basis === undefined || recordData.basis === '') recordData.basis = 'Per Container';
+        recordData.default_rate = recordData.default_rate !== '' && !isNaN(Number(recordData.default_rate)) ? Number(recordData.default_rate) : 0;
+        recordData.default_qty = recordData.default_qty !== '' && !isNaN(Number(recordData.default_qty)) ? parseInt(recordData.default_qty, 10) : 1;
+        recordData.default_applicable = recordData.default_applicable === 'Yes' || recordData.default_applicable === true || recordData.default_applicable === 'true';
+        recordData.tax_applicable = recordData.tax_applicable === 'Yes' || recordData.tax_applicable === true || recordData.tax_applicable === 'true';
       }
+
       if (entityType === 'containerType') {
         if (!recordData.iso_code) recordData.iso_code = recordData.container_code || 'GEN';
         if (!recordData.size) recordData.size = '20';
         if (!recordData.category) recordData.category = 'Dry';
+        recordData.capacity_cbm = recordData.capacity_cbm !== '' && !isNaN(Number(recordData.capacity_cbm)) ? Number(recordData.capacity_cbm) : null;
+        recordData.max_weight = recordData.max_weight !== '' && !isNaN(Number(recordData.max_weight)) ? Number(recordData.max_weight) : null;
       }
+
       if (entityType === 'customer') {
         if (!recordData.customer_type) recordData.customer_type = 'Shipper / Exporter';
+        recordData.credit_limit = recordData.credit_limit !== '' && !isNaN(Number(recordData.credit_limit)) ? Number(recordData.credit_limit) : null;
       }
+
       if (entityType === 'vendor') {
-        if (!recordData.vendor_type) recordData.vendor_type = 'Shipping Line';
+        recordData.vendor_type = normalizeVendorType(recordData.vendor_type);
       }
 
-      // 1. Resolve & Auto-Create Foreign Keys (Country, State, City)
-      if (entityType === 'state' || entityType === 'city' || entityType === 'port') {
-        const countryVal = data.country_code || data.country_id || data.country;
-        if (countryVal) {
-          const strCountry = String(countryVal).trim();
-          const countryCacheKey = strCountry.toLowerCase();
-          
-          let countryObj = countryCache.get(countryCacheKey);
+      if (entityType === 'currency') {
+        recordData.exchange_rate = recordData.exchange_rate !== '' && !isNaN(Number(recordData.exchange_rate)) ? Number(recordData.exchange_rate) : 1;
+        recordData.base_currency = recordData.base_currency === 'Yes' ? 'Yes' : 'No';
+      }
 
-          if (!countryObj) {
-            countryObj = await Country.findOne({
-              where: {
-                company_id: companyId,
-                [Op.or]: [
-                  { country_code: { [Op.iLike]: strCountry } },
-                  { country_name: { [Op.iLike]: strCountry } }
-                ]
-              },
-              transaction
-            });
-          }
+      if (entityType === 'paymentTerm') {
+        recordData.credit_days = recordData.credit_days !== '' && !isNaN(Number(recordData.credit_days)) ? parseInt(recordData.credit_days, 10) : 0;
+      }
 
-          if (!countryObj) {
-            // Auto-create missing Country with unique code guarantee
-            let code = generateSmartCountryCode(strCountry);
-            let attempts = 0;
-            while (await Country.findOne({ where: { company_id: companyId, country_code: code }, transaction })) {
-              attempts++;
-              code = `${strCountry.substring(0, 2).toUpperCase()}${attempts}`;
-            }
+      if (entityType === 'shippingLine') {
+        if (!recordData.tracking_method) recordData.tracking_method = 'GENERIC_FETCH';
+      }
 
-            countryObj = await Country.create({
+      if (entityType === 'commodity') {
+        recordData.hazardous = recordData.hazardous === 'Yes' ? 'Yes' : 'No';
+      }
+
+      if (entityType === 'vehicle') {
+        recordData.vehicle_capacity = recordData.vehicle_capacity !== '' && !isNaN(Number(recordData.vehicle_capacity)) ? Number(recordData.vehicle_capacity) : null;
+        recordData.gps_enabled = recordData.gps_enabled === 'Yes' ? 'Yes' : 'No';
+        
+        // Nullify empty date fields
+        ['registration_expiry', 'insurance_expiry', 'fitness_expiry', 'pollution_expiry'].forEach(f => {
+          if (!recordData[f] || recordData[f] === '') recordData[f] = null;
+        });
+      }
+
+      if (entityType === 'driver') {
+        if (!recordData.license_expiry || recordData.license_expiry === '') recordData.license_expiry = null;
+      }
+
+      if (entityType === 'warehouse') {
+        recordData.capacity = recordData.capacity !== '' && !isNaN(Number(recordData.capacity)) ? Number(recordData.capacity) : null;
+      }
+
+      if (entityType === 'employee') {
+        if (!recordData.dob || recordData.dob === '') recordData.dob = null;
+        if (!recordData.doj || recordData.doj === '') recordData.doj = null;
+        if (recordData.reporting_manager && typeof recordData.reporting_manager === 'string') {
+          // If reporting manager is not a UUID, try finding employee
+          const mgr = await Employee.findOne({
+            where: {
               company_id: companyId,
-              country_code: code,
-              country_name: strCountry,
-              status: 'Active',
-              created_by: userId,
-              updated_by: userId
-            }, { transaction });
+              [Op.or]: [
+                { employee_code: { [Op.iLike]: recordData.reporting_manager.trim() } },
+                { first_name: { [Op.iLike]: recordData.reporting_manager.trim() } }
+              ]
+            },
+            transaction
+          });
+          if (mgr) {
+            recordData.reporting_manager = mgr.id;
+          } else {
+            recordData.reporting_manager = null;
           }
-
-          countryCache.set(countryCacheKey, countryObj);
-          recordData.country_id = countryObj.id;
-          delete recordData.country_code;
-          delete recordData.country;
-        }
-
-        if ((entityType === 'city' || entityType === 'port') && recordData.country_id) {
-          const stateVal = data.state_code || data.state_id || data.state;
-          if (stateVal) {
-            const strState = String(stateVal).trim();
-            const stateCacheKey = `${recordData.country_id}::${strState.toLowerCase()}`;
-            
-            let stateObj = stateCache.get(stateCacheKey);
-
-            if (!stateObj) {
-              stateObj = await State.findOne({
-                where: {
-                  company_id: companyId,
-                  country_id: recordData.country_id,
-                  [Op.or]: [
-                    { state_code: { [Op.iLike]: strState } },
-                    { state_name: { [Op.iLike]: strState } }
-                  ]
-                },
-                transaction
-              });
-            }
-
-            if (!stateObj) {
-              // Auto-create missing State with unique code guarantee
-              let code = strState.substring(0, 3).toUpperCase();
-              let attempts = 0;
-              while (await State.findOne({ where: { company_id: companyId, country_id: recordData.country_id, state_code: code }, transaction })) {
-                attempts++;
-                code = `${strState.substring(0, 2).toUpperCase()}${attempts}`;
-              }
-
-              stateObj = await State.create({
-                company_id: companyId,
-                country_id: recordData.country_id,
-                state_code: code,
-                state_name: strState,
-                status: 'Active',
-                created_by: userId,
-                updated_by: userId
-              }, { transaction });
-            }
-
-            stateCache.set(stateCacheKey, stateObj);
-            recordData.state_id = stateObj.id;
-            delete recordData.state_code;
-            delete recordData.state;
-          }
-        }
-
-        if (entityType === 'port') {
-          delete recordData.city_name;
-          delete recordData.city;
         }
       }
+
+      // Default status
+      if (!recordData.status) recordData.status = 'Active';
 
       // Clean up auxiliary fields that aren't model columns
       delete recordData._row;
       delete recordData._errors;
       delete recordData._status;
 
-      // 2. Perform Atomic Upsert Check (Find existing record by composite key)
+      // ----------------------------------------------------
+      // I. Perform Atomic Upsert Check (Find existing record)
+      // ----------------------------------------------------
       const whereClause = { company_id: companyId };
       let hasAllKeys = true;
 
