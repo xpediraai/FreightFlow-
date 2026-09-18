@@ -112,6 +112,21 @@ const DEFAULT_UOMS = [
   { id: 'uom_5', uom_code: 'PCS', uom_name: 'Pieces (PCS)' },
 ];
 
+const SERVICE_TYPES = [
+  { id: "clearing", code: "CLR", name: "Clearing", description: "Customs clearance and export documentation" },
+  { id: "forwarding", code: "FWD", name: "Forwarding", description: "Booking, carrier coordination and BL" },
+  { id: "transport", code: "TRN", name: "Transport", description: "Factory, port and container transportation" }
+];
+
+const SPECIAL_REQUIREMENTS = [
+  "Inspections",
+  "Certifications",
+  "Fumigations",
+  "Loading/Unloading",
+  "Palletization",
+  "Lashing/Chocking"
+];
+
 const emptyCargo = () => ({
   commodity: '',
   hsn_code: '',
@@ -659,7 +674,7 @@ const ShippingInquiryForm = ({
         <FloatingWrapper>
           <div style={styles.sectionHeader}>
             <Building2 size={16} color="#1976D2" />
-            <span>Section 1 — Exporter Details</span>
+            <span>Section 1 — Exporter Details and Shipment</span>
           </div>
           <div style={styles.grid}>
             <div className="form-group">
@@ -701,15 +716,6 @@ const ShippingInquiryForm = ({
                 <div style={styles.error}>{errors.exporter_id.message}</div>
               )}
             </div>
-          </div>
-        </FloatingWrapper>
-        {/* SECTION 2 — ROUTING DETAILS */}
-        <FloatingWrapper>
-          <div style={styles.sectionHeader}>
-            <MapPin size={16} color="#1976D2" />
-            <span>Section 2 — Routing Details</span>
-          </div>
-          <div style={styles.grid}>
             <div className="form-group">
               <label className="text-sm font-medium" style={styles.label}>
                 Port of Loading (POL){' '}
@@ -824,6 +830,76 @@ const ShippingInquiryForm = ({
                 {...register('fpod')}
               />
             </div>
+            <div className="form-group">
+              <label className="text-sm font-medium" style={styles.label}>
+                Shipment Type <span style={styles.required}>*</span>
+              </label>
+              <select
+                className="form-control form-control-sm"
+                style={styles.input}
+                disabled={disabled}
+                {...register('shipment_type', { required: true })}
+              >
+                <option value="">-- Select Shipment Type --</option>
+                {transportModes.map((tm) => (
+                  <option
+                    key={tm.id || tm.mode_code}
+                    value={tm.mode_name || tm.mode_code}
+                  >
+                    {tm.mode_name} {tm.mode_code ? `(${tm.mode_code})` : ''}
+                  </option>
+                ))}
+              </select>
+            </div>
+            <div className="form-group">
+              <label className="text-sm font-medium" style={styles.label}>
+                Shipment Sub Type <span style={styles.required}>*</span>
+              </label>
+              <select
+                className="form-control form-control-sm"
+                style={styles.input}
+                disabled={disabled}
+                {...register('shipment_sub_type', { required: true })}
+              >
+                <option value="Clearing">Clearing</option>
+                <option value="Forwarding">Forwarding</option>
+                <option value="Transport">Transport</option>
+              </select>
+            </div>
+
+            <div className="form-group">
+              <label className="text-sm font-medium" style={styles.label}>
+                Shipment Terms (Incoterms) <span style={styles.required}>*</span>
+              </label>
+              <select
+                className="form-control form-control-sm"
+                style={styles.input}
+                disabled={disabled}
+                {...register('shipment_terms', { required: true })}
+              >
+                <option value="FOB">FOB — Free On Board</option>
+                <option value="CIF">CIF — Cost, Insurance & Freight</option>
+                <option value="CFR">CFR — Cost & Freight</option>
+                <option value="EXW">EXW — Ex Works</option>
+                <option value="FCA">FCA</option>
+                <option value="DAP">DAP</option>
+                <option value="DDP">DDP</option>
+                <option value="Freight_Prepaid">Freight Prepaid</option>
+                <option value="Freight_Collect">Freight Collect</option>
+                <option value="Other">Other</option>
+              </select>
+            </div>
+          </div>
+        </FloatingWrapper>
+        {/* SECTION 2 — ROUTING DETAILS */}
+        <FloatingWrapper>
+          <div style={styles.sectionHeader}>
+            <MapPin size={16} color="#1976D2" />
+            <span>Section 2 —  Services Required</span>
+          </div>
+          <div style={styles.grid}>
+            <div className="service-selector" style={{ display: 'flex', flexDirection: 'column' }}>{SERVICE_TYPES.map(s => <label className="service-option" style={{ display: 'flex', gap: '20px' }} key={s.id}><input type="checkbox" name="services" value={s.id} />
+              <div style={{ display: 'flex', flexDirection: 'column' }}><b>{s.name}</b><small>{s.description}</small></div></label>)}</div>
           </div>
         </FloatingWrapper>
         {/* SECTION 3 — CARGO DETAILS (field array) */}
@@ -1088,74 +1164,6 @@ const ShippingInquiryForm = ({
             Add Another Container Type
           </button>
         </FloatingWrapper>
-        {/* SECTION 5 — COMMERCIAL / SHIPMENT TERMS */}
-        <FloatingWrapper>
-          <div style={styles.sectionHeader}>
-            <FileText size={16} color="#1976D2" />
-            <span>Section 5 — Commercial / Shipment Terms</span>
-          </div>
-          <div style={styles.grid}>
-            <div className="form-group">
-              <label className="text-sm font-medium" style={styles.label}>
-                Shipment Type <span style={styles.required}>*</span>
-              </label>
-              <select
-                className="form-control form-control-sm"
-                style={styles.input}
-                disabled={disabled}
-                {...register('shipment_type', { required: true })}
-              >
-                <option value="">-- Select Shipment Type --</option>
-                {transportModes.map((tm) => (
-                  <option
-                    key={tm.id || tm.mode_code}
-                    value={tm.mode_name || tm.mode_code}
-                  >
-                    {tm.mode_name} {tm.mode_code ? `(${tm.mode_code})` : ''}
-                  </option>
-                ))}
-              </select>
-            </div>
-            <div className="form-group">
-              <label className="text-sm font-medium" style={styles.label}>
-                Shipment Sub Type <span style={styles.required}>*</span>
-              </label>
-              <select
-                className="form-control form-control-sm"
-                style={styles.input}
-                disabled={disabled}
-                {...register('shipment_sub_type', { required: true })}
-              >
-                <option value="Clearing">Clearing</option>
-                <option value="Forwarding">Forwarding</option>
-                <option value="Transport">Transport</option>
-              </select>
-            </div>
-
-            <div className="form-group">
-              <label className="text-sm font-medium" style={styles.label}>
-                Shipment Terms (Incoterms) <span style={styles.required}>*</span>
-              </label>
-              <select
-                className="form-control form-control-sm"
-                style={styles.input}
-                disabled={disabled}
-                {...register('shipment_terms', { required: true })}
-              >
-                <option value="FOB">FOB — Free On Board</option>
-                <option value="CIF">CIF — Cost, Insurance & Freight</option>
-                <option value="CFR">CFR — Cost & Freight</option>
-                <option value="EXW">EXW — Ex Works</option>
-                <option value="FCA">FCA</option>
-                <option value="DAP">DAP</option>
-                <option value="DDP">DDP</option>
-                <option value="Freight_Prepaid">Freight Prepaid</option>
-                <option value="Freight_Collect">Freight Collect</option>
-                <option value="Other">Other</option>
-              </select>
-            </div>
-          </div>
-        </FloatingWrapper>
         {/* SECTION 6 — STUFFING & CARGO READINESS */}
         <FloatingWrapper>
           <div style={styles.sectionHeader}>
@@ -1367,89 +1375,7 @@ const ShippingInquiryForm = ({
             <span>Section 8 — Special Requirements & Operational Status</span>
           </div>
           <div style={styles.grid}>
-            <div className="form-group">
-              <label className="text-sm font-medium" style={styles.label}>
-                Inspections
-              </label>
-              <input
-                type="text"
-                className="form-control form-control-sm"
-                style={styles.input}
-                disabled={disabled}
-                placeholder="Enter inspection requirements"
-                {...register('inspections')}
-              />
-            </div>
-
-            <div className="form-group">
-              <label className="text-sm font-medium" style={styles.label}>
-                Certifications
-              </label>
-              <input
-                type="text"
-                className="form-control form-control-sm"
-                style={styles.input}
-                disabled={disabled}
-                placeholder="Enter certification requirements"
-                {...register('certifications')}
-              />
-            </div>
-
-            <div className="form-group">
-              <label className="text-sm font-medium" style={styles.label}>
-                Fumigations
-              </label>
-              <input
-                type="text"
-                className="form-control form-control-sm"
-                style={styles.input}
-                disabled={disabled}
-                placeholder="Enter fumigation requirements"
-                {...register('fumigations')}
-              />
-            </div>
-
-            <div className="form-group">
-              <label className="text-sm font-medium" style={styles.label}>
-                Loading/Unloading
-              </label>
-              <input
-                type="text"
-                className="form-control form-control-sm"
-                style={styles.input}
-                disabled={disabled}
-                placeholder="Enter loading/unloading requirements"
-                {...register('loading_unloading')}
-              />
-            </div>
-
-            <div className="form-group">
-              <label className="text-sm font-medium" style={styles.label}>
-                Palletization
-              </label>
-              <input
-                type="text"
-                className="form-control form-control-sm"
-                style={styles.input}
-                disabled={disabled}
-                placeholder="Enter palletization requirements"
-                {...register('palletization')}
-              />
-            </div>
-
-            <div className="form-group">
-              <label className="text-sm font-medium" style={styles.label}>
-                Lashing/Chocking
-              </label>
-              <input
-                type="text"
-                className="form-control form-control-sm"
-                style={styles.input}
-                disabled={disabled}
-                placeholder="Enter lashing/chocking requirements"
-                {...register('lashing_chocking')}
-              />
-            </div>
+            {SPECIAL_REQUIREMENTS.map(x => <label key={x}><input type="checkbox" name="specialRequirements" value={x} />{x}</label>)}
             <div className="form-group">
               <label className="text-sm font-medium" style={styles.label}>
                 Priority
