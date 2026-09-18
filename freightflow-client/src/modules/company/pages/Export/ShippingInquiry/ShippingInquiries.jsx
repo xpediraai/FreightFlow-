@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import Page from '../../../../../shared/components/Page';
 import PageHeader from '../../../../../shared/components/PageHeader';
 import MasterToolbar from '../../../../../shared/components/Master/MasterToolbar';
@@ -6,35 +6,41 @@ import ExpandableForm from '../../../../../shared/components/Master/ExpandableFo
 import ShippingInquiryList from './ShippingInquiryList';
 import ShippingInquiryForm from './ShippingInquiryForm';
 import FloatingWrapper from '../../../../../shared/components/FloattingWrapper/FloatingWrapper';
+import { shippingInquiryService } from './shippingInquiry.service';
 
 const ShippingInquiries = () => {
-  const [inquiries, setInquiries] = useState(() => {
-    try {
-      const saved = localStorage.getItem('freightflow_shipping_inquiries');
-      if (saved) {
-        const parsed = JSON.parse(saved);
-        if (Array.isArray(parsed)) return parsed;
-      }
-    } catch (err) {
-      console.error('Failed to load saved inquiries:', err);
-    }
-    return [];
-  });
-
+  const [inquiries, setInquiries] = useState([]);
+  const [isLoading, setIsLoading] = useState(true);
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [selectedInquiry, setSelectedInquiry] = useState(null);
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState('ALL STATUS');
   const [viewMode, setViewMode] = useState(() => localStorage.getItem('preferredViewMode') || 'table');
 
-  // Save to localStorage when inquiries change
-  useEffect(() => {
+  const fetchInquiries = useCallback(async () => {
+    setIsLoading(true);
     try {
-      localStorage.setItem('freightflow_shipping_inquiries', JSON.stringify(inquiries));
+      const res = await shippingInquiryService.getInquiries();
+      const listData =
+        res?.data?.inquiries ||
+        res?.data?.data?.inquiries ||
+        res?.inquiries ||
+        (Array.isArray(res?.data) ? res.data : null) ||
+        (Array.isArray(res) ? res : []);
+      if (Array.isArray(listData)) {
+        setInquiries(listData);
+      }
     } catch (err) {
-      console.error('Failed to persist inquiries:', err);
+      console.error('Failed to fetch shipping inquiries from backend:', err);
+      setInquiries([]);
+    } finally {
+      setIsLoading(false);
     }
-  }, [inquiries]);
+  }, []);
+
+  useEffect(() => {
+    fetchInquiries();
+  }, [fetchInquiries]);
 
   const handleCreateNew = () => {
     setSelectedInquiry(null);
@@ -52,20 +58,19 @@ const ShippingInquiries = () => {
     setSelectedInquiry(null);
   };
 
-  const handleSaveSuccess = (savedInquiry) => {
-    if (selectedInquiry) {
-      // Update existing
-      setInquiries(prev => prev.map(item => item.id === savedInquiry.id ? savedInquiry : item));
-    } else {
-      // Create new
-      setInquiries(prev => [savedInquiry, ...prev]);
-    }
+  const handleSaveSuccess = () => {
     setIsFormOpen(false);
     setSelectedInquiry(null);
+    fetchInquiries();
   };
 
-  const handleDelete = (id) => {
-    setInquiries(prev => prev.filter(item => item.id !== id));
+  const handleDelete = async (id) => {
+    try {
+      await shippingInquiryService.deleteInquiry(id);
+    } catch (err) {
+      console.error('Failed to delete shipping inquiry:', err);
+    }
+    fetchInquiries();
   };
 
   return (
@@ -101,8 +106,10 @@ const ShippingInquiries = () => {
                 localStorage.setItem('preferredViewMode', mode);
               }}
             />
+
             <ShippingInquiryList
               inquiries={inquiries}
+              isLoading={isLoading}
               onEdit={handleEdit}
               onDelete={handleDelete}
               searchQuery={searchTerm}

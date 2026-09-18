@@ -35,4 +35,11 @@ export const commonService = {
   createContainerType: (data) => api.post('/container-type', data),
   updateContainerType: (id, data) => api.put(`/container-type/${id}`, data),
   deleteContainerType: (id) => api.delete(`/container-type/${id}`),
+
+  // --- Commodity ---
+  getCommodities: (params) => api.get('/commodity', { params }),
+  getCommodityById: (id) => api.get(`/commodity/${id}`),
+  createCommodity: (data) => api.post('/commodity', data),
+  updateCommodity: (id, data) => api.put(`/commodity/${id}`, data),
+  deleteCommodity: (id) => api.delete(`/commodity/${id}`),
 };

@@ -12,6 +12,7 @@
   "license": "ISC",
   "description": "",
   "dependencies": {
+    "axios": "^1.19.0",
     "bcrypt": "^6.0.0",
     "cookie-parser": "^1.4.7",
     "cors": "^2.8.6",
@@ -24,6 +25,7 @@
     "multer": "^2.2.0",
     "nodemon": "^3.1.14",
     "pg": "^8.21.0",
+    "puppeteer": "^25.8.0",
     "sequelize": "^6.37.8",
     "uuid": "^14.0.0"
   },

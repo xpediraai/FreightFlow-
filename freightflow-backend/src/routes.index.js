@@ -26,7 +26,9 @@ const incotermRoutes = require('./modules/Masters/Common/IncotermMasters/incoter
 const chargeRoutes = require('./modules/Masters/Common/ChargeMasters/charge.routes');
 const paymentTermRoutes = require('./modules/Masters/Foundation/PaymentTermMasters/paymentTerm.routes');
 const bulkImportRoutes = require('./modules/Masters/bulkImport.routes');
-
+const trackingRoutes = require('./modules/Operations/Tracking/tracking.routes');
+const shippingInquiryRoutes = require('./modules/Operations/ShippingInquiry/shippingInquiry.routes');
+const exportQuotationRoutes = require('./modules/Operations/ExportQuotation/exportQuotation.routes');
 
 // Mount routes
 router.use('/auth', authRoutes);
@@ -54,5 +56,8 @@ router.use('/incoterm', incotermRoutes);
 router.use('/charge', chargeRoutes);
 router.use('/payment-term', paymentTermRoutes);
 router.use('/masters/bulk-import', bulkImportRoutes);
+router.use('/tracking', trackingRoutes);
+router.use('/shipping-inquiry', shippingInquiryRoutes);
+router.use('/export-quotation', exportQuotationRoutes);
 
 module.exports = router;

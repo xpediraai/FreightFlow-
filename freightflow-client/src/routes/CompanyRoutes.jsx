@@ -37,6 +37,9 @@ import Vendors from '../modules/company/pages/Masters/Business/Vendor/Vendors';
 import ShippingInquiries from '../modules/company/pages/Export/ShippingInquiry/ShippingInquiries';
 import Quotations from '../modules/company/pages/Export/Quotation/Quotations';
 
+// Operations Modules
+import ShipmentTracking from '../modules/company/pages/Operations/Tracking/ShipmentTracking';
+
 // Placeholders for unimplemented features
 const GenericPlaceholder = ({ title }) => (
   <div style={{ padding: '2rem' }}>
@@ -49,6 +52,14 @@ const CompanyRoutes = [
   {
     path: 'dashboard',
     element: <Dashboard />,
+  },
+  {
+    path: 'tracking',
+    element: <ShipmentTracking />,
+  },
+  {
+    path: 'masters/operations/tracking',
+    element: <ShipmentTracking />,
   },
   {
     path: 'company',

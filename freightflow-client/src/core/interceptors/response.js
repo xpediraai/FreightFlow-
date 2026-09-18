@@ -86,7 +86,7 @@ export const responseErrorInterceptor = async (error) => {
     toast.error(message, { toastId: message });
   }
 
-  if (error.response && error.response.data) {
+  if (error.response && error.response.data && typeof error.response.data === 'object') {
     error.response.data.message = message;
   }
 

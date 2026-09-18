@@ -4,6 +4,8 @@ import Button from '../../../../../shared/components/Button';
 import { businessService } from '../../../../masters/services/business.service';
 import { logisticsService } from '../../../../masters/services/logistics.service';
 import { commonService } from '../../../../masters/services/common.service';
+import { shippingInquiryService } from '../ShippingInquiry/shippingInquiry.service';
+import { exportQuotationService } from './exportQuotation.service';
 
 export const generateQuotationNo = (existingCount = 0) => {
   const now = new Date();
@@ -108,15 +110,16 @@ const QuotationForm = ({ onCancel, onSuccess, initialData, existingCount = 0 }) 
 
   // Fetch Saved Inquiries & Master Shipping Lines & UOMs
   useEffect(() => {
-    try {
-      const inqRaw = localStorage.getItem('freightflow_shipping_inquiries');
-      if (inqRaw) {
-        const parsed = JSON.parse(inqRaw);
-        if (Array.isArray(parsed)) setSavedInquiries(parsed);
+    const fetchInquiries = async () => {
+      try {
+        const res = await shippingInquiryService.getInquiries({ limit: 500 });
+        const list = res?.data?.data?.inquiries || res?.data?.inquiries || res?.data || [];
+        if (Array.isArray(list)) setSavedInquiries(list);
+      } catch (err) {
+        console.error('Failed to load saved inquiries for dropdown:', err);
       }
-    } catch (err) {
-      console.error('Failed to load saved inquiries for dropdown:', err);
-    }
+    };
+    fetchInquiries();
 
     const fetchMasters = async () => {
       try {
@@ -381,7 +384,7 @@ const QuotationForm = ({ onCancel, onSuccess, initialData, existingCount = 0 }) 
   };
 
   // Form Submit
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     setGlobalError('');
 
@@ -397,19 +400,35 @@ const QuotationForm = ({ onCancel, onSuccess, initialData, existingCount = 0 }) 
     setIsLoading(true);
 
     try {
+      const formattedCharges = charges.map(c => ({
+        charge_name: c.name || c.charge_name || 'Charge Head',
+        basis: c.basis || 'Per Container',
+        applicable: c.applicable !== false,
+        quantity: Number(c.quantity) || 1,
+        rate: Number(c.rate) || 0,
+        amount: c.applicable !== false ? (Number(c.quantity || 1) * Number(c.rate || 0)) : 0,
+      }));
+
       const payload = {
         ...formData,
         gross_weight: finalWeight,
-        charges,
+        charges: formattedCharges,
         total_amount: totalAmount,
-        id: isEditMode ? initialData.id : `quot_${Date.now()}`,
-        created_at: isEditMode ? initialData.created_at : new Date().toISOString(),
-        updated_at: new Date().toISOString()
       };
 
-      onSuccess && onSuccess(payload);
+      let response;
+      if (isEditMode) {
+        response = await exportQuotationService.updateQuotation(initialData.id, payload);
+      } else {
+        response = await exportQuotationService.createQuotation(payload);
+      }
+
+      const savedData = response?.data?.data || response?.data;
+      onSuccess && onSuccess(savedData);
     } catch (err) {
-      setGlobalError(err.message || 'Failed to save export quotation.');
+      console.error('Save Export Quotation error:', err);
+      const msg = err.response?.data?.message || err.response?.data?.error || err.message || 'Failed to save export quotation.';
+      setGlobalError(msg);
     } finally {
       setIsLoading(false);
     }
