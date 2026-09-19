@@ -16,12 +16,16 @@ const chargeItemSchema = Joi.object({
   amount: Joi.number().min(0).default(0),
 }).unknown(true);
 
-const carrierOptionSchema = Joi.object({
-  line: Joi.string().allow("", null).optional(),
-  freight: Joi.number().allow(null, 0).optional(),
-  local: Joi.number().allow(null, 0).optional(),
-  notes: Joi.string().allow("", null).optional(),
-}).unknown(true);
+const carrierOptionSchema = Joi.alternatives().try(
+  Joi.object({
+    line: Joi.string().allow("", null).optional(),
+    freight: Joi.alternatives().try(Joi.number(), Joi.string().allow("", null)).allow(null, 0).optional(),
+    local: Joi.alternatives().try(Joi.number(), Joi.string().allow("", null)).allow(null, 0).optional(),
+    notes: Joi.string().allow("", null).optional(),
+  }).unknown(true),
+  Joi.string().allow("", null),
+  Joi.allow(null)
+);
 
 const createExportQuotationSchema = Joi.object({
   quotation_no: Joi.string().allow("", null).optional(),
@@ -43,7 +47,10 @@ const createExportQuotationSchema = Joi.object({
     Joi.string().allow("", null)
   ).optional(),
   container_type: Joi.string().allow("", null).optional().default("20'"),
-  no_of_containers: Joi.number().integer().min(1).allow(null).optional().default(1),
+  no_of_containers: Joi.alternatives().try(
+    Joi.number().integer().min(1),
+    Joi.string().allow("", null)
+  ).allow(null).optional().default(1),
   shipment_terms: Joi.string().allow("", null).optional().default("FOB"),
   cargo_ready_date: Joi.date().iso().allow("", null).optional(),
   stuffing_location: Joi.string().allow("", null).optional().default("Factory"),
@@ -52,7 +59,10 @@ const createExportQuotationSchema = Joi.object({
   factory_address: Joi.string().allow("", null).optional(),
   factory_contact_person: Joi.string().allow("", null).optional(),
   shipping_line_preference: Joi.string().allow("", null).optional(),
-  free_days_required: Joi.number().integer().min(0).allow(null).optional(),
+  free_days_required: Joi.alternatives().try(
+    Joi.number().integer().min(0),
+    Joi.string().allow("", null)
+  ).allow(null).optional(),
   special_requirements: Joi.string().allow("", null).optional(),
 
   customs_verification_status: Joi.string().allow("", null).optional(),
@@ -97,7 +107,10 @@ const updateExportQuotationSchema = Joi.object({
     Joi.string().allow("", null)
   ).optional(),
   container_type: Joi.string().allow("", null).optional(),
-  no_of_containers: Joi.number().integer().min(1).allow(null).optional(),
+  no_of_containers: Joi.alternatives().try(
+    Joi.number().integer().min(1),
+    Joi.string().allow("", null)
+  ).allow(null).optional(),
   shipment_terms: Joi.string().allow("", null).optional(),
   cargo_ready_date: Joi.date().iso().allow("", null).optional(),
   stuffing_location: Joi.string().allow("", null).optional(),
@@ -106,7 +119,10 @@ const updateExportQuotationSchema = Joi.object({
   factory_address: Joi.string().allow("", null).optional(),
   factory_contact_person: Joi.string().allow("", null).optional(),
   shipping_line_preference: Joi.string().allow("", null).optional(),
-  free_days_required: Joi.number().integer().min(0).allow(null).optional(),
+  free_days_required: Joi.alternatives().try(
+    Joi.number().integer().min(0),
+    Joi.string().allow("", null)
+  ).allow(null).optional(),
   special_requirements: Joi.string().allow("", null).optional(),
 
   customs_verification_status: Joi.string().allow("", null).optional(),

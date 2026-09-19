@@ -774,8 +774,25 @@ const QuotationForm = ({ onCancel, onSuccess, initialData, existingCount = 0 }) 
         amount: c.applicable !== false ? (Number(c.quantity || 1) * Number(c.rate || 0)) : 0,
       }));
 
+      const cleanCarrier = (c) => {
+        if (!c) return { line: '', freight: null, local: null, notes: '' };
+        return {
+          line: c.line || '',
+          freight: c.freight !== '' && c.freight !== undefined && c.freight !== null && !isNaN(Number(c.freight)) ? Number(c.freight) : null,
+          local: c.local !== '' && c.local !== undefined && c.local !== null && !isNaN(Number(c.local)) ? Number(c.local) : null,
+          notes: c.notes || ''
+        };
+      };
+
       const payload = {
         ...formData,
+        free_days_required: formData.free_days_required !== '' && formData.free_days_required !== undefined && formData.free_days_required !== null && !isNaN(Number(formData.free_days_required)) ? parseInt(formData.free_days_required, 10) : null,
+        no_of_containers: formData.no_of_containers !== '' && formData.no_of_containers !== undefined && formData.no_of_containers !== null && !isNaN(Number(formData.no_of_containers)) ? parseInt(formData.no_of_containers, 10) : 1,
+        carrier_option_a: cleanCarrier(formData.carrier_option_a),
+        carrier_option_b: cleanCarrier(formData.carrier_option_b),
+        carrier_option_c: cleanCarrier(formData.carrier_option_c),
+        selected_carrier: formData.selected_carrier || '',
+        carrier_selection_notes: formData.carrier_selection_notes || '',
         currency: formData.currency || 'INR',
         gross_weight: finalWeight,
         charges: formattedCharges,
@@ -848,7 +865,6 @@ const QuotationForm = ({ onCancel, onSuccess, initialData, existingCount = 0 }) 
           <span>Section 1 — Header & Linked Shipping Inquiry</span>
         </div>
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: '1rem' }}>
-          
           {/* Quotation No */}
           <div className="form-group">
             <label style={{ display: 'block', fontSize: '0.85rem', fontWeight: 500, marginBottom: '0.35rem' }}>Quotation No <span style={{ color: '#d32f2f' }}>*</span></label>
@@ -878,7 +894,7 @@ const QuotationForm = ({ onCancel, onSuccess, initialData, existingCount = 0 }) 
           {/* Linked Shipping Inquiry Selector */}
           <div className="form-group">
             <label style={{ display: 'block', fontSize: '0.85rem', fontWeight: 600, color: '#0288d1', marginBottom: '0.35rem' }}>
-              Link Existing Shipping Inquiry <span style={{ color: '#d32f2f' }}>*</span>
+              Link Existing Shipping Inquiry <span style={{ color: '#6b7280', fontSize: '0.75rem', fontWeight: 'normal' }}>(Optional)</span>
             </label>
             <select
               name="inquiry_id"

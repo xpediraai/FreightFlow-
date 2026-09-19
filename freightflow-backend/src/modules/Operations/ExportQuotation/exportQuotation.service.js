@@ -40,6 +40,19 @@ const calculateTotalAmount = (charges = []) => {
   }, 0);
 };
 
+const cleanCarrierOption = (opt) => {
+  if (!opt) return null;
+  if (typeof opt === "string") {
+    try { opt = JSON.parse(opt); } catch(e) { return null; }
+  }
+  return {
+    line: opt.line || "",
+    freight: opt.freight !== "" && opt.freight !== undefined && opt.freight !== null && !isNaN(Number(opt.freight)) ? Number(opt.freight) : null,
+    local: opt.local !== "" && opt.local !== undefined && opt.local !== null && !isNaN(Number(opt.local)) ? Number(opt.local) : null,
+    notes: opt.notes || ""
+  };
+};
+
 /**
  * Create a new Export Quotation with charges
  */
@@ -54,6 +67,12 @@ const createExportQuotation = async (companyId, data, userId) => {
 
     const quotationData = {
       ...data,
+      carrier_option_a: cleanCarrierOption(data.carrier_option_a),
+      carrier_option_b: cleanCarrierOption(data.carrier_option_b),
+      carrier_option_c: cleanCarrierOption(data.carrier_option_c),
+      free_days_required: data.free_days_required !== "" && data.free_days_required !== undefined && data.free_days_required !== null && !isNaN(Number(data.free_days_required)) ? parseInt(data.free_days_required, 10) : null,
+      no_of_containers: data.no_of_containers !== "" && data.no_of_containers !== undefined && data.no_of_containers !== null && !isNaN(Number(data.no_of_containers)) ? parseInt(data.no_of_containers, 10) : 1,
+      cargo_ready_date: data.cargo_ready_date ? data.cargo_ready_date : null,
       company_id: companyId || data.company_id || null,
       quotation_no: quotationNo,
       total_amount: totalAmount,
@@ -175,11 +194,26 @@ const updateExportQuotation = async (id, companyId, data, userId) => {
       updatedTotalAmount = calculateTotalAmount(data.charges);
     }
 
-    await quotation.update({
+    const updateData = {
       ...data,
       total_amount: updatedTotalAmount !== undefined ? updatedTotalAmount : quotation.total_amount,
       updated_by: userId || null,
-    }, { transaction });
+    };
+
+    if (data.carrier_option_a !== undefined) updateData.carrier_option_a = cleanCarrierOption(data.carrier_option_a);
+    if (data.carrier_option_b !== undefined) updateData.carrier_option_b = cleanCarrierOption(data.carrier_option_b);
+    if (data.carrier_option_c !== undefined) updateData.carrier_option_c = cleanCarrierOption(data.carrier_option_c);
+    if (data.free_days_required !== undefined) {
+      updateData.free_days_required = data.free_days_required !== "" && data.free_days_required !== null && !isNaN(Number(data.free_days_required)) ? parseInt(data.free_days_required, 10) : null;
+    }
+    if (data.no_of_containers !== undefined) {
+      updateData.no_of_containers = data.no_of_containers !== "" && data.no_of_containers !== null && !isNaN(Number(data.no_of_containers)) ? parseInt(data.no_of_containers, 10) : 1;
+    }
+    if (data.cargo_ready_date !== undefined) {
+      updateData.cargo_ready_date = data.cargo_ready_date || null;
+    }
+
+    await quotation.update(updateData, { transaction });
 
     if (data.charges && Array.isArray(data.charges)) {
       await db.ExportQuotationCharge.destroy({ where: { quotation_id: id }, transaction });
