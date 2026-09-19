@@ -295,64 +295,171 @@ const QuotationForm = ({ onCancel, onSuccess, initialData, existingCount = 0 }) 
   };
 
 
-  // Handle Inquiry Selection -> Auto Populate Shipment Fields & Quantities
-  const handleInquirySelect = (e) => {
-    const inqId = e.target.value;
-    if (!inqId) return;
+  // Extract Cargo and Container specifications from Shipping Inquiry object
+  const extractInquiryDetails = (inq) => {
+    if (!inq) return {};
 
-    const selectedInq = savedInquiries.find(item => String(item.id) === String(inqId) || item.inquiry_no === inqId);
-    if (selectedInq) {
-      const containerQty = parseInt(selectedInq.no_of_containers || selectedInq.quantity || '1', 10) || 1;
-      const rawWeight = selectedInq.gross_weight || selectedInq.weight || '';
-      const parsedWeight = parseWeightString(rawWeight);
-      
+    // 1. Cargos extraction (supports cargoDetails array, legacy cargos array, or flat fields)
+    const cargos = Array.isArray(inq.cargoDetails) && inq.cargoDetails.length > 0
+      ? inq.cargoDetails
+      : (Array.isArray(inq.cargos) && inq.cargos.length > 0
+        ? inq.cargos
+        : (inq.cargo ? [inq.cargo] : []));
+
+    let commodity = inq.commodity || '';
+    let hsnCode = inq.hsn_code || '';
+    let cargoType = inq.cargo_type || 'General';
+    let weightValue = '';
+    let weightUom = 'KG';
+    let grossWeight = inq.gross_weight || inq.weight || '';
+
+    if (cargos.length > 0) {
+      if (!commodity) {
+        commodity = cargos.map(c => c.commodity || c.commodity_name || c.name).filter(Boolean).join(', ');
+      }
+      if (!hsnCode) {
+        hsnCode = cargos.map(c => c.hsn_code || c.hsn).filter(Boolean).join(', ');
+      }
+      if (!inq.cargo_type && cargos[0]?.cargo_type) {
+        cargoType = cargos[0].cargo_type;
+      }
+
+      if (cargos.length === 1) {
+        weightValue = (cargos[0].weight_value !== undefined && cargos[0].weight_value !== null) ? String(cargos[0].weight_value) : '';
+        weightUom = cargos[0].weight_uom || 'KG';
+      } else {
+        const totalNum = cargos.reduce((sum, c) => sum + (parseFloat(c.weight_value) || 0), 0);
+        weightValue = totalNum > 0 ? String(totalNum) : ((cargos[0].weight_value !== undefined && cargos[0].weight_value !== null) ? String(cargos[0].weight_value) : '');
+        weightUom = cargos[0].weight_uom || 'KG';
+      }
+
+      if (!grossWeight && weightValue) {
+        grossWeight = `${weightValue} ${weightUom}`.trim();
+      }
+    }
+
+    if (grossWeight && !weightValue) {
+      const parsed = parseWeightString(grossWeight);
+      weightValue = parsed.val;
+      weightUom = parsed.uom || 'KG';
+    }
+
+    // 2. Containers extraction (supports containerDetails array, legacy containers array, or flat fields)
+    const containers = Array.isArray(inq.containerDetails) && inq.containerDetails.length > 0
+      ? inq.containerDetails
+      : (Array.isArray(inq.containers) && inq.containers.length > 0
+        ? inq.containers
+        : (inq.container ? [inq.container] : []));
+
+    let containerQty = 1;
+    let containerType = inq.container_type || "20'";
+
+    if (containers.length > 0) {
+      containerQty = containers.reduce((sum, c) => sum + (parseInt(c.no_of_containers || c.quantity || '1', 10) || 1), 0);
+      if (containers.length === 1) {
+        containerType = containers[0].container_type || "20'";
+      } else {
+        containerType = containers.map(c => `${c.no_of_containers || 1} x ${c.container_type || "20'"}`).join(', ');
+      }
+    } else if (inq.no_of_containers || inq.quantity) {
+      containerQty = parseInt(inq.no_of_containers || inq.quantity || '1', 10) || 1;
+    }
+
+    return {
+      commodity,
+      hsn_code: hsnCode,
+      cargo_type: cargoType,
+      weight_value: weightValue,
+      weight_uom: weightUom || 'KG',
+      gross_weight: grossWeight || (weightValue ? `${weightValue} ${weightUom}`.trim() : ''),
+      container_type: containerType,
+      no_of_containers: String(containerQty),
+      containerQty
+    };
+  };
+
+  // Helper to populate form data from selected inquiry
+  const applyInquiryToForm = (selectedInq) => {
+    if (!selectedInq) return;
+
+    const details = extractInquiryDetails(selectedInq);
+
+    setFormData(prev => ({
+      ...prev,
+      inquiry_id: selectedInq.id,
+      inquiry_no: selectedInq.inquiry_no,
+      exporter_id: selectedInq.exporter_id || selectedInq.customer_id || '',
+      exporter_name: selectedInq.exporter_name || selectedInq.customer_name || '',
+      pol: selectedInq.pol || selectedInq.origin || '',
+      pod: selectedInq.pod || selectedInq.destination || '',
+      fpod: selectedInq.fpod || '',
+      commodity: details.commodity || prev.commodity || '',
+      hsn_code: details.hsn_code || prev.hsn_code || '',
+      cargo_type: details.cargo_type || prev.cargo_type || 'General',
+      gross_weight: details.gross_weight || prev.gross_weight || '',
+      weight_value: details.weight_value || prev.weight_value || '',
+      weight_uom: details.weight_uom || prev.weight_uom || 'KG',
+      container_type: details.container_type || prev.container_type || "20'",
+      no_of_containers: details.no_of_containers || prev.no_of_containers || '1',
+      shipment_terms: selectedInq.shipment_terms || 'FOB',
+      cargo_ready_date: selectedInq.cargo_ready_date ? selectedInq.cargo_ready_date.split('T')[0] : '',
+      stuffing_location: selectedInq.stuffing_location || 'Factory',
+      stuffing_location_other: selectedInq.stuffing_location_other || '',
+      factory_details: selectedInq.factory_details || null,
+      factory_name: selectedInq.factory_name || selectedInq.factory_details?.factory_name || '',
+      factory_address: selectedInq.factory_address || selectedInq.factory_details?.factory_address || '',
+      factory_city: selectedInq.factory_city || selectedInq.factory_details?.city || '',
+      factory_state: selectedInq.factory_state || selectedInq.factory_details?.state || '',
+      factory_pincode: selectedInq.factory_pincode || selectedInq.factory_details?.pincode || '',
+      factory_contact_person: selectedInq.factory_contact_person || selectedInq.factory_details?.contact_person || '',
+      factory_contact_phone: selectedInq.factory_contact_phone || selectedInq.factory_details?.contact_phone || '',
+      factory_gstin: selectedInq.factory_gstin || selectedInq.factory_details?.gstin || '',
+      shipping_line_preference: selectedInq.shipping_line_preference || '',
+      free_days_required: selectedInq.free_days_required !== undefined ? String(selectedInq.free_days_required) : '',
+      special_requirements: selectedInq.special_requirements || selectedInq.remarks || ''
+    }));
+
+    // Update charges quantities for 'Per Container' basis to match inquiry's container count
+    const containerQty = details.containerQty || 1;
+    setCharges(prevCharges => 
+      prevCharges.map(item => {
+        const newQty = item.basis === 'Per Container' ? containerQty : item.quantity;
+        const newAmt = item.applicable ? newQty * (Number(item.rate) || 0) : 0;
+        return {
+          ...item,
+          quantity: newQty,
+          amount: newAmt
+        };
+      })
+    );
+  };
+
+  // Handle Inquiry Selection -> Auto Populate Shipment Fields & Quantities
+  const handleInquirySelect = async (e) => {
+    const inqId = e.target.value;
+    if (!inqId) {
       setFormData(prev => ({
         ...prev,
-        inquiry_id: selectedInq.id,
-        inquiry_no: selectedInq.inquiry_no,
-        exporter_id: selectedInq.exporter_id || selectedInq.customer_id || '',
-        exporter_name: selectedInq.exporter_name || selectedInq.customer_name || '',
-        pol: selectedInq.pol || selectedInq.origin || '',
-        pod: selectedInq.pod || selectedInq.destination || '',
-        fpod: selectedInq.fpod || '',
-        commodity: selectedInq.commodity || '',
-        hsn_code: selectedInq.hsn_code || '',
-        cargo_type: selectedInq.cargo_type || 'General',
-        gross_weight: rawWeight,
-        weight_value: parsedWeight.val,
-        weight_uom: parsedWeight.uom,
-        container_type: selectedInq.container_type || "20'",
-        no_of_containers: String(containerQty),
-        shipment_terms: selectedInq.shipment_terms || 'FOB',
-        cargo_ready_date: selectedInq.cargo_ready_date ? selectedInq.cargo_ready_date.split('T')[0] : '',
-        stuffing_location: selectedInq.stuffing_location || 'Factory',
-        stuffing_location_other: selectedInq.stuffing_location_other || '',
-        factory_details: selectedInq.factory_details || null,
-        factory_name: selectedInq.factory_name || selectedInq.factory_details?.factory_name || '',
-        factory_address: selectedInq.factory_address || selectedInq.factory_details?.factory_address || '',
-        factory_city: selectedInq.factory_city || selectedInq.factory_details?.city || '',
-        factory_state: selectedInq.factory_state || selectedInq.factory_details?.state || '',
-        factory_pincode: selectedInq.factory_pincode || selectedInq.factory_details?.pincode || '',
-        factory_contact_person: selectedInq.factory_contact_person || selectedInq.factory_details?.contact_person || '',
-        factory_contact_phone: selectedInq.factory_contact_phone || selectedInq.factory_details?.contact_phone || '',
-        factory_gstin: selectedInq.factory_gstin || selectedInq.factory_details?.gstin || '',
-        shipping_line_preference: selectedInq.shipping_line_preference || '',
-        free_days_required: selectedInq.free_days_required !== undefined ? String(selectedInq.free_days_required) : '',
-        special_requirements: selectedInq.special_requirements || selectedInq.remarks || ''
+        inquiry_id: '',
+        inquiry_no: ''
       }));
+      return;
+    }
 
-      // Update charges quantities for 'Per Container' basis to match inquiry's container count
-      setCharges(prevCharges => 
-        prevCharges.map(item => {
-          const newQty = item.basis === 'Per Container' ? containerQty : item.quantity;
-          const newAmt = item.applicable ? newQty * (Number(item.rate) || 0) : 0;
-          return {
-            ...item,
-            quantity: newQty,
-            amount: newAmt
-          };
-        })
-      );
+    const cachedInq = savedInquiries.find(item => String(item.id) === String(inqId) || item.inquiry_no === inqId);
+    if (cachedInq) {
+      applyInquiryToForm(cachedInq);
+    }
+
+    // Also fetch full inquiry details by ID from API to ensure fresh/complete nested associations
+    try {
+      const res = await shippingInquiryService.getInquiryById(inqId);
+      const fullInq = res?.data?.data || res?.data;
+      if (fullInq && fullInq.id) {
+        applyInquiryToForm(fullInq);
+      }
+    } catch (err) {
+      console.warn('Could not fetch single inquiry details, using list cache:', err);
     }
   };
 
