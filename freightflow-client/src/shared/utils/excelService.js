@@ -22,10 +22,10 @@ export const MASTER_SCHEMAS = {
       { key: 'default_qty', label: 'Default Quantity', required: false, type: 'number' },
       { 
         key: 'shipment_sub_type', 
-        label: 'Shipment Sub Type (Multiple allowed with comma: Clearing, Forwarding, Transport, Clearing & Forwarding, Door to Door, Customs Clearance, Other)', 
+        label: 'Shipment Sub Type (Multiple allowed with comma: Clearing, Forwarding, Transport)', 
         required: false, 
         type: 'multiselect', 
-        options: ['Clearing', 'Forwarding', 'Transport', 'Clearing & Forwarding', 'Door to Door', 'Customs Clearance', 'Other'] 
+        options: ['Clearing', 'Forwarding', 'Transport'] 
       },
       { key: 'default_applicable', label: 'Default Applicable in Quotation', required: false, type: 'select', options: ['Yes', 'No'] },
       { key: 'description', label: 'Description', required: false, type: 'string' },
@@ -38,7 +38,7 @@ export const MASTER_SCHEMAS = {
         'Basis / Unit *': 'Per Container',
         'Default Rate': 85000,
         'Default Quantity': 1,
-        'Shipment Sub Type (Multiple allowed with comma: Clearing, Forwarding, Transport, Clearing & Forwarding, Door to Door, Customs Clearance, Other)': 'Clearing, Forwarding',
+        'Shipment Sub Type (Multiple allowed with comma: Clearing, Forwarding, Transport)': 'Clearing, Forwarding',
         'Default Applicable in Quotation': 'Yes',
         'Description': 'Standard Ocean Freight charges',
         'Status': 'Active'
@@ -49,7 +49,7 @@ export const MASTER_SCHEMAS = {
         'Basis / Unit *': 'Per Container',
         'Default Rate': 9500,
         'Default Quantity': 1,
-        'Shipment Sub Type (Multiple allowed with comma: Clearing, Forwarding, Transport, Clearing & Forwarding, Door to Door, Customs Clearance, Other)': 'Clearing, Customs Clearance',
+        'Shipment Sub Type (Multiple allowed with comma: Clearing, Forwarding, Transport)': 'Forwarding, Transport',
         'Default Applicable in Quotation': 'Yes',
         'Description': 'Origin Terminal Handling Charges',
         'Status': 'Active'

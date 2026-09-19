@@ -10,10 +10,6 @@ export const SHIPMENT_SUB_TYPES = [
   'Clearing',
   'Forwarding',
   'Transport',
-  'Clearing & Forwarding',
-  'Door to Door',
-  'Customs Clearance',
-  'Other',
 ];
 
 const ChargeForm = ({ onCancel, onSuccess, initialData }) => {

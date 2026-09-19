@@ -38,6 +38,10 @@ const createExportQuotationSchema = Joi.object({
   hsn_code: Joi.string().allow("", null).optional(),
   cargo_type: Joi.string().allow("", null).optional().default("General"),
   gross_weight: Joi.string().allow("", null).optional(),
+  shipment_sub_type: Joi.alternatives().try(
+    Joi.array().items(Joi.string()),
+    Joi.string().allow("", null)
+  ).optional(),
   container_type: Joi.string().allow("", null).optional().default("20'"),
   no_of_containers: Joi.number().integer().min(1).allow(null).optional().default(1),
   shipment_terms: Joi.string().allow("", null).optional().default("FOB"),
@@ -88,6 +92,10 @@ const updateExportQuotationSchema = Joi.object({
   hsn_code: Joi.string().allow("", null).optional(),
   cargo_type: Joi.string().allow("", null).optional(),
   gross_weight: Joi.string().allow("", null).optional(),
+  shipment_sub_type: Joi.alternatives().try(
+    Joi.array().items(Joi.string()),
+    Joi.string().allow("", null)
+  ).optional(),
   container_type: Joi.string().allow("", null).optional(),
   no_of_containers: Joi.number().integer().min(1).allow(null).optional(),
   shipment_terms: Joi.string().allow("", null).optional(),

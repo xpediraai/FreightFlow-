@@ -81,6 +81,88 @@ const getFullFileUrl = (url) => {
   return `${backendBase}${url.startsWith('/') ? '' : '/'}${url}`;
 };
 
+/**
+ * Filter, sort, and calculate charges based on the selected Shipping Inquiry's shipment_sub_type.
+ * Matching sub-type charges are prioritized at the top and marked applicable.
+ */
+export const getSortedChargesForInquiry = (masters = [], inquirySubTypes = [], containerQty = 1, preferredCurrency = 'INR') => {
+  if (!Array.isArray(masters) || masters.length === 0) return [];
+
+  let targetSubTypes = [];
+  if (Array.isArray(inquirySubTypes)) {
+    targetSubTypes = inquirySubTypes.map(s => String(s).trim().toLowerCase()).filter(Boolean);
+  } else if (typeof inquirySubTypes === 'string' && inquirySubTypes.trim()) {
+    try {
+      const parsed = JSON.parse(inquirySubTypes);
+      if (Array.isArray(parsed)) targetSubTypes = parsed.map(s => String(s).trim().toLowerCase()).filter(Boolean);
+      else targetSubTypes = inquirySubTypes.split(',').map(s => s.trim().toLowerCase()).filter(Boolean);
+    } catch (e) {
+      targetSubTypes = inquirySubTypes.split(',').map(s => s.trim().toLowerCase()).filter(Boolean);
+    }
+  }
+
+  const scored = masters.map((cm) => {
+    let cmSubTypes = [];
+    if (Array.isArray(cm.shipment_sub_type)) {
+      cmSubTypes = cm.shipment_sub_type;
+    } else if (typeof cm.shipment_sub_type === 'string' && cm.shipment_sub_type.trim()) {
+      cmSubTypes = cm.shipment_sub_type.split(',').map(s => s.trim()).filter(Boolean);
+    } else if (typeof cm.charge_type === 'string' && cm.charge_type.trim() && cm.charge_type !== 'Revenue' && cm.charge_type !== 'Expense') {
+      cmSubTypes = cm.charge_type.split(',').map(s => s.trim()).filter(Boolean);
+    }
+
+    const lowerCmSubTypes = cmSubTypes.map(s => String(s).trim().toLowerCase());
+    
+    let isMatch = false;
+    let matchCount = 0;
+    if (targetSubTypes.length > 0) {
+      matchCount = lowerCmSubTypes.filter(s => targetSubTypes.includes(s)).length;
+      isMatch = matchCount > 0;
+    }
+
+    return {
+      cm,
+      cmSubTypes,
+      isMatch,
+      matchCount
+    };
+  });
+
+  let sortedList = [...scored];
+  if (targetSubTypes.length > 0) {
+    sortedList.sort((a, b) => {
+      if (a.isMatch && !b.isMatch) return -1;
+      if (!a.isMatch && b.isMatch) return 1;
+      if (a.matchCount !== b.matchCount) return b.matchCount - a.matchCount;
+      if (a.cm.defaultApplicable && !b.cm.defaultApplicable) return -1;
+      if (!a.cm.defaultApplicable && b.cm.defaultApplicable) return 1;
+      return 0;
+    });
+  }
+
+  return sortedList.map(({ cm, cmSubTypes, isMatch }) => {
+    const isApplicable = targetSubTypes.length > 0 
+      ? (isMatch && cm.defaultApplicable !== false)
+      : (cm.defaultApplicable ?? true);
+
+    const qty = cm.basis === 'Per Container' ? (containerQty || 1) : (cm.quantity || 1);
+    const rate = Number(cm.rate || 0);
+
+    return {
+      id: `ch_${cm.id}`,
+      name: cm.name,
+      basis: cm.basis,
+      currency: preferredCurrency || cm.currency || 'INR',
+      applicable: isApplicable,
+      quantity: qty,
+      rate: rate,
+      amount: isApplicable ? qty * rate : 0,
+      shipment_sub_type: cmSubTypes,
+      isMatch: isMatch
+    };
+  });
+};
+
 const QuotationForm = ({ onCancel, onSuccess, initialData, existingCount = 0 }) => {
   const isEditMode = !!initialData;
   const [isLoading, setIsLoading] = useState(false);
@@ -102,6 +184,7 @@ const QuotationForm = ({ onCancel, onSuccess, initialData, existingCount = 0 }) 
     currency: 'INR',
     inquiry_id: '',
     inquiry_no: '',
+    shipment_sub_type: [],
     exporter_id: '',
     exporter_name: '',
     pol: '',
@@ -219,28 +302,35 @@ const QuotationForm = ({ onCancel, onSuccess, initialData, existingCount = 0 }) 
         }
         if (Array.isArray(chargeData) && chargeData.length > 0) {
           const activeMasters = chargeData.filter(c => c.status !== 'Inactive');
-          const mappedMasters = activeMasters.map((c, i) => ({
-            id: c.id || `cm_${i}`,
-            name: c.charge_name || c.name || c.description,
-            basis: c.basis || c.uom || 'Per Container',
-            currency: c.default_currency || c.currency || 'INR',
-            defaultApplicable: c.default_applicable ?? true,
-            rate: Number(c.default_rate || c.rate || 0),
-            quantity: Number(c.default_qty || c.quantity || 1)
-          }));
+          const mappedMasters = activeMasters.map((c, i) => {
+            let subTypes = [];
+            if (Array.isArray(c.shipment_sub_type)) {
+              subTypes = c.shipment_sub_type;
+            } else if (typeof c.shipment_sub_type === 'string' && c.shipment_sub_type.trim()) {
+              subTypes = c.shipment_sub_type.split(',').map(s => s.trim()).filter(Boolean);
+            } else if (typeof c.charge_type === 'string' && c.charge_type.trim() && c.charge_type !== 'Revenue' && c.charge_type !== 'Expense') {
+              subTypes = c.charge_type.split(',').map(s => s.trim()).filter(Boolean);
+            }
+            return {
+              id: c.id || `cm_${i}`,
+              name: c.charge_name || c.name || c.description,
+              basis: c.basis || c.uom || 'Per Container',
+              currency: c.default_currency || c.currency || 'INR',
+              defaultApplicable: c.default_applicable ?? true,
+              rate: Number(c.default_rate || c.rate || 0),
+              quantity: Number(c.default_qty || c.quantity || 1),
+              shipment_sub_type: subTypes,
+              charge_type: c.charge_type
+            };
+          });
           setChargeMasters(mappedMasters);
 
           if (!initialData) {
-            setCharges(mappedMasters.map(cm => ({
-              id: `ch_${cm.id}`,
-              name: cm.name,
-              basis: cm.basis,
-              currency: formData.currency || cm.currency || 'INR',
-              applicable: cm.defaultApplicable,
-              quantity: cm.quantity,
-              rate: cm.rate,
-              amount: cm.defaultApplicable ? cm.quantity * cm.rate : 0
-            })));
+            setCharges(prev => {
+              const inqSubTypes = formData.shipment_sub_type || [];
+              const containerQty = parseInt(formData.no_of_containers || '1', 10) || 1;
+              return getSortedChargesForInquiry(mappedMasters, inqSubTypes, containerQty, formData.currency || 'INR');
+            });
           }
         }
       } catch (err) {
@@ -267,11 +357,25 @@ const QuotationForm = ({ onCancel, onSuccess, initialData, existingCount = 0 }) 
         }
       }
 
+      let inqSubTypes = [];
+      const rawSubType = initialData.shipment_sub_type || initialData.shipping_sub_type;
+      if (Array.isArray(rawSubType)) inqSubTypes = rawSubType;
+      else if (typeof rawSubType === 'string' && rawSubType.trim()) {
+        try {
+          const parsed = JSON.parse(rawSubType);
+          if (Array.isArray(parsed)) inqSubTypes = parsed;
+          else inqSubTypes = rawSubType.split(',').map(s => s.trim()).filter(Boolean);
+        } catch (e) {
+          inqSubTypes = rawSubType.split(',').map(s => s.trim()).filter(Boolean);
+        }
+      }
+
       const initialCurrency = initialData.currency || initialData.charges?.[0]?.currency || 'INR';
 
       setFormData(prev => ({
         ...prev,
         ...initialData,
+        shipment_sub_type: inqSubTypes,
         currency: initialCurrency,
         gross_weight: rawWeight,
         weight_value: initialData.weight_value || parsedWeight.val,
@@ -409,6 +513,21 @@ const QuotationForm = ({ onCancel, onSuccess, initialData, existingCount = 0 }) 
       containerQty = parseInt(inq.no_of_containers || inq.quantity || '1', 10) || 1;
     }
 
+    // 3. Shipment Sub Types extraction
+    let shipmentSubTypes = [];
+    const rawSubType = inq.shipment_sub_type || inq.shipping_sub_type || inq.sub_type;
+    if (Array.isArray(rawSubType)) {
+      shipmentSubTypes = rawSubType;
+    } else if (typeof rawSubType === 'string' && rawSubType.trim()) {
+      try {
+        const parsed = JSON.parse(rawSubType);
+        if (Array.isArray(parsed)) shipmentSubTypes = parsed;
+        else shipmentSubTypes = rawSubType.split(',').map(s => s.trim()).filter(Boolean);
+      } catch (e) {
+        shipmentSubTypes = rawSubType.split(',').map(s => s.trim()).filter(Boolean);
+      }
+    }
+
     return {
       commodity,
       hsn_code: hsnCode,
@@ -418,7 +537,8 @@ const QuotationForm = ({ onCancel, onSuccess, initialData, existingCount = 0 }) 
       gross_weight: grossWeight || (weightValue ? `${weightValue} ${weightUom}`.trim() : ''),
       container_type: containerType,
       no_of_containers: String(containerQty),
-      containerQty
+      containerQty,
+      shipment_sub_type: shipmentSubTypes
     };
   };
 
@@ -427,11 +547,14 @@ const QuotationForm = ({ onCancel, onSuccess, initialData, existingCount = 0 }) 
     if (!selectedInq) return;
 
     const details = extractInquiryDetails(selectedInq);
+    const inqSubTypes = details.shipment_sub_type || [];
+    const containerQty = details.containerQty || 1;
 
     setFormData(prev => ({
       ...prev,
       inquiry_id: selectedInq.id,
       inquiry_no: selectedInq.inquiry_no,
+      shipment_sub_type: inqSubTypes,
       exporter_id: selectedInq.exporter_id || selectedInq.customer_id || '',
       exporter_name: selectedInq.exporter_name || selectedInq.customer_name || '',
       pol: selectedInq.pol || selectedInq.origin || '',
@@ -463,19 +586,23 @@ const QuotationForm = ({ onCancel, onSuccess, initialData, existingCount = 0 }) 
       special_requirements: selectedInq.special_requirements || selectedInq.remarks || ''
     }));
 
-    // Update charges quantities for 'Per Container' basis to match inquiry's container count
-    const containerQty = details.containerQty || 1;
-    setCharges(prevCharges => 
-      prevCharges.map(item => {
-        const newQty = item.basis === 'Per Container' ? containerQty : item.quantity;
-        const newAmt = item.applicable ? newQty * (Number(item.rate) || 0) : 0;
-        return {
-          ...item,
-          quantity: newQty,
-          amount: newAmt
-        };
-      })
-    );
+    // Automatically sort and populate charges matching the inquiry's shipment_sub_type
+    if (chargeMasters && chargeMasters.length > 0) {
+      const sortedCharges = getSortedChargesForInquiry(chargeMasters, inqSubTypes, containerQty, formData.currency || 'INR');
+      setCharges(sortedCharges);
+    } else {
+      setCharges(prevCharges => 
+        prevCharges.map(item => {
+          const newQty = item.basis === 'Per Container' ? containerQty : item.quantity;
+          const newAmt = item.applicable ? newQty * (Number(item.rate) || 0) : 0;
+          return {
+            ...item,
+            quantity: newQty,
+            amount: newAmt
+          };
+        })
+      );
+    }
   };
 
   // Handle Inquiry Selection -> Auto Populate Shipment Fields & Quantities
@@ -615,18 +742,9 @@ const QuotationForm = ({ onCancel, onSuccess, initialData, existingCount = 0 }) 
   };
 
   const handleResetToMasterCharges = () => {
-    setCharges(
-      chargeMasters.map(ch => ({
-        id: `ch_${ch.id}`,
-        name: ch.name,
-        basis: ch.basis,
-        currency: formData.currency || ch.currency || 'INR',
-        applicable: ch.defaultApplicable,
-        quantity: ch.quantity || 1,
-        rate: ch.rate || 0,
-        amount: ch.defaultApplicable ? (ch.quantity || 1) * (ch.rate || 0) : 0
-      }))
-    );
+    const inqSubTypes = formData.shipment_sub_type || [];
+    const containerQty = parseInt(formData.no_of_containers || '1', 10) || 1;
+    setCharges(getSortedChargesForInquiry(chargeMasters, inqSubTypes, containerQty, formData.currency || 'INR'));
   };
 
   // Form Submit
@@ -1268,11 +1386,26 @@ const QuotationForm = ({ onCancel, onSuccess, initialData, existingCount = 0 }) 
               }}
             >
               <option value="">-- Pick Charge Head to Add --</option>
-              {chargeMasters.map((cm, i) => (
-                <option key={cm.id || i} value={cm.id || cm.name}>
-                  {cm.name} ({cm.basis}) - {currencySymbol}{cm.rate}
-                </option>
-              ))}
+              {(() => {
+                const targetSubTypes = (formData.shipment_sub_type || []).map(s => String(s).trim().toLowerCase());
+                const sortedDropdownMasters = [...chargeMasters].sort((a, b) => {
+                  const aMatches = (a.shipment_sub_type || []).some(s => targetSubTypes.includes(String(s).trim().toLowerCase()));
+                  const bMatches = (b.shipment_sub_type || []).some(s => targetSubTypes.includes(String(s).trim().toLowerCase()));
+                  if (aMatches && !bMatches) return -1;
+                  if (!aMatches && bMatches) return 1;
+                  return 0;
+                });
+                return sortedDropdownMasters.map((cm, i) => {
+                  const subTypeTag = Array.isArray(cm.shipment_sub_type) && cm.shipment_sub_type.length > 0 
+                    ? ` [${cm.shipment_sub_type.join(', ')}]` 
+                    : '';
+                  return (
+                    <option key={cm.id || i} value={cm.id || cm.name}>
+                      {cm.name}{subTypeTag} ({cm.basis}) - {currencySymbol}{cm.rate}
+                    </option>
+                  );
+                });
+              })()}
             </select>
           </div>
 
@@ -1350,24 +1483,44 @@ const QuotationForm = ({ onCancel, onSuccess, initialData, existingCount = 0 }) 
 
                   {/* Charge Name (tabIndex -1) */}
                   <td style={{ padding: '0.4rem' }}>
-                    <input
-                      type="text"
-                      tabIndex={-1}
-                      disabled={!item.applicable}
-                      value={item.name || ''}
-                      onChange={(e) => handleChargeValueChange(item.id, 'name', e.target.value)}
-                      placeholder="e.g. Ocean Freight / THC / BL Charges"
-                      style={{
-                        width: '100%',
-                        padding: '0.3rem 0.5rem',
-                        borderRadius: '4px',
-                        border: '1px solid #cbd5e1',
-                        fontSize: '0.825rem',
-                        fontWeight: item.applicable ? 600 : 400,
-                        color: item.applicable ? '#0f172a' : '#94a3b8',
-                        backgroundColor: item.applicable ? '#ffffff' : '#f1f5f9'
-                      }}
-                    />
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                      <input
+                        type="text"
+                        tabIndex={-1}
+                        disabled={!item.applicable}
+                        value={item.name || ''}
+                        onChange={(e) => handleChargeValueChange(item.id, 'name', e.target.value)}
+                        placeholder="e.g. Ocean Freight / THC / BL Charges"
+                        style={{
+                          flex: 1,
+                          padding: '0.3rem 0.5rem',
+                          borderRadius: '4px',
+                          border: '1px solid #cbd5e1',
+                          fontSize: '0.825rem',
+                          fontWeight: item.applicable ? 600 : 400,
+                          color: item.applicable ? '#0f172a' : '#94a3b8',
+                          backgroundColor: item.applicable ? '#ffffff' : '#f1f5f9'
+                        }}
+                      />
+                      {Array.isArray(item.shipment_sub_type) && item.shipment_sub_type.length > 0 && (
+                        <span 
+                          title={`Sub Types: ${item.shipment_sub_type.join(', ')}`}
+                          style={{
+                            fontSize: '0.68rem',
+                            backgroundColor: item.isMatch ? '#e0f2fe' : '#f1f5f9',
+                            color: item.isMatch ? '#0369a1' : '#64748b',
+                            border: item.isMatch ? '1px solid #bae6fd' : '1px solid #e2e8f0',
+                            padding: '1px 5px',
+                            borderRadius: '3px',
+                            whiteSpace: 'nowrap',
+                            fontWeight: item.isMatch ? 600 : 400
+                          }}
+                        >
+                          {item.shipment_sub_type[0]}
+                          {item.shipment_sub_type.length > 1 && ` +${item.shipment_sub_type.length - 1}`}
+                        </span>
+                      )}
+                    </div>
                   </td>
 
                   {/* Basis / Unit (tabIndex -1) */}
