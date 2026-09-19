@@ -129,149 +129,155 @@ const executeBulkImport = async (entityType, rows, user) => {
       // ----------------------------------------------------
       // A. Foreign Key: Country Resolution & Auto-Creation
       // ----------------------------------------------------
-      const countryVal = data.country_code || data.country_id || data.country;
-      if (countryVal) {
-        const strCountry = String(countryVal).trim();
-        const countryCacheKey = strCountry.toLowerCase();
-        let countryObj = countryCache.get(countryCacheKey);
+      if (entityType !== 'country') {
+        const countryVal = data.country_code || data.country_id || data.country;
+        if (countryVal) {
+          const strCountry = String(countryVal).trim();
+          const countryCacheKey = strCountry.toLowerCase();
+          let countryObj = countryCache.get(countryCacheKey);
 
-        if (!countryObj) {
-          countryObj = await Country.findOne({
-            where: {
-              company_id: companyId,
-              [Op.or]: [
-                { country_code: { [Op.iLike]: strCountry } },
-                { country_name: { [Op.iLike]: strCountry } }
-              ]
-            },
-            transaction
-          });
-        }
-
-        if (!countryObj && (entityType === 'state' || entityType === 'city' || entityType === 'port' || entityType === 'shippingLine' || entityType === 'driver' || entityType === 'warehouse' || entityType === 'employee' || entityType === 'vendor')) {
-          let code = generateSmartCountryCode(strCountry);
-          let attempts = 0;
-          while (await Country.findOne({ where: { company_id: companyId, country_code: code }, transaction })) {
-            attempts++;
-            code = `${strCountry.substring(0, 2).toUpperCase()}${attempts}`;
+          if (!countryObj) {
+            countryObj = await Country.findOne({
+              where: {
+                company_id: companyId,
+                [Op.or]: [
+                  { country_code: { [Op.iLike]: strCountry } },
+                  { country_name: { [Op.iLike]: strCountry } }
+                ]
+              },
+              transaction
+            });
           }
 
-          countryObj = await Country.create({
-            company_id: companyId,
-            country_code: code,
-            country_name: strCountry,
-            status: 'Active',
-            created_by: userId,
-            updated_by: userId
-          }, { transaction });
-        }
+          if (!countryObj && (entityType === 'state' || entityType === 'city' || entityType === 'port' || entityType === 'shippingLine' || entityType === 'driver' || entityType === 'warehouse' || entityType === 'employee' || entityType === 'vendor')) {
+            let code = generateSmartCountryCode(strCountry);
+            let attempts = 0;
+            while (await Country.findOne({ where: { company_id: companyId, country_code: code }, transaction })) {
+              attempts++;
+              code = `${strCountry.substring(0, 2).toUpperCase()}${attempts}`;
+            }
 
-        if (countryObj) {
-          countryCache.set(countryCacheKey, countryObj);
-          recordData.country_id = countryObj.id;
+            countryObj = await Country.create({
+              company_id: companyId,
+              country_code: code,
+              country_name: strCountry,
+              status: 'Active',
+              created_by: userId,
+              updated_by: userId
+            }, { transaction });
+          }
+
+          if (countryObj) {
+            countryCache.set(countryCacheKey, countryObj);
+            recordData.country_id = countryObj.id;
+          }
         }
+        delete recordData.country_code;
+        delete recordData.country;
       }
-      delete recordData.country_code;
-      delete recordData.country;
 
       // ----------------------------------------------------
       // B. Foreign Key: State Resolution & Auto-Creation
       // ----------------------------------------------------
-      const stateVal = data.state_code || data.state_id || data.state;
-      if (stateVal) {
-        const strState = String(stateVal).trim();
-        const stateCacheKey = `${recordData.country_id || 'ANY'}::${strState.toLowerCase()}`;
-        let stateObj = stateCache.get(stateCacheKey);
+      if (entityType !== 'state') {
+        const stateVal = data.state_code || data.state_id || data.state;
+        if (stateVal) {
+          const strState = String(stateVal).trim();
+          const stateCacheKey = `${recordData.country_id || 'ANY'}::${strState.toLowerCase()}`;
+          let stateObj = stateCache.get(stateCacheKey);
 
-        if (!stateObj) {
-          const stateWhere = {
-            company_id: companyId,
-            [Op.or]: [
-              { state_code: { [Op.iLike]: strState } },
-              { state_name: { [Op.iLike]: strState } }
-            ]
-          };
-          if (recordData.country_id) {
-            stateWhere.country_id = recordData.country_id;
+          if (!stateObj) {
+            const stateWhere = {
+              company_id: companyId,
+              [Op.or]: [
+                { state_code: { [Op.iLike]: strState } },
+                { state_name: { [Op.iLike]: strState } }
+              ]
+            };
+            if (recordData.country_id) {
+              stateWhere.country_id = recordData.country_id;
+            }
+
+            stateObj = await State.findOne({ where: stateWhere, transaction });
           }
 
-          stateObj = await State.findOne({ where: stateWhere, transaction });
-        }
+          if (!stateObj && recordData.country_id) {
+            let code = strState.substring(0, 3).toUpperCase();
+            let attempts = 0;
+            while (await State.findOne({ where: { company_id: companyId, country_id: recordData.country_id, state_code: code }, transaction })) {
+              attempts++;
+              code = `${strState.substring(0, 2).toUpperCase()}${attempts}`;
+            }
 
-        if (!stateObj && recordData.country_id) {
-          let code = strState.substring(0, 3).toUpperCase();
-          let attempts = 0;
-          while (await State.findOne({ where: { company_id: companyId, country_id: recordData.country_id, state_code: code }, transaction })) {
-            attempts++;
-            code = `${strState.substring(0, 2).toUpperCase()}${attempts}`;
+            stateObj = await State.create({
+              company_id: companyId,
+              country_id: recordData.country_id,
+              state_code: code,
+              state_name: strState,
+              status: 'Active',
+              created_by: userId,
+              updated_by: userId
+            }, { transaction });
           }
 
-          stateObj = await State.create({
-            company_id: companyId,
-            country_id: recordData.country_id,
-            state_code: code,
-            state_name: strState,
-            status: 'Active',
-            created_by: userId,
-            updated_by: userId
-          }, { transaction });
+          if (stateObj) {
+            stateCache.set(stateCacheKey, stateObj);
+            recordData.state_id = stateObj.id;
+          }
         }
-
-        if (stateObj) {
-          stateCache.set(stateCacheKey, stateObj);
-          recordData.state_id = stateObj.id;
-        }
+        delete recordData.state_code;
+        delete recordData.state;
       }
-      delete recordData.state_code;
-      delete recordData.state;
 
       // ----------------------------------------------------
       // C. Foreign Key: City Resolution & Auto-Creation
       // ----------------------------------------------------
-      const cityVal = data.city_name || data.city_code || data.city_id || data.city;
-      if (cityVal && entityType !== 'city') {
-        const strCity = String(cityVal).trim();
-        const cityCacheKey = `${recordData.state_id || 'ANY'}::${strCity.toLowerCase()}`;
-        let cityObj = cityCache.get(cityCacheKey);
+      if (entityType !== 'city') {
+        const cityVal = data.city_name || data.city_code || data.city_id || data.city;
+        if (cityVal) {
+          const strCity = String(cityVal).trim();
+          const cityCacheKey = `${recordData.state_id || 'ANY'}::${strCity.toLowerCase()}`;
+          let cityObj = cityCache.get(cityCacheKey);
 
-        if (!cityObj) {
-          const cityWhere = {
-            company_id: companyId,
-            [Op.or]: [
-              { city_name: { [Op.iLike]: strCity } },
-              { city_code: { [Op.iLike]: strCity } }
-            ]
-          };
-          if (recordData.state_id) {
-            cityWhere.state_id = recordData.state_id;
+          if (!cityObj) {
+            const cityWhere = {
+              company_id: companyId,
+              [Op.or]: [
+                { city_name: { [Op.iLike]: strCity } },
+                { city_code: { [Op.iLike]: strCity } }
+              ]
+            };
+            if (recordData.state_id) {
+              cityWhere.state_id = recordData.state_id;
+            }
+
+            cityObj = await City.findOne({ where: cityWhere, transaction });
           }
 
-          cityObj = await City.findOne({ where: cityWhere, transaction });
-        }
+          if (!cityObj && recordData.state_id && recordData.country_id) {
+            let code = strCity.substring(0, 3).toUpperCase();
+            let attempts = 0;
+            while (await City.findOne({ where: { company_id: companyId, state_id: recordData.state_id, city_code: code }, transaction })) {
+              attempts++;
+              code = `${strCity.substring(0, 2).toUpperCase()}${attempts}`;
+            }
 
-        if (!cityObj && recordData.state_id && recordData.country_id) {
-          let code = strCity.substring(0, 3).toUpperCase();
-          let attempts = 0;
-          while (await City.findOne({ where: { company_id: companyId, state_id: recordData.state_id, city_code: code }, transaction })) {
-            attempts++;
-            code = `${strCity.substring(0, 2).toUpperCase()}${attempts}`;
+            cityObj = await City.create({
+              company_id: companyId,
+              country_id: recordData.country_id,
+              state_id: recordData.state_id,
+              city_code: code,
+              city_name: strCity,
+              status: 'Active',
+              created_by: userId,
+              updated_by: userId
+            }, { transaction });
           }
 
-          cityObj = await City.create({
-            company_id: companyId,
-            country_id: recordData.country_id,
-            state_id: recordData.state_id,
-            city_code: code,
-            city_name: strCity,
-            status: 'Active',
-            created_by: userId,
-            updated_by: userId
-          }, { transaction });
-        }
-
-        if (cityObj) {
-          cityCache.set(cityCacheKey, cityObj);
-          recordData.city_id = cityObj.id;
+          if (cityObj) {
+            cityCache.set(cityCacheKey, cityObj);
+            recordData.city_id = cityObj.id;
+          }
         }
         delete recordData.city_name;
         delete recordData.city;
@@ -280,166 +286,174 @@ const executeBulkImport = async (entityType, rows, user) => {
       // ----------------------------------------------------
       // D. Foreign Key: Department Resolution & Auto-Creation
       // ----------------------------------------------------
-      const deptVal = data.department_code || data.department_name || data.department_id || data.department;
-      if (deptVal) {
-        const strDept = String(deptVal).trim();
-        const deptCacheKey = strDept.toLowerCase();
-        let deptObj = departmentCache.get(deptCacheKey);
+      if (entityType !== 'department') {
+        const deptVal = data.department_code || data.department_name || data.department_id || data.department;
+        if (deptVal) {
+          const strDept = String(deptVal).trim();
+          const deptCacheKey = strDept.toLowerCase();
+          let deptObj = departmentCache.get(deptCacheKey);
 
-        if (!deptObj) {
-          deptObj = await Department.findOne({
-            where: {
-              company_id: companyId,
-              [Op.or]: [
-                { department_code: { [Op.iLike]: strDept } },
-                { department_name: { [Op.iLike]: strDept } }
-              ]
-            },
-            transaction
-          });
-        }
-
-        if (!deptObj && (entityType === 'designation' || entityType === 'employee')) {
-          let code = strDept.substring(0, 4).toUpperCase();
-          let attempts = 0;
-          while (await Department.findOne({ where: { company_id: companyId, department_code: code }, transaction })) {
-            attempts++;
-            code = `${strDept.substring(0, 3).toUpperCase()}${attempts}`;
+          if (!deptObj) {
+            deptObj = await Department.findOne({
+              where: {
+                company_id: companyId,
+                [Op.or]: [
+                  { department_code: { [Op.iLike]: strDept } },
+                  { department_name: { [Op.iLike]: strDept } }
+                ]
+              },
+              transaction
+            });
           }
 
-          deptObj = await Department.create({
-            company_id: companyId,
-            department_code: code,
-            department_name: strDept,
-            status: 'Active',
-            created_by: userId,
-            updated_by: userId
-          }, { transaction });
-        }
+          if (!deptObj && (entityType === 'designation' || entityType === 'employee')) {
+            let code = strDept.substring(0, 4).toUpperCase();
+            let attempts = 0;
+            while (await Department.findOne({ where: { company_id: companyId, department_code: code }, transaction })) {
+              attempts++;
+              code = `${strDept.substring(0, 3).toUpperCase()}${attempts}`;
+            }
 
-        if (deptObj) {
-          departmentCache.set(deptCacheKey, deptObj);
-          recordData.department_id = deptObj.id;
+            deptObj = await Department.create({
+              company_id: companyId,
+              department_code: code,
+              department_name: strDept,
+              status: 'Active',
+              created_by: userId,
+              updated_by: userId
+            }, { transaction });
+          }
+
+          if (deptObj) {
+            departmentCache.set(deptCacheKey, deptObj);
+            recordData.department_id = deptObj.id;
+          }
         }
+        delete recordData.department_code;
+        delete recordData.department_name;
+        delete recordData.department;
       }
-      delete recordData.department_code;
-      delete recordData.department_name;
-      delete recordData.department;
 
       // ----------------------------------------------------
       // E. Foreign Key: Designation Resolution & Auto-Creation
       // ----------------------------------------------------
-      const desigVal = data.designation_code || data.designation_name || data.designation_id || data.designation;
-      if (desigVal) {
-        const strDesig = String(desigVal).trim();
-        const desigCacheKey = strDesig.toLowerCase();
-        let desigObj = designationCache.get(desigCacheKey);
+      if (entityType !== 'designation') {
+        const desigVal = data.designation_code || data.designation_name || data.designation_id || data.designation;
+        if (desigVal) {
+          const strDesig = String(desigVal).trim();
+          const desigCacheKey = strDesig.toLowerCase();
+          let desigObj = designationCache.get(desigCacheKey);
 
-        if (!desigObj) {
-          desigObj = await Designation.findOne({
-            where: {
-              company_id: companyId,
-              [Op.or]: [
-                { designation_code: { [Op.iLike]: strDesig } },
-                { designation_name: { [Op.iLike]: strDesig } }
-              ]
-            },
-            transaction
-          });
-        }
-
-        if (!desigObj && entityType === 'employee') {
-          let code = strDesig.substring(0, 4).toUpperCase();
-          let attempts = 0;
-          while (await Designation.findOne({ where: { company_id: companyId, designation_code: code }, transaction })) {
-            attempts++;
-            code = `${strDesig.substring(0, 3).toUpperCase()}${attempts}`;
+          if (!desigObj) {
+            desigObj = await Designation.findOne({
+              where: {
+                company_id: companyId,
+                [Op.or]: [
+                  { designation_code: { [Op.iLike]: strDesig } },
+                  { designation_name: { [Op.iLike]: strDesig } }
+                ]
+              },
+              transaction
+            });
           }
 
-          desigObj = await Designation.create({
-            company_id: companyId,
-            department_id: recordData.department_id || null,
-            designation_code: code,
-            designation_name: strDesig,
-            status: 'Active',
-            created_by: userId,
-            updated_by: userId
-          }, { transaction });
-        }
+          if (!desigObj && entityType === 'employee') {
+            let code = strDesig.substring(0, 4).toUpperCase();
+            let attempts = 0;
+            while (await Designation.findOne({ where: { company_id: companyId, designation_code: code }, transaction })) {
+              attempts++;
+              code = `${strDesig.substring(0, 3).toUpperCase()}${attempts}`;
+            }
 
-        if (desigObj) {
-          designationCache.set(desigCacheKey, desigObj);
-          recordData.designation_id = desigObj.id;
+            desigObj = await Designation.create({
+              company_id: companyId,
+              department_id: recordData.department_id || null,
+              designation_code: code,
+              designation_name: strDesig,
+              status: 'Active',
+              created_by: userId,
+              updated_by: userId
+            }, { transaction });
+          }
+
+          if (desigObj) {
+            designationCache.set(desigCacheKey, desigObj);
+            recordData.designation_id = desigObj.id;
+          }
         }
+        delete recordData.designation_code;
+        delete recordData.designation_name;
+        delete recordData.designation;
       }
-      delete recordData.designation_code;
-      delete recordData.designation_name;
-      delete recordData.designation;
 
       // ----------------------------------------------------
       // F. Foreign Key: Vendor Resolution
       // ----------------------------------------------------
-      const vendorVal = data.vendor_code || data.vendor_name || data.vendor_id || data.vendor;
-      if (vendorVal && (entityType === 'vehicle' || entityType === 'driver')) {
-        const strVendor = String(vendorVal).trim();
-        const vendorCacheKey = strVendor.toLowerCase();
-        let vendorObj = vendorCache.get(vendorCacheKey);
+      if (entityType !== 'vendor') {
+        const vendorVal = data.vendor_code || data.vendor_name || data.vendor_id || data.vendor;
+        if (vendorVal && (entityType === 'vehicle' || entityType === 'driver')) {
+          const strVendor = String(vendorVal).trim();
+          const vendorCacheKey = strVendor.toLowerCase();
+          let vendorObj = vendorCache.get(vendorCacheKey);
 
-        if (!vendorObj) {
-          vendorObj = await Vendor.findOne({
-            where: {
-              company_id: companyId,
-              [Op.or]: [
-                { vendor_code: { [Op.iLike]: strVendor } },
-                { vendor_name: { [Op.iLike]: strVendor } }
-              ]
-            },
-            transaction
-          });
-        }
+          if (!vendorObj) {
+            vendorObj = await Vendor.findOne({
+              where: {
+                company_id: companyId,
+                [Op.or]: [
+                  { vendor_code: { [Op.iLike]: strVendor } },
+                  { vendor_name: { [Op.iLike]: strVendor } }
+                ]
+              },
+              transaction
+            });
+          }
 
-        if (vendorObj) {
-          vendorCache.set(vendorCacheKey, vendorObj);
-          recordData.vendor_id = vendorObj.id;
+          if (vendorObj) {
+            vendorCache.set(vendorCacheKey, vendorObj);
+            recordData.vendor_id = vendorObj.id;
+          }
         }
+        delete recordData.vendor_code;
+        delete recordData.vendor;
       }
-      delete recordData.vendor_code;
-      delete recordData.vendor;
 
       // ----------------------------------------------------
       // G. Foreign Key: Currency Resolution
       // ----------------------------------------------------
-      const currVal = data.currency_code || data.currency_name || data.currency_id || data.currency || data.default_currency;
-      if (currVal && (entityType === 'customer' || entityType === 'vendor' || entityType === 'charge')) {
-        const strCurr = String(currVal).trim();
-        const currCacheKey = strCurr.toLowerCase();
-        let currObj = currencyCache.get(currCacheKey);
+      if (entityType !== 'currency') {
+        const currVal = data.currency_code || data.currency_name || data.currency_id || data.currency || data.default_currency;
+        if (currVal && (entityType === 'customer' || entityType === 'vendor' || entityType === 'charge')) {
+          const strCurr = String(currVal).trim();
+          const currCacheKey = strCurr.toLowerCase();
+          let currObj = currencyCache.get(currCacheKey);
 
-        if (!currObj) {
-          currObj = await Currency.findOne({
-            where: {
-              company_id: companyId,
-              [Op.or]: [
-                { currency_code: { [Op.iLike]: strCurr } },
-                { currency_name: { [Op.iLike]: strCurr } },
-                { symbol: { [Op.iLike]: strCurr } }
-              ]
-            },
-            transaction
-          });
-        }
+          if (!currObj) {
+            currObj = await Currency.findOne({
+              where: {
+                company_id: companyId,
+                [Op.or]: [
+                  { currency_code: { [Op.iLike]: strCurr } },
+                  { currency_name: { [Op.iLike]: strCurr } },
+                  { symbol: { [Op.iLike]: strCurr } }
+                ]
+              },
+              transaction
+            });
+          }
 
-        if (currObj) {
-          currencyCache.set(currCacheKey, currObj);
-          if (entityType === 'charge') {
-            recordData.default_currency = currObj.id;
-          } else {
-            recordData.currency_id = currObj.id;
+          if (currObj) {
+            currencyCache.set(currCacheKey, currObj);
+            if (entityType === 'charge') {
+              recordData.default_currency = currObj.id;
+            } else {
+              recordData.currency_id = currObj.id;
+            }
           }
         }
+        delete recordData.currency_code;
+        delete recordData.currency;
       }
-      delete recordData.currency_code;
-      delete recordData.currency;
 
       // ----------------------------------------------------
       // H. Entity-Specific Field Formatting & Defaults
