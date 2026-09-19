@@ -43,13 +43,19 @@ const Charge = sequelize.define("Charge", {
         allowNull: true,
         defaultValue: true,
     },
+    shipment_sub_type: {
+        type: DataTypes.JSONB,
+        allowNull: true,
+        defaultValue: [],
+    },
     charge_type: {
-        type: DataTypes.ENUM("Revenue", "Expense", "Both"),
-        allowNull: false,
+        type: DataTypes.STRING,
+        allowNull: true,
     },
     applicable_module: {
-        type: DataTypes.ENUM("Inquiry", "Quotation", "Shipment", "Customs", "Billing", "Transport"),
-        allowNull: false,
+        type: DataTypes.STRING,
+        allowNull: true,
+        defaultValue: "Quotation",
     },
     tax_applicable: {
         type: DataTypes.BOOLEAN,

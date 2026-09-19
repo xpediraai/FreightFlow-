@@ -12,8 +12,15 @@ const createChargeSchema = Joi.object({
     default_rate: Joi.number().min(0).allow(null).optional().default(0),
     default_qty: Joi.number().integer().min(1).allow(null).optional().default(1),
     default_applicable: Joi.boolean().allow(null).optional().default(true),
-    charge_type: Joi.string().valid("Revenue", "Expense", "Both").optional().default("Revenue"),
-    applicable_module: Joi.string().valid("Inquiry", "Quotation", "Shipment", "Customs", "Billing", "Transport").optional().default("Quotation"),
+    shipment_sub_type: Joi.alternatives().try(
+        Joi.array().items(Joi.string()),
+        Joi.string().allow("", null)
+    ).optional().default([]),
+    charge_type: Joi.alternatives().try(
+        Joi.array().items(Joi.string()),
+        Joi.string().allow("", null)
+    ).optional(),
+    applicable_module: Joi.string().allow("", null).optional().default("Quotation"),
     tax_applicable: Joi.boolean().default(false).optional(),
     default_currency: Joi.string().uuid().allow("", null).optional(),
     description: Joi.string().trim().allow("", null).optional(),
@@ -28,8 +35,15 @@ const updateChargeSchema = Joi.object({
     default_rate: Joi.number().min(0).allow(null).optional(),
     default_qty: Joi.number().integer().min(1).allow(null).optional(),
     default_applicable: Joi.boolean().allow(null).optional(),
-    charge_type: Joi.string().valid("Revenue", "Expense", "Both").optional(),
-    applicable_module: Joi.string().valid("Inquiry", "Quotation", "Shipment", "Customs", "Billing", "Transport").optional(),
+    shipment_sub_type: Joi.alternatives().try(
+        Joi.array().items(Joi.string()),
+        Joi.string().allow("", null)
+    ).optional(),
+    charge_type: Joi.alternatives().try(
+        Joi.array().items(Joi.string()),
+        Joi.string().allow("", null)
+    ).optional(),
+    applicable_module: Joi.string().allow("", null).optional(),
     tax_applicable: Joi.boolean().optional(),
     default_currency: Joi.string().uuid().allow("", null).optional(),
     description: Joi.string().trim().allow("", null).optional(),

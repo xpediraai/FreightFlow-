@@ -445,7 +445,20 @@ const executeBulkImport = async (entityType, rows, user) => {
       // H. Entity-Specific Field Formatting & Defaults
       // ----------------------------------------------------
       if (entityType === 'charge') {
-        if (!recordData.charge_type) recordData.charge_type = 'Revenue';
+        const rawSubType = recordData.shipment_sub_type || recordData.charge_type || recordData['Shipment Sub Type'];
+        if (rawSubType) {
+          if (Array.isArray(rawSubType)) {
+            recordData.shipment_sub_type = rawSubType;
+            recordData.charge_type = rawSubType.join(', ');
+          } else if (typeof rawSubType === 'string' && rawSubType.trim()) {
+            const arr = rawSubType.split(',').map(s => s.trim()).filter(Boolean);
+            recordData.shipment_sub_type = arr;
+            recordData.charge_type = arr.join(', ');
+          }
+        } else {
+          recordData.shipment_sub_type = [];
+          recordData.charge_type = '';
+        }
         if (!recordData.applicable_module) recordData.applicable_module = 'Quotation';
         if (recordData.basis === undefined || recordData.basis === '') recordData.basis = 'Per Container';
         recordData.default_rate = recordData.default_rate !== '' && !isNaN(Number(recordData.default_rate)) ? Number(recordData.default_rate) : 0;

@@ -147,9 +147,26 @@ const ChargeList = ({ onEdit, searchQuery = '', viewMode = 'table', refreshTrigg
       render: (row) => row.default_rate ? `₹${Number(row.default_rate).toLocaleString('en-IN')}` : '-'
     },
     {
-      header: 'Type',
-      key: 'charge_type',
-      render: (row) => row.charge_type || '-'
+      header: 'Shipment Sub Type',
+      key: 'shipment_sub_type',
+      render: (row) => {
+        let types = [];
+        if (Array.isArray(row.shipment_sub_type)) {
+          types = row.shipment_sub_type;
+        } else if (typeof row.shipment_sub_type === 'string' && row.shipment_sub_type.trim()) {
+          types = row.shipment_sub_type.split(',').map(s => s.trim()).filter(Boolean);
+        } else if (typeof row.charge_type === 'string' && row.charge_type.trim()) {
+          types = row.charge_type.split(',').map(s => s.trim()).filter(Boolean);
+        }
+        if (!types.length) return '-';
+        return (
+          <div className="flex flex-wrap gap-xs" style={{ maxWidth: '240px' }}>
+            {types.map(t => (
+              <Badge key={t} variant="info" size="sm">{t}</Badge>
+            ))}
+          </div>
+        );
+      }
     },
     {
       header: 'Module',
@@ -202,20 +219,25 @@ const ChargeList = ({ onEdit, searchQuery = '', viewMode = 'table', refreshTrigg
     return (
     <>
       <div className="grid" style={{ gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: '1.5rem' }}>
-        {paginatedList.map(c => (
-          <div key={c.id}>
-            <MasterDataCard
-              title={c.charge_name}
-              code={c.charge_code}
-              status={c.status}
-              onEdit={() => onEdit && onEdit(c)}
-              gridData={[
-                { label: 'Type', value: c.charge_type },
-                { label: 'Module', value: c.applicable_module }
-              ]}
-            />
-          </div>
-        ))}
+        {paginatedList.map(c => {
+          const subTypes = Array.isArray(c.shipment_sub_type) 
+            ? c.shipment_sub_type.join(', ') 
+            : (c.shipment_sub_type || c.charge_type || '-');
+          return (
+            <div key={c.id}>
+              <MasterDataCard
+                title={c.charge_name}
+                code={c.charge_code}
+                status={c.status}
+                onEdit={() => onEdit && onEdit(c)}
+                gridData={[
+                  { label: 'Sub Types', value: subTypes },
+                  { label: 'Module', value: c.applicable_module }
+                ]}
+              />
+            </div>
+          );
+        })}
         {paginatedList.length === 0 && !isLoading && (
           <div className="text-center p-xl text-tertiary w-full" style={{ gridColumn: '1 / -1' }}>
             No records found.

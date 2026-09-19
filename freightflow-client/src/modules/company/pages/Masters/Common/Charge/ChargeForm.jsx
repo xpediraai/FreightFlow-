@@ -4,6 +4,17 @@ import Button from '../../../../../../shared/components/Button';
 import { businessService } from '../../../../../masters/services/business.service';
 import { foundationService } from '../../../../../masters/services/foundation.service';
 import StatusToggle from '../../../../../../shared/components/Input/StatusToggle';
+import { MultiSelectDropdown } from '../../../../../../shared/components/Input';
+
+export const SHIPMENT_SUB_TYPES = [
+  'Clearing',
+  'Forwarding',
+  'Transport',
+  'Clearing & Forwarding',
+  'Door to Door',
+  'Customs Clearance',
+  'Other',
+];
 
 const ChargeForm = ({ onCancel, onSuccess, initialData }) => {
   const isEditMode = !!initialData;
@@ -18,7 +29,8 @@ const ChargeForm = ({ onCancel, onSuccess, initialData }) => {
     default_rate: '',
     default_qty: '1',
     default_applicable: true,
-    charge_type: 'Revenue',
+    shipment_sub_type: [],
+    charge_type: '',
     applicable_module: 'Shipment',
     tax_applicable: false,
     default_currency: '',
@@ -48,9 +60,19 @@ const ChargeForm = ({ onCancel, onSuccess, initialData }) => {
 
   useEffect(() => {
     if (initialData) {
+      let subTypes = [];
+      if (Array.isArray(initialData.shipment_sub_type)) {
+        subTypes = initialData.shipment_sub_type;
+      } else if (typeof initialData.shipment_sub_type === 'string' && initialData.shipment_sub_type.trim()) {
+        subTypes = initialData.shipment_sub_type.split(',').map(s => s.trim()).filter(Boolean);
+      } else if (typeof initialData.charge_type === 'string' && initialData.charge_type.trim() && initialData.charge_type !== 'Revenue' && initialData.charge_type !== 'Expense') {
+        subTypes = initialData.charge_type.split(',').map(s => s.trim()).filter(Boolean);
+      }
+
       setFormData({
         ...formData,
-        ...initialData
+        ...initialData,
+        shipment_sub_type: subTypes
       });
     }
   }, [initialData]);
@@ -74,6 +96,9 @@ const ChargeForm = ({ onCancel, onSuccess, initialData }) => {
 
     setIsLoading(true);
     try {
+      const subTypesArray = Array.isArray(formData.shipment_sub_type) ? formData.shipment_sub_type : [];
+      const subTypesStr = subTypesArray.join(', ');
+
       const apiPayload = {
         charge_code: formData.charge_code.trim(),
         charge_name: formData.charge_name.trim(),
@@ -81,7 +106,8 @@ const ChargeForm = ({ onCancel, onSuccess, initialData }) => {
         default_rate: formData.default_rate !== '' ? Number(formData.default_rate) : 0,
         default_qty: formData.default_qty !== '' ? Number(formData.default_qty) : 1,
         default_applicable: !!formData.default_applicable,
-        charge_type: formData.charge_type || 'Revenue',
+        shipment_sub_type: subTypesArray,
+        charge_type: subTypesStr || 'General',
         applicable_module: formData.applicable_module || 'Quotation',
         tax_applicable: !!formData.tax_applicable,
         default_currency: formData.default_currency || null,
@@ -179,11 +205,14 @@ const ChargeForm = ({ onCancel, onSuccess, initialData }) => {
         </div>
 
         <div className="form-group">
-          <label>Charge Type</label>
-          <select disabled={isLoading} name="charge_type" value={formData.charge_type} onChange={handleChange} className="form-control form-control-sm">
-            <option value="Revenue">Revenue / Income</option>
-            <option value="Expense">Expense / Cost</option>
-          </select>
+          <label>Shipment Sub Type</label>
+          <MultiSelectDropdown
+            options={SHIPMENT_SUB_TYPES}
+            value={formData.shipment_sub_type || []}
+            onChange={(selected) => setFormData(prev => ({ ...prev, shipment_sub_type: selected }))}
+            placeholder="-- Select Shipment Sub Type --"
+            disabled={isLoading}
+          />
         </div>
 
         <div className="form-group" style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginTop: '1.25rem' }}>
@@ -212,3 +241,4 @@ const ChargeForm = ({ onCancel, onSuccess, initialData }) => {
 };
 
 export default ChargeForm;
+

@@ -20,7 +20,13 @@ export const MASTER_SCHEMAS = {
       },
       { key: 'default_rate', label: 'Default Rate', required: false, type: 'number' },
       { key: 'default_qty', label: 'Default Quantity', required: false, type: 'number' },
-      { key: 'charge_type', label: 'Charge Type', required: false, type: 'select', options: ['Revenue', 'Expense'] },
+      { 
+        key: 'shipment_sub_type', 
+        label: 'Shipment Sub Type (Multiple allowed with comma: Clearing, Forwarding, Transport, Clearing & Forwarding, Door to Door, Customs Clearance, Other)', 
+        required: false, 
+        type: 'multiselect', 
+        options: ['Clearing', 'Forwarding', 'Transport', 'Clearing & Forwarding', 'Door to Door', 'Customs Clearance', 'Other'] 
+      },
       { key: 'default_applicable', label: 'Default Applicable in Quotation', required: false, type: 'select', options: ['Yes', 'No'] },
       { key: 'description', label: 'Description', required: false, type: 'string' },
       { key: 'status', label: 'Status', required: false, type: 'select', options: ['Active', 'Inactive'] }
@@ -32,7 +38,7 @@ export const MASTER_SCHEMAS = {
         'Basis / Unit *': 'Per Container',
         'Default Rate': 85000,
         'Default Quantity': 1,
-        'Charge Type': 'Revenue',
+        'Shipment Sub Type (Multiple allowed with comma: Clearing, Forwarding, Transport, Clearing & Forwarding, Door to Door, Customs Clearance, Other)': 'Clearing, Forwarding',
         'Default Applicable in Quotation': 'Yes',
         'Description': 'Standard Ocean Freight charges',
         'Status': 'Active'
@@ -43,7 +49,7 @@ export const MASTER_SCHEMAS = {
         'Basis / Unit *': 'Per Container',
         'Default Rate': 9500,
         'Default Quantity': 1,
-        'Charge Type': 'Expense',
+        'Shipment Sub Type (Multiple allowed with comma: Clearing, Forwarding, Transport, Clearing & Forwarding, Door to Door, Customs Clearance, Other)': 'Clearing, Customs Clearance',
         'Default Applicable in Quotation': 'Yes',
         'Description': 'Origin Terminal Handling Charges',
         'Status': 'Active'
@@ -1003,6 +1009,23 @@ export const validateMasterRows = (entityType, rawRows, existingDbRecords = []) 
             rowErrors[header.key] = `Invalid option. Allowed: ${header.options.join(', ')}`;
           } else {
             mappedData[header.key] = match; // normalize casing to option
+          }
+        } else if (header.type === 'multiselect' && header.options && header.options.length > 0) {
+          const items = String(rawVal).split(',').map(s => s.trim()).filter(Boolean);
+          const validItems = [];
+          const invalidItems = [];
+          items.forEach(item => {
+            const match = header.options.find(opt => opt.toLowerCase() === item.toLowerCase());
+            if (match) {
+              validItems.push(match);
+            } else {
+              invalidItems.push(item);
+            }
+          });
+          if (invalidItems.length > 0) {
+            rowErrors[header.key] = `Invalid option(s): "${invalidItems.join(', ')}". Allowed: ${header.options.join(', ')}`;
+          } else {
+            mappedData[header.key] = validItems.join(', ');
           }
         }
       }
