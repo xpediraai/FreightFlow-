@@ -130,15 +130,25 @@ const PortForm = ({ onCancel, onSuccess, initialData }) => {
 
     setIsLoading(true);
     
+    const payload = {
+      port_code: formData.port_code.trim(),
+      port_name: formData.port_name.trim(),
+      country_id: formData.country_id || null,
+      state_id: formData.state_id || null,
+      city_id: formData.city_id || null,
+      time_zone: formData.time_zone ? formData.time_zone.trim() : null,
+      status: formData.status
+    };
+
     try {
       if (isEditMode) {
-        await logisticsService.updatePort(initialData.id, formData);
+        await logisticsService.updatePort(initialData.id, payload);
       } else {
-        await logisticsService.createPort(formData);
+        await logisticsService.createPort(payload);
       }
       onSuccess && onSuccess();
     } catch (err) {
-      setGlobalError(err.message || `Failed to ${isEditMode ? 'update' : 'create'} port`);
+      setGlobalError(err.response?.data?.messageToShow || err.response?.data?.message || err.message || `Failed to ${isEditMode ? 'update' : 'create'} port`);
     } finally {
       setIsLoading(false);
     }

@@ -5,9 +5,9 @@
 const { Op } = require("sequelize");
 const db = require("../../../../database/index");
 const Port = db.Port || require("./port.model"); // Fallback if db not initialized
-const Country = db.Country || require("../CountryMasters/country.model");
-const State = db.State || require("../StateMasters/state.model");
-const City = db.City || require("../CityMasters/city.model");
+const Country = db.Country || require("../../Foundation/CountryMasters/country.model");
+const State = db.State || require("../../Foundation/StateMasters/state.model");
+const City = db.City || require("../../Foundation/CityMasters/city.model");
 const sequelize = require("../../../../config/database");
 const path = require("path");
 const { writeLogToFile } = require("../../../../services/loggerService");
@@ -18,6 +18,9 @@ const deleteLogPath = path.join(__dirname, "../../../../../logs/Port/Delete.txt"
 
 const validateHierarchy = async (companyId, countryId, stateId, cityId, transaction) => {
     // Validate Country
+    if (!countryId) {
+        throw new Error("Country ID is required.");
+    }
     const country = await Country.findOne({
         where: { id: countryId, company_id: companyId },
         transaction
@@ -51,10 +54,17 @@ const validateHierarchy = async (companyId, countryId, stateId, cityId, transact
 const createPort = async (companyId, portData, userId, reqInfo) => {
     const transaction = await sequelize.transaction();
     try {
-        await validateHierarchy(companyId, portData.country_id, portData.state_id, portData.city_id, transaction);
+        const portCode = portData.port_code ? portData.port_code.trim() : "";
+        const portName = portData.port_name ? portData.port_name.trim() : "";
+        const countryId = (portData.country_id && typeof portData.country_id === 'string' && portData.country_id.trim() !== '') ? portData.country_id.trim() : null;
+        const stateId = (portData.state_id && typeof portData.state_id === 'string' && portData.state_id.trim() !== '') ? portData.state_id.trim() : null;
+        const cityId = (portData.city_id && typeof portData.city_id === 'string' && portData.city_id.trim() !== '') ? portData.city_id.trim() : null;
+        const timeZone = (portData.time_zone && typeof portData.time_zone === 'string' && portData.time_zone.trim() !== '') ? portData.time_zone.trim() : null;
+
+        await validateHierarchy(companyId, countryId, stateId, cityId, transaction);
 
         const existingPort = await Port.findOne({
-            where: { company_id: companyId, port_code: portData.port_code },
+            where: { company_id: companyId, port_code: portCode },
             transaction
         });
 
@@ -64,6 +74,13 @@ const createPort = async (companyId, portData, userId, reqInfo) => {
 
         const dataToInsert = {
             ...portData,
+            port_code: portCode,
+            port_name: portName,
+            country_id: countryId,
+            state_id: stateId,
+            city_id: cityId,
+            time_zone: timeZone,
+            status: portData.status || "Active",
             company_id: companyId,
             created_by: userId,
             updated_by: userId
@@ -153,17 +170,29 @@ const updatePort = async (companyId, portId, portData, userId, reqInfo) => {
             throw new Error("Port not found.");
         }
 
-        let targetCountryId = portData.country_id !== undefined ? portData.country_id : port.country_id;
-        let targetStateId = portData.state_id !== undefined ? portData.state_id : port.state_id;
-        let targetCityId = portData.city_id !== undefined ? portData.city_id : port.city_id;
+        let targetCountryId = port.country_id;
+        if (portData.country_id !== undefined) {
+            targetCountryId = (typeof portData.country_id === 'string' && portData.country_id.trim() !== '') ? portData.country_id.trim() : null;
+        }
 
-        if (portData.country_id || portData.state_id || portData.city_id) {
+        let targetStateId = port.state_id;
+        if (portData.state_id !== undefined) {
+            targetStateId = (typeof portData.state_id === 'string' && portData.state_id.trim() !== '') ? portData.state_id.trim() : null;
+        }
+
+        let targetCityId = port.city_id;
+        if (portData.city_id !== undefined) {
+            targetCityId = (typeof portData.city_id === 'string' && portData.city_id.trim() !== '') ? portData.city_id.trim() : null;
+        }
+
+        if (portData.country_id !== undefined || portData.state_id !== undefined || portData.city_id !== undefined) {
             await validateHierarchy(companyId, targetCountryId, targetStateId, targetCityId, transaction);
         }
 
-        if (portData.port_code && portData.port_code !== port.port_code) {
+        const portCode = portData.port_code !== undefined ? portData.port_code.trim() : undefined;
+        if (portCode && portCode !== port.port_code) {
             const existingPort = await Port.findOne({
-                where: { company_id: companyId, port_code: portData.port_code },
+                where: { company_id: companyId, port_code: portCode },
                 transaction
             });
             if (existingPort) {
@@ -173,8 +202,21 @@ const updatePort = async (companyId, portId, portData, userId, reqInfo) => {
 
         const dataToUpdate = {
             ...portData,
+            country_id: targetCountryId,
+            state_id: targetStateId,
+            city_id: targetCityId,
             updated_by: userId
         };
+
+        if (portCode !== undefined) {
+            dataToUpdate.port_code = portCode;
+        }
+        if (portData.port_name !== undefined) {
+            dataToUpdate.port_name = portData.port_name.trim();
+        }
+        if (portData.time_zone !== undefined) {
+            dataToUpdate.time_zone = (typeof portData.time_zone === 'string' && portData.time_zone.trim() !== '') ? portData.time_zone.trim() : null;
+        }
 
         const updatedPort = await port.update(dataToUpdate, { transaction });
         await transaction.commit();
