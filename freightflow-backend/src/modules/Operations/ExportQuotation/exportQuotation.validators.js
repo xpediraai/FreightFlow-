@@ -9,6 +9,7 @@ const chargeItemSchema = Joi.object({
   name: Joi.string().allow("", null).optional(),
   charge_name: Joi.string().allow("", null).optional(),
   basis: Joi.string().allow("", null).optional().default("Per Container"),
+  currency: Joi.string().allow("", null).optional().default("INR"),
   applicable: Joi.boolean().default(true),
   quantity: Joi.number().min(0).default(1),
   rate: Joi.number().min(0).default(0),
@@ -63,6 +64,7 @@ const createExportQuotationSchema = Joi.object({
   selected_carrier: Joi.string().allow("", null).optional(),
   carrier_selection_notes: Joi.string().allow("", null).optional(),
 
+  currency: Joi.string().allow("", null).optional().default("INR"),
   total_amount: Joi.number().min(0).optional().default(0),
   priority: Joi.string().valid("Low", "Medium", "High").default("Medium").optional(),
   status: Joi.string().valid("Draft", "Prepared", "Sent", "Accepted", "Rejected", "Cancelled").default("Prepared").optional(),
@@ -112,6 +114,7 @@ const updateExportQuotationSchema = Joi.object({
   selected_carrier: Joi.string().allow("", null).optional(),
   carrier_selection_notes: Joi.string().allow("", null).optional(),
 
+  currency: Joi.string().allow("", null).optional(),
   total_amount: Joi.number().min(0).optional(),
   priority: Joi.string().valid("Low", "Medium", "High").optional(),
   status: Joi.string().valid("Draft", "Prepared", "Sent", "Accepted", "Rejected", "Cancelled").optional(),

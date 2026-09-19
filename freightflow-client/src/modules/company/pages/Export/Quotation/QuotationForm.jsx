@@ -4,6 +4,7 @@ import Button from '../../../../../shared/components/Button';
 import { businessService } from '../../../../masters/services/business.service';
 import { logisticsService } from '../../../../masters/services/logistics.service';
 import { commonService } from '../../../../masters/services/common.service';
+import { foundationService } from '../../../../masters/services/foundation.service';
 import { shippingInquiryService } from '../ShippingInquiry/shippingInquiry.service';
 import { exportQuotationService } from './exportQuotation.service';
 
@@ -20,6 +21,15 @@ export const INITIAL_CHARGE_HEADS = [];
 const DEFAULT_CARRIER_A = { line: '', freight: '', local: '', notes: '' };
 const DEFAULT_CARRIER_B = { line: '', freight: '', local: '', notes: '' };
 const DEFAULT_CARRIER_C = { line: '', freight: '', local: '', notes: '' };
+
+const DEFAULT_CURRENCIES = [
+  { id: 'curr_inr', currency_code: 'INR', symbol: '₹', currency_name: 'Indian Rupee (INR)' },
+  { id: 'curr_usd', currency_code: 'USD', symbol: '$', currency_name: 'US Dollar (USD)' },
+  { id: 'curr_eur', currency_code: 'EUR', symbol: '€', currency_name: 'Euro (EUR)' },
+  { id: 'curr_aed', currency_code: 'AED', symbol: 'AED', currency_name: 'UAE Dirham (AED)' },
+  { id: 'curr_gbp', currency_code: 'GBP', symbol: '£', currency_name: 'British Pound (GBP)' },
+  { id: 'curr_sgd', currency_code: 'SGD', symbol: 'S$', currency_name: 'Singapore Dollar (SGD)' },
+];
 
 const DEFAULT_UOMS = [
   { id: 'uom_1', uom_code: 'KG', uom_name: 'Kilograms (KG)' },
@@ -82,12 +92,14 @@ const QuotationForm = ({ onCancel, onSuccess, initialData, existingCount = 0 }) 
   const [savedInquiries, setSavedInquiries] = useState([]);
   const [shippingLinesMaster, setShippingLinesMaster] = useState([]);
   const [uoms, setUoms] = useState(DEFAULT_UOMS);
+  const [currencies, setCurrencies] = useState(DEFAULT_CURRENCIES);
   const [chargeMasters, setChargeMasters] = useState(INITIAL_CHARGE_HEADS);
 
   // Form State
   const [formData, setFormData] = useState({
     quotation_no: '',
     quotation_date: new Date().toISOString().split('T')[0],
+    currency: 'INR',
     inquiry_id: '',
     inquiry_no: '',
     exporter_id: '',
@@ -143,7 +155,21 @@ const QuotationForm = ({ onCancel, onSuccess, initialData, existingCount = 0 }) 
     return item.applicable ? sum + (Number(item.amount) || 0) : sum;
   }, 0);
 
-  // Fetch Saved Inquiries & Master Shipping Lines & UOMs
+  // Derived Currency display helpers
+  const selectedCurrencyObj = currencies.find(c => (c.currency_code || c.code) === (formData.currency || 'INR'));
+  const currencySymbol = selectedCurrencyObj?.symbol || formData.currency || '₹';
+  const currencyCode = formData.currency || 'INR';
+
+  // Master Currency Switcher - updates header and all charge lines
+  const handleCurrencyChange = (newCurrency) => {
+    setFormData(prev => ({ ...prev, currency: newCurrency }));
+    setCharges(prevCharges => prevCharges.map(item => ({
+      ...item,
+      currency: newCurrency
+    })));
+  };
+
+  // Fetch Saved Inquiries & Master Shipping Lines & UOMs & Currencies
   useEffect(() => {
     const fetchInquiries = async () => {
       try {
@@ -158,10 +184,11 @@ const QuotationForm = ({ onCancel, onSuccess, initialData, existingCount = 0 }) 
 
     const fetchMasters = async () => {
       try {
-        const [linesRes, uomRes, chargeRes] = await Promise.allSettled([
+        const [linesRes, uomRes, chargeRes, currRes] = await Promise.allSettled([
           logisticsService.getShippingLines(),
           commonService.getUOMs(),
-          businessService.getCharges()
+          businessService.getCharges(),
+          foundationService.getCurrencies({ page: 1, limit: 10000 })
         ]);
         if (linesRes.status === 'fulfilled' && linesRes.value) {
           const data = linesRes.value?.data?.data?.data || linesRes.value?.data?.data || linesRes.value?.data;
@@ -170,6 +197,15 @@ const QuotationForm = ({ onCancel, onSuccess, initialData, existingCount = 0 }) 
         if (uomRes.status === 'fulfilled' && uomRes.value) {
           const data = uomRes.value?.data?.data?.data || uomRes.value?.data?.data || uomRes.value?.data;
           if (Array.isArray(data)) setUoms(data);
+        }
+        if (currRes.status === 'fulfilled' && currRes.value) {
+          const currData = currRes.value?.data?.data?.data || currRes.value?.data?.data || currRes.value?.data;
+          if (Array.isArray(currData) && currData.length > 0) {
+            const activeCurrs = currData.filter(c => c.status !== 'Inactive');
+            if (activeCurrs.length > 0) {
+              setCurrencies(activeCurrs);
+            }
+          }
         }
         let chargeData = [];
         if (chargeRes.status === 'fulfilled' && chargeRes.value) {
@@ -187,6 +223,7 @@ const QuotationForm = ({ onCancel, onSuccess, initialData, existingCount = 0 }) 
             id: c.id || `cm_${i}`,
             name: c.charge_name || c.name || c.description,
             basis: c.basis || c.uom || 'Per Container',
+            currency: c.default_currency || c.currency || 'INR',
             defaultApplicable: c.default_applicable ?? true,
             rate: Number(c.default_rate || c.rate || 0),
             quantity: Number(c.default_qty || c.quantity || 1)
@@ -198,6 +235,7 @@ const QuotationForm = ({ onCancel, onSuccess, initialData, existingCount = 0 }) 
               id: `ch_${cm.id}`,
               name: cm.name,
               basis: cm.basis,
+              currency: formData.currency || cm.currency || 'INR',
               applicable: cm.defaultApplicable,
               quantity: cm.quantity,
               rate: cm.rate,
@@ -229,9 +267,12 @@ const QuotationForm = ({ onCancel, onSuccess, initialData, existingCount = 0 }) 
         }
       }
 
+      const initialCurrency = initialData.currency || initialData.charges?.[0]?.currency || 'INR';
+
       setFormData(prev => ({
         ...prev,
         ...initialData,
+        currency: initialCurrency,
         gross_weight: rawWeight,
         weight_value: initialData.weight_value || parsedWeight.val,
         weight_uom: initialData.weight_uom || parsedWeight.uom,
@@ -242,7 +283,10 @@ const QuotationForm = ({ onCancel, onSuccess, initialData, existingCount = 0 }) 
         quotation_date: initialData.quotation_date ? initialData.quotation_date.split('T')[0] : new Date().toISOString().split('T')[0]
       }));
       if (Array.isArray(initialData.charges)) {
-        setCharges(initialData.charges);
+        setCharges(initialData.charges.map(ch => ({
+          ...ch,
+          currency: ch.currency || initialCurrency
+        })));
       }
     } else {
       setFormData(prev => ({
@@ -486,7 +530,7 @@ const QuotationForm = ({ onCancel, onSuccess, initialData, existingCount = 0 }) 
     setFormData(prev => ({
       ...prev,
       selected_carrier: optionObj.line || '',
-      carrier_selection_notes: `Selected ${optionObj.line || 'Carrier'}${optionObj.freight ? ` (Freight: ₹${optionObj.freight})` : ''}. ${optionObj.notes || ''}`.trim()
+      carrier_selection_notes: `Selected ${optionObj.line || 'Carrier'}${optionObj.freight ? ` (Freight: ${currencySymbol}${optionObj.freight})` : ''}. ${optionObj.notes || ''}`.trim()
     }));
 
     // Update Ocean Freight charge line rate automatically if rate is present
@@ -528,7 +572,7 @@ const QuotationForm = ({ onCancel, onSuccess, initialData, existingCount = 0 }) 
       if (c.id === id) {
         const updated = { ...c, [field]: val };
         
-        if (field === 'name' || field === 'basis') {
+        if (field === 'name' || field === 'basis' || field === 'currency') {
           return updated;
         }
 
@@ -557,6 +601,7 @@ const QuotationForm = ({ onCancel, onSuccess, initialData, existingCount = 0 }) 
         id: newId,
         name: presetCharge?.name || presetCharge?.charge_name || '',
         basis: presetCharge?.basis || presetCharge?.uom || 'Per Container',
+        currency: formData.currency || presetCharge?.currency || presetCharge?.default_currency || 'INR',
         applicable: true,
         quantity: 1,
         rate: Number(presetCharge?.rate || presetCharge?.default_rate || 0),
@@ -575,6 +620,7 @@ const QuotationForm = ({ onCancel, onSuccess, initialData, existingCount = 0 }) 
         id: `ch_${ch.id}`,
         name: ch.name,
         basis: ch.basis,
+        currency: formData.currency || ch.currency || 'INR',
         applicable: ch.defaultApplicable,
         quantity: ch.quantity || 1,
         rate: ch.rate || 0,
@@ -603,6 +649,7 @@ const QuotationForm = ({ onCancel, onSuccess, initialData, existingCount = 0 }) 
       const formattedCharges = charges.map(c => ({
         charge_name: c.name || c.charge_name || 'Charge Head',
         basis: c.basis || 'Per Container',
+        currency: formData.currency || c.currency || 'INR',
         applicable: c.applicable !== false,
         quantity: Number(c.quantity) || 1,
         rate: Number(c.rate) || 0,
@@ -611,6 +658,7 @@ const QuotationForm = ({ onCancel, onSuccess, initialData, existingCount = 0 }) 
 
       const payload = {
         ...formData,
+        currency: formData.currency || 'INR',
         gross_weight: finalWeight,
         charges: formattedCharges,
         total_amount: totalAmount,
@@ -1046,14 +1094,14 @@ const QuotationForm = ({ onCancel, onSuccess, initialData, existingCount = 0 }) 
                   <div style={{ display: 'flex', gap: '0.4rem' }}>
                     <input
                       type="number"
-                      placeholder="Freight Rate (₹)"
+                      placeholder={`Freight Rate (${currencySymbol})`}
                       value={carrierA.freight}
                       onChange={(e) => handleCarrierOptionChange('carrier_option_a', 'freight', e.target.value === '' ? '' : Number(e.target.value))}
                       style={{ width: '50%', padding: '0.35rem', borderRadius: '4px', border: '1px solid #cbd5e1' }}
                     />
                     <input
                       type="number"
-                      placeholder="Local Charges (₹)"
+                      placeholder={`Local Charges (${currencySymbol})`}
                       value={carrierA.local}
                       onChange={(e) => handleCarrierOptionChange('carrier_option_a', 'local', e.target.value === '' ? '' : Number(e.target.value))}
                       style={{ width: '50%', padding: '0.35rem', borderRadius: '4px', border: '1px solid #cbd5e1' }}
@@ -1094,14 +1142,14 @@ const QuotationForm = ({ onCancel, onSuccess, initialData, existingCount = 0 }) 
                   <div style={{ display: 'flex', gap: '0.4rem' }}>
                     <input
                       type="number"
-                      placeholder="Freight Rate (₹)"
+                      placeholder={`Freight Rate (${currencySymbol})`}
                       value={carrierB.freight}
                       onChange={(e) => handleCarrierOptionChange('carrier_option_b', 'freight', e.target.value === '' ? '' : Number(e.target.value))}
                       style={{ width: '50%', padding: '0.35rem', borderRadius: '4px', border: '1px solid #cbd5e1' }}
                     />
                     <input
                       type="number"
-                      placeholder="Local Charges (₹)"
+                      placeholder={`Local Charges (${currencySymbol})`}
                       value={carrierB.local}
                       onChange={(e) => handleCarrierOptionChange('carrier_option_b', 'local', e.target.value === '' ? '' : Number(e.target.value))}
                       style={{ width: '50%', padding: '0.35rem', borderRadius: '4px', border: '1px solid #cbd5e1' }}
@@ -1142,14 +1190,14 @@ const QuotationForm = ({ onCancel, onSuccess, initialData, existingCount = 0 }) 
                   <div style={{ display: 'flex', gap: '0.4rem' }}>
                     <input
                       type="number"
-                      placeholder="Freight Rate (₹)"
+                      placeholder={`Freight Rate (${currencySymbol})`}
                       value={carrierC.freight}
                       onChange={(e) => handleCarrierOptionChange('carrier_option_c', 'freight', e.target.value === '' ? '' : Number(e.target.value))}
                       style={{ width: '50%', padding: '0.35rem', borderRadius: '4px', border: '1px solid #cbd5e1' }}
                     />
                     <input
                       type="number"
-                      placeholder="Local Charges (₹)"
+                      placeholder={`Local Charges (${currencySymbol})`}
                       value={carrierC.local}
                       onChange={(e) => handleCarrierOptionChange('carrier_option_c', 'local', e.target.value === '' ? '' : Number(e.target.value))}
                       style={{ width: '50%', padding: '0.35rem', borderRadius: '4px', border: '1px solid #cbd5e1' }}
@@ -1201,8 +1249,10 @@ const QuotationForm = ({ onCancel, onSuccess, initialData, existingCount = 0 }) 
           <span>Section 5 — Client Quotation Charge Line Items (Charge Master Engine)</span>
         </div>
 
-        {/* Master Quick Select Bar & Reset Button */}
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.75rem', gap: '0.5rem', flexWrap: 'wrap' }}>
+        {/* Master Toolbar: Quick Add (Left), Currency Dropdown & Reset (Right) */}
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.85rem', gap: '0.75rem', flexWrap: 'wrap' }}>
+          
+          {/* Left: Quick Add From Charge Master */}
           <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', flexWrap: 'wrap' }}>
             <span style={{ fontSize: '0.8rem', fontWeight: 600, color: '#475569' }}>Quick Add From Charge Master:</span>
             <select
@@ -1220,55 +1270,89 @@ const QuotationForm = ({ onCancel, onSuccess, initialData, existingCount = 0 }) 
               <option value="">-- Pick Charge Head to Add --</option>
               {chargeMasters.map((cm, i) => (
                 <option key={cm.id || i} value={cm.id || cm.name}>
-                  {cm.name} ({cm.basis}) - ₹{cm.rate}
+                  {cm.name} ({cm.basis}) - {currencySymbol}{cm.rate}
                 </option>
               ))}
             </select>
           </div>
 
-          <Button
-            type="button"
-            variant="outline"
-            size="sm"
-            onClick={handleResetToMasterCharges}
-            leftIcon={RotateCcw}
-            style={{ fontSize: '0.78rem' }}
-          >
-            Reset Default Charges
-          </Button>
+          {/* Right: Quotation Currency Dropdown + Reset Default Charges Button */}
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.65rem', flexWrap: 'wrap' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
+              <span style={{ fontSize: '0.8rem', fontWeight: 600, color: '#475569' }}>Quotation Currency:</span>
+              <select
+                name="currency"
+                value={formData.currency || 'INR'}
+                onChange={(e) => handleCurrencyChange(e.target.value)}
+                style={{
+                  padding: '0.35rem 0.6rem',
+                  borderRadius: '4px',
+                  border: '1px solid #cbd5e1',
+                  fontSize: '0.8rem',
+                  backgroundColor: '#f8fafc',
+                  color: '#1e293b'
+                }}
+              >
+                {currencies.map(curr => {
+                  const code = curr.currency_code || curr.code || 'INR';
+                  const symbol = curr.symbol || code;
+                  const name = curr.currency_name || curr.name || code;
+                  return (
+                    <option key={curr.id || code} value={code}>
+                      {code} ({symbol}) — {name}
+                    </option>
+                  );
+                })}
+              </select>
+            </div>
+
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              onClick={handleResetToMasterCharges}
+              leftIcon={RotateCcw}
+              style={{ fontSize: '0.78rem' }}
+            >
+              Reset Default Charges
+            </Button>
+          </div>
+
         </div>
 
         <div style={{ overflowX: 'auto', border: '1px solid #e2e8f0', borderRadius: '8px', marginBottom: '1.5rem' }}>
           <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.85rem' }}>
             <thead>
               <tr style={{ backgroundColor: '#f1f5f9', borderBottom: '2px solid #cbd5e1', textAlign: 'left' }}>
-                <th style={{ padding: '0.6rem', textAlign: 'center', width: '50px' }}>Apply</th>
-                <th style={{ padding: '0.6rem', width: '35%' }}>Charge / Service Description</th>
+                <th style={{ padding: '0.6rem', textAlign: 'center', width: '45px' }}>Apply</th>
+                <th style={{ padding: '0.6rem', width: '36%' }}>Charge / Service Description</th>
                 <th style={{ padding: '0.6rem', width: '20%' }}>Basis / Unit</th>
                 <th style={{ padding: '0.6rem', textAlign: 'center', width: '10%' }}>Quantity</th>
-                <th style={{ padding: '0.6rem', textAlign: 'right', width: '14%' }}>Rate (₹)</th>
-                <th style={{ padding: '0.6rem', textAlign: 'right', width: '14%' }}>Amount (₹)</th>
-                <th style={{ padding: '0.6rem', textAlign: 'center', width: '50px' }}>Action</th>
+                <th style={{ padding: '0.6rem', textAlign: 'right', width: '15%' }}>Rate ({currencySymbol})</th>
+                <th style={{ padding: '0.6rem', textAlign: 'right', width: '15%' }}>Amount ({currencySymbol})</th>
+                <th style={{ padding: '0.6rem', textAlign: 'center', width: '45px' }}>Action</th>
               </tr>
             </thead>
             <tbody>
               {charges.map((item, idx) => (
                 <tr key={item.id} style={{ borderBottom: '1px solid #f1f5f9', backgroundColor: item.applicable ? '#ffffff' : '#f8fafc' }}>
                   
-                  {/* Applicable Checkbox */}
+                  {/* Applicable Checkbox (tabIndex -1 so Tab skips to Quantity/Rate) */}
                   <td style={{ padding: '0.4rem', textAlign: 'center' }}>
                     <input
                       type="checkbox"
+                      tabIndex={-1}
                       checked={item.applicable}
                       onChange={() => handleChargeToggle(item.id)}
                       style={{ cursor: 'pointer', width: '16px', height: '16px' }}
                     />
                   </td>
 
-                  {/* Charge Name (Editable Input) */}
+                  {/* Charge Name (tabIndex -1) */}
                   <td style={{ padding: '0.4rem' }}>
                     <input
                       type="text"
+                      tabIndex={-1}
                       disabled={!item.applicable}
                       value={item.name || ''}
                       onChange={(e) => handleChargeValueChange(item.id, 'name', e.target.value)}
@@ -1286,9 +1370,10 @@ const QuotationForm = ({ onCancel, onSuccess, initialData, existingCount = 0 }) 
                     />
                   </td>
 
-                  {/* Basis / Unit (Editable Select) */}
+                  {/* Basis / Unit (tabIndex -1) */}
                   <td style={{ padding: '0.4rem' }}>
                     <select
+                      tabIndex={-1}
                       disabled={!item.applicable}
                       value={item.basis || 'Per Container'}
                       onChange={(e) => handleChargeValueChange(item.id, 'basis', e.target.value)}
@@ -1315,11 +1400,12 @@ const QuotationForm = ({ onCancel, onSuccess, initialData, existingCount = 0 }) 
                     </select>
                   </td>
 
-                  {/* Quantity Input */}
+                  {/* Quantity Input (Active in Tab sequence) */}
                   <td style={{ padding: '0.4rem', textAlign: 'center' }}>
                     <input
                       type="number"
                       min="0"
+                      tabIndex={item.applicable ? 0 : -1}
                       disabled={!item.applicable}
                       value={item.quantity}
                       onChange={(e) => handleChargeValueChange(item.id, 'quantity', e.target.value)}
@@ -1334,50 +1420,106 @@ const QuotationForm = ({ onCancel, onSuccess, initialData, existingCount = 0 }) 
                     />
                   </td>
 
-                  {/* Rate Input */}
+                  {/* Rate Input (Active in Tab sequence) */}
                   <td style={{ padding: '0.4rem', textAlign: 'right' }}>
-                    <input
-                      type="number"
-                      min="0"
-                      disabled={!item.applicable}
-                      value={item.rate}
-                      onChange={(e) => handleChargeValueChange(item.id, 'rate', e.target.value)}
+                    <div
                       style={{
-                        width: '90px',
-                        padding: '0.3rem 0.4rem',
-                        textAlign: 'right',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'flex-end',
                         borderRadius: '4px',
                         border: '1px solid #cbd5e1',
-                        fontSize: '0.825rem'
+                        backgroundColor: item.applicable ? '#ffffff' : '#f1f5f9',
+                        padding: '0 0.4rem 0 0.2rem'
                       }}
-                    />
+                    >
+                      <input
+                        type="number"
+                        min="0"
+                        tabIndex={item.applicable ? 0 : -1}
+                        disabled={!item.applicable}
+                        value={item.rate}
+                        onChange={(e) => handleChargeValueChange(item.id, 'rate', e.target.value)}
+                        placeholder="0"
+                        style={{
+                          width: '100%',
+                          padding: '0.3rem 0.2rem',
+                          textAlign: 'right',
+                          border: 'none',
+                          outline: 'none',
+                          background: 'transparent',
+                          fontSize: '0.825rem',
+                          fontWeight: 600,
+                          color: '#0f172a'
+                        }}
+                      />
+                      <span
+                        style={{
+                          fontSize: '0.75rem',
+                          fontWeight: 700,
+                          color: '#64748b',
+                          marginLeft: '0.2rem',
+                          userSelect: 'none',
+                          pointerEvents: 'none'
+                        }}
+                      >
+                        {currencySymbol}
+                      </span>
+                    </div>
                   </td>
 
-                  {/* Amount Input */}
+                  {/* Amount Input (tabIndex -1 so Tab key jumps straight to next line's Quantity) */}
                   <td style={{ padding: '0.4rem', textAlign: 'right' }}>
-                    <input
-                      type="number"
-                      min="0"
-                      disabled={!item.applicable}
-                      value={item.amount}
-                      onChange={(e) => handleChargeValueChange(item.id, 'amount', e.target.value)}
+                    <div
                       style={{
-                        width: '105px',
-                        padding: '0.3rem 0.4rem',
-                        textAlign: 'right',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'flex-end',
                         borderRadius: '4px',
                         border: '1px solid #cbd5e1',
-                        fontSize: '0.825rem',
-                        fontWeight: 700,
-                        color: item.applicable ? '#2e7d32' : '#94a3b8'
+                        backgroundColor: item.applicable ? '#f8fafc' : '#f1f5f9',
+                        padding: '0 0.4rem 0 0.2rem'
                       }}
-                    />
+                    >
+                      <input
+                        type="number"
+                        min="0"
+                        tabIndex={-1}
+                        disabled={!item.applicable}
+                        value={item.amount}
+                        onChange={(e) => handleChargeValueChange(item.id, 'amount', e.target.value)}
+                        style={{
+                          width: '100%',
+                          padding: '0.3rem 0.2rem',
+                          textAlign: 'right',
+                          border: 'none',
+                          outline: 'none',
+                          background: 'transparent',
+                          fontSize: '0.825rem',
+                          fontWeight: 700,
+                          color: item.applicable ? '#2e7d32' : '#94a3b8'
+                        }}
+                      />
+                      <span
+                        style={{
+                          fontSize: '0.75rem',
+                          fontWeight: 700,
+                          color: item.applicable ? '#2e7d32' : '#64748b',
+                          marginLeft: '0.2rem',
+                          userSelect: 'none',
+                          pointerEvents: 'none'
+                        }}
+                      >
+                        {currencySymbol}
+                      </span>
+                    </div>
                   </td>
 
-                  {/* Remove Button */}
+                  {/* Remove Button (tabIndex -1) */}
                   <td style={{ padding: '0.4rem', textAlign: 'center' }}>
                     <button
                       type="button"
+                      tabIndex={-1}
                       onClick={() => handleRemoveChargeLine(item.id)}
                       title="Remove Charge Line"
                       style={{
@@ -1402,10 +1544,10 @@ const QuotationForm = ({ onCancel, onSuccess, initialData, existingCount = 0 }) 
             <tfoot>
               <tr style={{ backgroundColor: '#e0f2fe', color: '#0369a1', fontWeight: 800 }}>
                 <td colSpan="5" style={{ padding: '0.75rem', textAlign: 'right', fontSize: '0.95rem' }}>
-                  GRAND TOTAL ESTIMATED CHARGES:
+                  GRAND TOTAL ESTIMATED CHARGES ({currencyCode}):
                 </td>
                 <td colSpan="2" style={{ padding: '0.75rem', textAlign: 'right', fontSize: '1.2rem', color: '#0288d1' }}>
-                  ₹{Number(totalAmount).toLocaleString('en-IN', { minimumFractionDigits: 2 })}
+                  {currencySymbol} {Number(totalAmount).toLocaleString('en-IN', { minimumFractionDigits: 2 })}
                 </td>
               </tr>
             </tfoot>

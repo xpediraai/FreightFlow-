@@ -67,6 +67,7 @@ const createExportQuotation = async (companyId, data, userId) => {
       const chargesToCreate = data.charges.map(c => ({
         ...c,
         quotation_id: newQuotation.id,
+        currency: c.currency || "INR",
         amount: c.amount !== undefined ? c.amount : (Number(c.quantity || 1) * Number(c.rate || 0)),
       }));
       await db.ExportQuotationCharge.bulkCreate(chargesToCreate, { transaction });
@@ -185,6 +186,7 @@ const updateExportQuotation = async (id, companyId, data, userId) => {
       const chargesToCreate = data.charges.map(c => ({
         ...c,
         quotation_id: id,
+        currency: c.currency || "INR",
         amount: c.amount !== undefined ? c.amount : (Number(c.quantity || 1) * Number(c.rate || 0)),
       }));
       await db.ExportQuotationCharge.bulkCreate(chargesToCreate, { transaction });

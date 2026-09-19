@@ -185,6 +185,11 @@ const ExportQuotation = sequelize.define("ExportQuotation", {
   },
 
   // Totals & Status
+  currency: {
+    type: DataTypes.STRING,
+    allowNull: true,
+    defaultValue: "INR",
+  },
   total_amount: {
     type: DataTypes.DECIMAL(12, 2),
     allowNull: false,
@@ -234,6 +239,11 @@ const ExportQuotationCharge = sequelize.define("ExportQuotationCharge", {
     type: DataTypes.STRING,
     allowNull: true,
     defaultValue: "Per Container",
+  },
+  currency: {
+    type: DataTypes.STRING,
+    allowNull: true,
+    defaultValue: "INR",
   },
   applicable: {
     type: DataTypes.BOOLEAN,

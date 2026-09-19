@@ -306,7 +306,7 @@ const QuotationPreviewModal = ({ quotation, onClose }) => {
               <div style={{ marginBottom: '1rem', pageBreakInside: 'avoid', breakInside: 'avoid' }}>
                 <div style={{ fontSize: '0.8rem', fontWeight: 700, color: '#111827', marginBottom: '0.35rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                   <span>Itemized Quotation Charges Breakdown</span>
-                  <span style={{ fontSize: '0.72rem', color: '#6b7280', fontWeight: 400 }}>Currency: INR (₹)</span>
+                  <span style={{ fontSize: '0.72rem', color: '#6b7280', fontWeight: 600 }}>Quotation Currency: {quotation.currency || 'INR'}</span>
                 </div>
                 
                 <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.8rem', border: '1px solid #cbd5e1' }}>
@@ -316,8 +316,8 @@ const QuotationPreviewModal = ({ quotation, onClose }) => {
                       <th style={{ padding: '0.35rem 0.5rem', borderBottom: '1.5px solid #cbd5e1' }}>Charge / Service Description</th>
                       <th style={{ padding: '0.35rem 0.5rem', borderBottom: '1.5px solid #cbd5e1' }}>Basis</th>
                       <th style={{ padding: '0.35rem 0.5rem', borderBottom: '1.5px solid #cbd5e1', textAlign: 'center', width: '50px' }}>Qty</th>
-                      <th style={{ padding: '0.35rem 0.5rem', borderBottom: '1.5px solid #cbd5e1', textAlign: 'right' }}>Rate (₹)</th>
-                      <th style={{ padding: '0.35rem 0.5rem', borderBottom: '1.5px solid #cbd5e1', textAlign: 'right' }}>Amount (₹)</th>
+                      <th style={{ padding: '0.35rem 0.5rem', borderBottom: '1.5px solid #cbd5e1', textAlign: 'right' }}>Rate ({quotation.currency || 'INR'})</th>
+                      <th style={{ padding: '0.35rem 0.5rem', borderBottom: '1.5px solid #cbd5e1', textAlign: 'right' }}>Amount ({quotation.currency || 'INR'})</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -328,8 +328,12 @@ const QuotationPreviewModal = ({ quotation, onClose }) => {
                           <td style={{ padding: '0.3rem 0.5rem', fontWeight: 600, color: '#0f172a' }}>{charge.charge_name || charge.name}</td>
                           <td style={{ padding: '0.3rem 0.5rem', color: '#64748b', fontSize: '0.75rem' }}>{charge.basis}</td>
                           <td style={{ padding: '0.3rem 0.5rem', textAlign: 'center', fontWeight: 500 }}>{charge.quantity}</td>
-                          <td style={{ padding: '0.3rem 0.5rem', textAlign: 'right' }}>₹{Number(charge.rate).toLocaleString('en-IN', { minimumFractionDigits: 2 })}</td>
-                          <td style={{ padding: '0.3rem 0.5rem', textAlign: 'right', fontWeight: 700, color: '#0f172a' }}>₹{Number(charge.amount).toLocaleString('en-IN', { minimumFractionDigits: 2 })}</td>
+                          <td style={{ padding: '0.3rem 0.5rem', textAlign: 'right' }}>
+                            {Number(charge.rate).toLocaleString('en-IN', { minimumFractionDigits: 2 })}
+                          </td>
+                          <td style={{ padding: '0.3rem 0.5rem', textAlign: 'right', fontWeight: 700, color: '#0f172a' }}>
+                            {Number(charge.amount).toLocaleString('en-IN', { minimumFractionDigits: 2 })}
+                          </td>
                         </tr>
                       ))
                     ) : (
@@ -342,9 +346,9 @@ const QuotationPreviewModal = ({ quotation, onClose }) => {
                   </tbody>
                   <tfoot>
                     <tr style={{ backgroundColor: '#e0f2fe', color: '#0369a1', fontWeight: 800 }}>
-                      <td colSpan="5" style={{ padding: '0.45rem 0.6rem', textAlign: 'right', fontSize: '0.85rem' }}>GRAND TOTAL ESTIMATED FREIGHT & CHARGES:</td>
+                      <td colSpan="5" style={{ padding: '0.45rem 0.6rem', textAlign: 'right', fontSize: '0.85rem' }}>GRAND TOTAL ESTIMATED FREIGHT & CHARGES ({quotation.currency || 'INR'}):</td>
                       <td style={{ padding: '0.45rem 0.6rem', textAlign: 'right', fontSize: '1rem', color: '#0288d1' }}>
-                        ₹{Number(quotation.total_amount || 0).toLocaleString('en-IN', { minimumFractionDigits: 2 })}
+                        {Number(quotation.total_amount || 0).toLocaleString('en-IN', { minimumFractionDigits: 2 })}
                       </td>
                     </tr>
                   </tfoot>
