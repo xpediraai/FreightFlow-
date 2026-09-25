@@ -36,6 +36,14 @@ import Vendors from '../modules/company/pages/Masters/Business/Vendor/Vendors';
 // Export Modules
 import ShippingInquiries from '../modules/company/pages/Export/ShippingInquiry/ShippingInquiries';
 import Quotations from '../modules/company/pages/Export/Quotation/Quotations';
+import ExportDashboard from '../modules/company/pages/Export/dashboard/Dashboard';
+import JobList from '../modules/company/pages/Export/jobs/JobList';
+import BillOfLading from '../modules/company/pages/Export/billOfLading/BillOfLading';
+import Clearing from '../modules/company/pages/Export/clearing/Clearing';
+import Containers from '../modules/company/pages/Export/containers/Containers';
+import Documents from '../modules/company/pages/Export/documents/Documents';
+import Finance from '../modules/company/pages/Export/finance/Finance';
+import Forwarding from '../modules/company/pages/Export/forwarding/Forwarding';
 
 // Operations Modules
 import ShipmentTracking from '../modules/company/pages/Operations/Tracking/ShipmentTracking';
@@ -154,6 +162,10 @@ const CompanyRoutes = [
     element: <Charges />,
   },
   {
+    path: 'export/dashboard',
+    element: <ExportDashboard />,
+  },
+  {
     path: 'export/shipping-inquiry',
     element: <ShippingInquiries />,
   },
@@ -162,9 +174,38 @@ const CompanyRoutes = [
     element: <Quotations />,
   },
   {
+    path: 'export/jobs',
+    element: <JobList />,
+  },
+  {
+    path: 'export/clearing',
+    element: <Clearing />,
+  },
+  {
+    path: 'export/forwarding',
+    element: <Forwarding />,
+  },
+  {
+    path: 'export/bill-of-lading',
+    element: <BillOfLading />,
+  },
+  {
+    path: 'export/containers',
+    element: <Containers />,
+  },
+  {
+    path: 'export/documents',
+    element: <Documents />,
+  },
+  {
+    path: 'export/finance',
+    element: <Finance />,
+  },
+  {
     path: 'export/*',
     element: <GenericPlaceholder title="Export Operations" />,
   },
+
   {
     path: 'masters/*',
     element: <GenericPlaceholder title="Masters Overview" />,

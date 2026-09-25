@@ -1,8 +1,9 @@
 import {
   LayoutDashboard, Users, Building2, Truck, Package, Settings, Circle,
   Globe, Box, Briefcase, MapPin, Grid, Map, CreditCard, Ruler, PackageOpen, FileText, Plane, Anchor, Ship,
-  Warehouse, Car, Award, Store, ShoppingBag, Receipt, DollarSign, FileOutput, HelpCircle
+  Warehouse, Car, Award, Store, ShoppingBag, Receipt, DollarSign, FileOutput, HelpCircle, ShieldCheck, RefreshCw
 } from 'lucide-react';
+
 
 export const getNavItems = (role) => {
   if (role === 'SUPER_ADMIN') {
@@ -86,10 +87,19 @@ export const getNavItems = (role) => {
       icon: FileOutput,
       color: '#4CAF50',
       children: [
+        { name: 'Dashboard', path: '/company/export/dashboard', icon: LayoutDashboard, color: '#1976D2' },
         { name: 'Shipping Inquiry', path: '/company/export/shipping-inquiry', icon: HelpCircle, color: '#009688' },
         { name: 'Quotation', path: '/company/export/quotation', icon: FileText, color: '#1976D2' },
+        { name: 'Export Jobs', path: '/company/export/jobs', icon: Briefcase, color: '#8B5CF6' },
+        { name: 'Customs Clearing', path: '/company/export/clearing', icon: ShieldCheck, color: '#9C27B0' },
+        { name: 'Ocean Forwarding', path: '/company/export/forwarding', icon: Ship, color: '#0288D1' },
+        { name: 'Bill of Lading', path: '/company/export/bill-of-lading', icon: RefreshCw, color: '#10B981' },
+        { name: 'Containers', path: '/company/export/containers', icon: Box, color: '#F57C00' },
+        { name: 'Documents', path: '/company/export/documents', icon: FileText, color: '#EC4899' },
+        { name: 'Finance & Invoices', path: '/company/export/finance', icon: DollarSign, color: '#2E7D32' },
       ]
     },
+
     { name: 'Settings', path: '/app/settings', icon: Settings, color: '#616161' },
   ];
 };

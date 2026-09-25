@@ -29,6 +29,7 @@ const bulkImportRoutes = require('./modules/Masters/bulkImport.routes');
 const trackingRoutes = require('./modules/Operations/Tracking/tracking.routes');
 const shippingInquiryRoutes = require('./modules/Operations/ShippingInquiry/shippingInquiry.routes');
 const exportQuotationRoutes = require('./modules/Operations/ExportQuotation/exportQuotation.routes');
+const exportClearingRoutes = require('./modules/Operations/ExportClearing/exportClearing.routes');
 
 // Mount routes
 router.use('/auth', authRoutes);
@@ -59,5 +60,6 @@ router.use('/masters/bulk-import', bulkImportRoutes);
 router.use('/tracking', trackingRoutes);
 router.use('/shipping-inquiry', shippingInquiryRoutes);
 router.use('/export-quotation', exportQuotationRoutes);
+router.use('/export-clearing', exportClearingRoutes);
 
 module.exports = router;

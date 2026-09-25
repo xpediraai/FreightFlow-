@@ -1,0 +1,104 @@
+/* ============================================================
+   EXPORT QUOTATIONS STYLES & ACTION BUTTONS
+============================================================ */
+
+.action-btn {
+  border: none;
+  background: transparent;
+  padding: 5px 8px;
+  border-radius: 6px;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.action-btn:hover {
+  transform: translateY(-1px);
+}
+
+.action-btn:active {
+  transform: translateY(0);
+}
+
+.view-btn {
+  color: #4b5563;
+  background-color: #f3f4f6;
+  border: 1px solid #e5e7eb;
+}
+
+.view-btn:hover {
+  background-color: #e5e7eb;
+  color: #111827;
+}
+
+.edit-btn {
+  color: #1976D2;
+  background-color: #eff6ff;
+  border: 1px solid #dbeafe;
+}
+
+.edit-btn:hover {
+  background-color: #dbeafe;
+  color: #1d4ed8;
+}
+
+.delete-btn {
+  color: #dc2626;
+  background-color: #fef2f2;
+  border: 1px solid #fee2e2;
+}
+
+.delete-btn:hover {
+  background-color: #fee2e2;
+  color: #b91c1c;
+}
+
+.send-btn {
+  color: #0288d1;
+  background-color: #e0f2fe;
+  border: 1px solid #bae6fd;
+}
+
+.send-btn:hover {
+  background-color: #bae6fd;
+  color: #0369a1;
+}
+
+.approve-btn {
+  color: #15803d;
+  background-color: #dcfce7;
+  border: 1px solid #bbf7d0;
+}
+
+.approve-btn:hover {
+  background-color: #bbf7d0;
+  color: #166534;
+}
+
+.reject-btn {
+  color: #b91c1c;
+  background-color: #fee2e2;
+  border: 1px solid #fecaca;
+}
+
+.reject-btn:hover {
+  background-color: #fecaca;
+  color: #991b1b;
+}
+
+.notification-toast {
+  animation: slideInDown 0.3s ease-out forwards;
+}
+
+@keyframes slideInDown {
+  from {
+    transform: translateY(-100%);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}

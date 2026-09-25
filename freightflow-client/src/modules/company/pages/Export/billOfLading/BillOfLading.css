@@ -1,0 +1,403 @@
+/* =========================================================
+   BILL OF LADING
+========================================================= */
+
+.bl-toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 16px;
+  margin-bottom: 16px;
+}
+
+.bl-search {
+  flex: 1;
+}
+
+.bl-search input {
+  width: 100%;
+}
+
+.bl-status-panel {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1.2fr;
+  gap: 16px;
+  padding: 18px;
+  margin-bottom: 18px;
+  background: var(--background, #f8fafc);
+  border: 1px solid var(--border, #e5e7eb);
+  border-radius: 12px;
+}
+
+.bl-status-panel label {
+  display: block;
+  margin-bottom: 6px;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.bl-status-panel input,
+.bl-status-panel select {
+  width: 100%;
+}
+
+.bl-modal {
+  max-width: 1200px !important;
+}
+
+.section-title-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 16px;
+}
+
+.cargo-list {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.cargo-item {
+  padding: 16px;
+  border: 1px solid var(--border, #e5e7eb);
+  border-radius: 10px;
+  background: var(--background, #fff);
+}
+
+.cargo-item-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 14px;
+}
+
+.cargo-total-box {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 12px;
+  margin-top: 16px;
+}
+
+.cargo-total-box > div {
+  padding: 14px;
+  border: 1px solid var(--border, #e5e7eb);
+  border-radius: 10px;
+  background: var(--background, #f8fafc);
+}
+
+.cargo-total-box span {
+  display: block;
+  font-size: 12px;
+  color: var(--muted, #64748b);
+  margin-bottom: 5px;
+}
+
+.cargo-total-box strong {
+  font-size: 18px;
+}
+
+.checkbox-field {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 16px;
+}
+
+.checkbox-field input {
+  width: auto;
+}
+
+.document-upload-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+}
+
+.upload-box {
+  padding: 18px;
+  border: 1px dashed var(--border, #cbd5e1);
+  border-radius: 10px;
+}
+
+.upload-box strong {
+  display: block;
+  margin-bottom: 10px;
+}
+
+.upload-box input {
+  width: 100%;
+}
+
+.small-text {
+  font-size: 12px;
+  margin-top: 10px;
+}
+
+.full-field {
+  grid-column: 1 / -1;
+}
+
+/* =========================================================
+   BL PREVIEW
+========================================================= */
+
+.bl-preview-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 10000;
+  background: rgba(15, 23, 42, 0.75);
+  overflow: auto;
+  padding: 30px;
+}
+
+.bl-preview-modal {
+  width: min(1100px, 100%);
+  margin: auto;
+}
+
+.preview-toolbar {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  margin-bottom: 15px;
+}
+
+.bl-document {
+  position: relative;
+  background: white;
+  color: #111827;
+  padding: 35px;
+  min-height: 1000px;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.25);
+}
+
+.draft-watermark {
+  position: absolute;
+  top: 48%;
+  left: 50%;
+  transform: translate(-50%, -50%) rotate(-30deg);
+  font-size: 38px;
+  font-weight: 800;
+  opacity: 0.08;
+  white-space: nowrap;
+  pointer-events: none;
+}
+
+.bl-document-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  border-bottom: 2px solid #111827;
+  padding-bottom: 18px;
+  margin-bottom: 18px;
+}
+
+.bl-document-header h1 {
+  margin: 0;
+  font-size: 26px;
+}
+
+.bl-document-header p {
+  margin: 5px 0 0;
+  color: #64748b;
+}
+
+.bl-number {
+  text-align: right;
+}
+
+.bl-number span {
+  display: block;
+  font-size: 12px;
+  color: #64748b;
+}
+
+.bl-number strong {
+  font-size: 20px;
+}
+
+.bl-route-grid,
+.bl-party-grid,
+.bl-vessel-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  border-top: 1px solid #d1d5db;
+  border-left: 1px solid #d1d5db;
+  margin-bottom: 18px;
+}
+
+.bl-party-grid {
+  grid-template-columns: repeat(3, 1fr);
+}
+
+.info-box {
+  min-height: 70px;
+  padding: 12px;
+  border-right: 1px solid #d1d5db;
+  border-bottom: 1px solid #d1d5db;
+  white-space: pre-line;
+}
+
+.info-box strong {
+  display: block;
+  font-size: 10px;
+  color: #64748b;
+  margin-bottom: 6px;
+  text-transform: uppercase;
+}
+
+.info-box div {
+  font-size: 13px;
+  line-height: 1.5;
+}
+
+.bl-cargo-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 20px;
+}
+
+.bl-cargo-table th,
+.bl-cargo-table td {
+  border: 1px solid #cbd5e1;
+  padding: 9px;
+  font-size: 11px;
+  vertical-align: top;
+}
+
+.bl-cargo-table th {
+  background: #f1f5f9;
+  font-weight: 700;
+  text-transform: uppercase;
+}
+
+.bl-cargo-table small {
+  color: #64748b;
+}
+
+.bl-document-footer {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 15px;
+  margin-top: 25px;
+  padding-top: 15px;
+  border-top: 1px solid #cbd5e1;
+}
+
+.bl-document-footer p {
+  margin: 5px 0 0;
+}
+
+.bl-remarks {
+  margin-top: 25px;
+  padding: 15px;
+  border: 1px solid #cbd5e1;
+}
+
+.bl-remarks p {
+  white-space: pre-line;
+}
+
+.bl-disclaimer {
+  margin-top: 30px;
+  padding: 12px;
+  border: 1px solid #f59e0b;
+  background: #fffbeb;
+  font-size: 11px;
+  line-height: 1.5;
+}
+
+/* =========================================================
+   RESPONSIVE
+========================================================= */
+
+@media (max-width: 900px) {
+  .bl-status-panel {
+    grid-template-columns: 1fr;
+  }
+
+  .cargo-total-box {
+    grid-template-columns: 1fr;
+  }
+
+  .document-upload-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .bl-route-grid,
+  .bl-vessel-grid {
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .bl-party-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .bl-document {
+    padding: 20px;
+  }
+}
+
+@media (max-width: 600px) {
+  .bl-toolbar {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .bl-route-grid,
+  .bl-vessel-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .bl-document-header {
+    flex-direction: column;
+    gap: 15px;
+  }
+
+  .bl-number {
+    text-align: left;
+  }
+}
+
+/* =========================================================
+   PRINT
+========================================================= */
+
+@media print {
+  body * {
+    visibility: hidden !important;
+  }
+
+  .bl-document,
+  .bl-document * {
+    visibility: visible !important;
+  }
+
+  .bl-document {
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 100%;
+    min-height: auto;
+    box-shadow: none;
+    padding: 20px;
+  }
+
+  .bl-preview-overlay {
+    position: static;
+    background: white;
+    padding: 0;
+  }
+
+  .preview-toolbar {
+    display: none !important;
+  }
+
+  @page {
+    size: A4;
+    margin: 10mm;
+  }
+}

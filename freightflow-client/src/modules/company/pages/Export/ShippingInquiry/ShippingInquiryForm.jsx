@@ -598,6 +598,7 @@ const ShippingInquiryForm = ({
   // Keep exporter_name in sync when exporter_id changes
   useEffect(() => {
     if (!exporterId) {
+      setValue('exporter_name', '');
       return;
     }
     const selected = exporters.find((c) => String(c.id) === String(exporterId) || getExporterName(c).toLowerCase() === String(exporterId).toLowerCase());
@@ -820,7 +821,7 @@ const ShippingInquiryForm = ({
         const n = parseInt(row.no_of_containers, 10);
         return sum + (isNaN(n) ? 0 : n);
       }, 0);
-
+      console.log(values)
       // Aggregate weight string & primary cargo for legacy consumers
       const primaryCargo = values.cargoDetails?.[0];
       const finalWeight = primaryCargo?.weight_value

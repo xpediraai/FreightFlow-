@@ -6,8 +6,10 @@ import ExpandableForm from '../../../../../shared/components/Master/ExpandableFo
 import QuotationList from './QuotationList';
 import QuotationForm from './QuotationForm';
 import { exportQuotationService } from './exportQuotation.service';
+import { useERP } from '../context/ERPContext';
 
 const Quotations = () => {
+  const { store, patch, createJobFromQuotation } = useERP() || {};
   const [quotations, setQuotations] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -17,6 +19,8 @@ const Quotations = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState('ALL STATUS');
   const [viewMode, setViewMode] = useState(() => localStorage.getItem('preferredQuotationViewMode') || 'table');
+
+  const localQuotations = store?.quotations || [];
 
   const fetchQuotations = useCallback(async () => {
     setIsLoading(true);
@@ -28,15 +32,20 @@ const Quotations = () => {
         status: statusFilter,
       });
 
-      const data = response?.data?.data?.quotations || response?.data?.quotations || response?.data || [];
-      setQuotations(Array.isArray(data) ? data : []);
+      const data = response?.data?.data?.quotations || response?.data?.quotations || response?.data;
+      if (Array.isArray(data) && data.length > 0) {
+        setQuotations(data);
+      } else {
+        // Fallback to local store data
+        setQuotations(localQuotations);
+      }
     } catch (err) {
-      console.error('Failed to fetch export quotations from backend:', err);
-      setError(err.response?.data?.message || err.message || 'Failed to load export quotations');
+      // Offline / local storage mode fallback
+      setQuotations(localQuotations);
     } finally {
       setIsLoading(false);
     }
-  }, [searchTerm, statusFilter]);
+  }, [searchTerm, statusFilter, localQuotations]);
 
   useEffect(() => {
     fetchQuotations();
@@ -64,21 +73,49 @@ const Quotations = () => {
     setSelectedQuotation(null);
   };
 
+  const handleStatusChange = async (quotation, newStatus) => {
+    try {
+      // Local ERP Store update & Job creation
+      if (newStatus === 'Approved' && createJobFromQuotation) {
+        createJobFromQuotation(quotation);
+      } else if (patch) {
+        patch('quotations', quotation.id, { status: newStatus });
+      }
+
+      // Backend API call if active
+      try {
+        await exportQuotationService.updateStatus(quotation.id, newStatus);
+      } catch (e) {
+        // Backend not connected or failed, handled locally
+      }
+
+      fetchQuotations();
+    } catch (err) {
+      console.error('Failed to update status:', err);
+    }
+  };
+
   const handleDelete = async (id) => {
     try {
-      await exportQuotationService.deleteQuotation(id);
+      if (patch) {
+        patch('quotations', id, null);
+      }
+      try {
+        await exportQuotationService.deleteQuotation(id);
+      } catch (e) {}
       fetchQuotations();
     } catch (err) {
       console.error('Failed to delete quotation:', err);
-      alert(err.response?.data?.message || err.message || 'Failed to delete export quotation');
     }
   };
+
+  const activeQuotations = quotations.length > 0 ? quotations : localQuotations;
 
   return (
     <Page>
       <PageHeader
         title="Export Quotations"
-        subtitle="Prepare, compare carrier options, calculate charges, and issue export freight quotations."
+        subtitle="Prepare, compare carrier options, calculate charges, issue export freight quotations & create jobs on approval."
         primaryAction={{ label: '+ Create Quotation', onClick: handleCreateNew }}
       />
 
@@ -88,7 +125,7 @@ const Quotations = () => {
             entityName="Export Quotation"
             searchTerm={searchTerm}
             onSearch={setSearchTerm}
-            totalRecords={quotations.length}
+            totalRecords={activeQuotations.length}
             statusFilter={statusFilter}
             onStatusChange={setStatusFilter}
             viewMode={viewMode}
@@ -103,7 +140,7 @@ const Quotations = () => {
               onCancel={handleCancel}
               onSuccess={handleSaveSuccess}
               initialData={selectedQuotation}
-              existingCount={quotations.length}
+              existingCount={activeQuotations.length}
             />
           </ExpandableForm>
 
@@ -114,10 +151,11 @@ const Quotations = () => {
           )}
 
           <QuotationList
-            quotations={quotations}
+            quotations={activeQuotations}
             isLoading={isLoading}
             onEdit={handleEdit}
             onDelete={handleDelete}
+            onStatusChange={handleStatusChange}
             searchQuery={searchTerm}
             viewMode={viewMode}
             statusFilter={statusFilter}

@@ -1,0 +1,31 @@
+/* ============================================================
+   OCEAN FORWARDING STYLES
+============================================================ */
+
+@import "../clearing/Clearing.css";
+
+.forwarding-page {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.forwarding-banner {
+  padding: 20px;
+  background: linear-gradient(135deg, #0288d1 0%, #0369a1 100%);
+  color: #ffffff;
+  border-radius: 12px;
+  box-shadow: 0 4px 12px rgba(2, 136, 209, 0.2);
+}
+
+.forwarding-banner h3 {
+  margin: 0 0 6px 0;
+  font-size: 1.25rem;
+  font-weight: 700;
+}
+
+.forwarding-banner p {
+  margin: 0;
+  opacity: 0.9;
+  font-size: 0.875rem;
+}
